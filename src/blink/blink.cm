@@ -1,24 +1,39 @@
 //! platform: sv
 
 // Tang 138K Console Lチカ回路
-// 内蔵オシレータ(52.5MHz) → 0.5秒カウンタ → LED出力トグル
+// Gowin内蔵オシレータ(52.5MHz) → 0.5秒カウンタ → LED出力トグル
 //
 // ハードウェア: Sipeed Tang 138K Console (GW5AST-LV138PG484A)
-// クロック: Gowin内蔵OSC (210MHz/4 = 52.5MHz)
+// クロック: Gowin内蔵OSC (210MHz / FREQ_DIV = 52.5MHz)
 // LED: CFG LED READY (U12), DONE (G11)
 
-// ポート宣言
-#[input]  posedge clk;
-#[output] bool led = false;
+// 定数定義
+const uint CLK_FREQ = 52500000;            // 内蔵OSCクロック周波数 (Hz)
+const uint HALF_SEC_COUNT = CLK_FREQ / 2 - 1;  // 0.5秒分のカウント値
 
-// 内部カウンタ（26,250,000カウントで0.5秒 @52.5MHz）
+// Gowin 内蔵オシレータの外部モジュール定義
+extern struct OSC {
+    #[sv::param] int FREQ_DIV = 4;
+    #[output] bool OSCOUT = clk;
+}
+
+// 出力ポート: CFG LED
+#[output] bool led_ready = false;
+#[output] bool led_done  = false;
+
+// 内部信号
+bool clk = false;
 uint counter = 0;
+
+// Gowin 内蔵オシレータのインスタンス化
+OSC osc_inst;
 
 // メインクロック処理（posedge clk で駆動）
 void blink(posedge clk) {
-    if (counter == 26249999) {
+    if (counter == HALF_SEC_COUNT) {
         counter = 0;
-        led = !led;
+        led_ready = !led_ready;
+        led_done = !led_done;
     } else {
         counter = counter + 1;
     }

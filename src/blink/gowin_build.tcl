@@ -14,7 +14,6 @@ set device_version "C"
 
 # ファイルパス（絶対パスで指定）
 set sv_file "${project_root}/build/blink.sv"
-set top_file "${project_root}/src/blink/top.sv"
 set cst_file "${project_root}/src/blink/tang_console_138k.cst"
 set output_dir "${project_root}/build"
 set project_name "blink"
@@ -24,14 +23,13 @@ create_project -name $project_name -dir $output_dir -pn $device_pn -device_versi
 
 # ソースファイルの追加
 add_file $sv_file
-add_file $top_file
 
 # ピン制約ファイルの追加
 add_file $cst_file
 
 # 合成設定
 set_option -verilog_std sysv2017
-set_option -top_module top
+set_option -top_module blink
 set_option -output_base_name blink
 
 # デュアルパーパスピンをGPIOとして使用
