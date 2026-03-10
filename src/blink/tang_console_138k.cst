@@ -1,0 +1,13 @@
+// ============================================================
+// Tang 138K Console ピン制約: CFG LED (READY/DONE)
+// ============================================================
+// デュアルパーパスピン — Tclで use_ready_as_gpio, use_done_as_gpio 必要
+// ============================================================
+
+// READY LED (U12, BANK10)
+IO_LOC  "led_ready" U12;
+IO_PORT "led_ready" IO_TYPE=LVCMOS33 DRIVE=8;
+
+// DONE LED (G11, BANK10)
+IO_LOC  "led_done" G11;
+IO_PORT "led_done" IO_TYPE=LVCMOS33 DRIVE=8;

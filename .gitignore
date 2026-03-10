@@ -1,0 +1,29 @@
+# ビルド出力
+build/
+*.bit
+*.fs
+*.svf
+*.bin
+
+# 一時ファイル
+.tmp/
+*.o
+*.a
+
+# Cm コンパイラキャッシュ
+.cm-cache/
+
+# OS固有
+.DS_Store
+Thumbs.db
+
+# エディタ
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Gowin EDA プロジェクトファイル（大きいバイナリ）
+*.gprj.user
+impl/

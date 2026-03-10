@@ -1,0 +1,25 @@
+//! platform: sv
+
+// Tang 138K Console Lチカ回路
+// 内蔵オシレータ(52.5MHz) → 0.5秒カウンタ → LED出力トグル
+//
+// ハードウェア: Sipeed Tang 138K Console (GW5AST-LV138PG484A)
+// クロック: Gowin内蔵OSC (210MHz/4 = 52.5MHz)
+// LED: CFG LED READY (U12), DONE (G11)
+
+// ポート宣言
+#[input]  posedge clk;
+#[output] bool led = false;
+
+// 内部カウンタ（26,250,000カウントで0.5秒 @52.5MHz）
+uint counter = 0;
+
+// メインクロック処理（posedge clk で駆動）
+void blink(posedge clk) {
+    if (counter == 26249999) {
+        counter = 0;
+        led = !led;
+    } else {
+        counter = counter + 1;
+    }
+}
