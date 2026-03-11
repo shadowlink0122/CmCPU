@@ -52,20 +52,20 @@ void process(posedge clk) {
     if (phase == 1) {
         // LOAD: メッセージ ROM から tx_data にロード
         uart_tx = true;
-        if (msg_idx == 0) { tx_data = 72; }
-        if (msg_idx == 1) { tx_data = 101; }
-        if (msg_idx == 2) { tx_data = 108; }
-        if (msg_idx == 3) { tx_data = 108; }
-        if (msg_idx == 4) { tx_data = 111; }
-        if (msg_idx == 5) { tx_data = 44; }
-        if (msg_idx == 6) { tx_data = 32; }
-        if (msg_idx == 7) { tx_data = 70; }
-        if (msg_idx == 8) { tx_data = 80; }
-        if (msg_idx == 9) { tx_data = 71; }
-        if (msg_idx == 10) { tx_data = 65; }
-        if (msg_idx == 11) { tx_data = 33; }
-        if (msg_idx == 12) { tx_data = 13; }
-        if (msg_idx == 13) { tx_data = 10; }
+        if (msg_idx == 0) { tx_data = 'H' as utiny; }
+        if (msg_idx == 1) { tx_data = 'e' as utiny; }
+        if (msg_idx == 2) { tx_data = 'l' as utiny; }
+        if (msg_idx == 3) { tx_data = 'l' as utiny; }
+        if (msg_idx == 4) { tx_data = 'o' as utiny; }
+        if (msg_idx == 5) { tx_data = ',' as utiny; }
+        if (msg_idx == 6) { tx_data = ' ' as utiny; }
+        if (msg_idx == 7) { tx_data = 'F' as utiny; }
+        if (msg_idx == 8) { tx_data = 'P' as utiny; }
+        if (msg_idx == 9) { tx_data = 'G' as utiny; }
+        if (msg_idx == 10) { tx_data = 'A' as utiny; }
+        if (msg_idx == 11) { tx_data = '!' as utiny; }
+        if (msg_idx == 12) { tx_data = '\r' as utiny; }
+        if (msg_idx == 13) { tx_data = '\n' as utiny; }
         phase = 2;
         clk_cnt = 0;
     }
