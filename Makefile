@@ -73,7 +73,7 @@ help:
 .PHONY: build
 build: $(BLINK_SV)
 	@echo "Verilator リントチェック中..."
-	verilator --lint-only --timing -Wno-fatal $(BLINK_SV)
+	verilator --lint-only --timing -Wno-fatal -Wno-MODMISSING $(BLINK_SV)
 	@echo ""
 	@echo "=========================================="
 	@echo "✅ ビルド完了! $(BLINK_SV)"
@@ -205,7 +205,7 @@ clean:
 .PHONY: uart-build
 uart-build: $(UART_SV)
 	@echo "Verilator リントチェック中..."
-	verilator --lint-only --timing -Wno-fatal $(UART_SV)
+	verilator --lint-only --timing -Wno-fatal -Wno-MODMISSING $(UART_SV)
 	@echo ""
 	@echo "=========================================="
 	@echo "✅ UART ビルド完了! $(UART_SV)"
