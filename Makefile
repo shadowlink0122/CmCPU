@@ -15,6 +15,13 @@ BLINK_SRC := $(SRC_DIR)/blink/blink.cm
 BLINK_CST := $(SRC_DIR)/blink/tang_console_138k.cst
 BLINK_SV := $(BUILD_DIR)/blink.sv
 
+# UART Hello 回路の設定
+UART_SRC := $(SRC_DIR)/uart/uart_hello.cm
+UART_CST := $(SRC_DIR)/uart/tang_console_138k.cst
+UART_SV := $(BUILD_DIR)/uart_hello.sv
+UART_TCL := $(SRC_DIR)/uart/gowin_build.tcl
+UART_FS := $(BUILD_DIR)/uart_hello/impl/pnr/uart_hello.fs
+
 # FPGA 合成ビルド成果物
 BLINK_JSON := $(BUILD_DIR)/blink.json
 BLINK_PNR := $(BUILD_DIR)/blink_pnr.json
@@ -43,19 +50,20 @@ GOWIN_PACK := $(HOME)/Library/Python/3.14/bin/gowin_pack
 help:
 	@echo "CmCPU プロジェクト - Make コマンド"
 	@echo ""
-	@echo "Cm ビルド:"
+	@echo "Lチカ (blink):"
 	@echo "  make build        - Cm → SV 変換 + リントチェック"
-	@echo "  make build-cm     - Cmコンパイラ自体をビルド"
-	@echo ""
-	@echo "FPGA 合成:"
-	@echo "  make gowin        - Gowin EDA フルフロー (SV → FS) ← 推奨"
-	@echo "  make appy         - Apycula OSS フルフロー (実験的)"
-	@echo ""
-	@echo "FPGA 書き込み:"
+	@echo "  make gowin        - Gowin EDA フルフロー (SV → FS)"
 	@echo "  make flash        - FPGAに書き込み (.fs)"
-	@echo "  make flash-sram   - SRAM書き込み (.bit)"
+	@echo "  make apply        - build + gowin + flash 一括実行"
 	@echo ""
-	@echo "ユーティリティ:"
+	@echo "UART Hello:"
+	@echo "  make uart-build   - Cm → SV 変換 + リントチェック"
+	@echo "  make uart-gowin   - Gowin EDA フルフロー (SV → FS)"
+	@echo "  make uart-flash   - FPGAに書き込み (.fs)"
+	@echo "  make uart-apply   - build + gowin + flash 一括実行"
+	@echo ""
+	@echo "共通:"
+	@echo "  make build-cm     - Cmコンパイラ自体をビルド"
 	@echo "  make clean        - ビルド出力をクリーン"
 	@echo "  make setup        - 開発環境セットアップ (macOS)"
 
@@ -190,4 +198,48 @@ clean:
 	@echo "ビルド出力をクリーン中..."
 	@rm -rf $(BUILD_DIR)
 	@echo "✅ クリーン完了!"
+
+# ============================================================
+# UART Hello: Cm → SV + リントチェック
+# ============================================================
+.PHONY: uart-build
+uart-build: $(UART_SV)
+	@echo "Verilator リントチェック中..."
+	verilator --lint-only --timing -Wno-fatal $(UART_SV)
+	@echo ""
+	@echo "=========================================="
+	@echo "✅ UART ビルド完了! $(UART_SV)"
+	@echo "=========================================="
+
+$(UART_SV): $(UART_SRC)
+	@echo "Cm → SystemVerilog 変換中 (UART)..."
+	@mkdir -p $(BUILD_DIR)
+	$(CM) compile --target=sv $(UART_SRC) -o $(UART_SV)
+	@echo "✅ SV生成完了: $(UART_SV)"
+
+# ============================================================
+# UART Hello: Gowin EDA フルフロー
+# ============================================================
+.PHONY: uart-gowin
+uart-gowin: $(UART_SV)
+	@echo "Gowin EDA で合成・配置配線・ビットストリーム生成中 (UART)..."
+	DYLD_LIBRARY_PATH=$(GW_LIB) DYLD_FRAMEWORK_PATH=$(GW_LIB) $(GW_SH) $(UART_TCL)
+	@echo ""
+	@echo "=========================================="
+	@echo "✅ Gowin EDA UART ビルド完了! $(UART_FS)"
+	@echo "=========================================="
+
+# ============================================================
+# UART Hello: FPGA書き込み
+# ============================================================
+.PHONY: uart-flash
+uart-flash:
+	@echo "FPGAに書き込み中 (UART)..."
+	openFPGALoader -b $(BOARD) $(UART_FS)
+	@echo "✅ UART 書き込み完了!"
+
+# UART: Cm → SV → FS → FPGA 一括実行
+.PHONY: uart-apply
+uart-apply: uart-build uart-gowin uart-flash
+
 

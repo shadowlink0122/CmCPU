@@ -1,0 +1,21 @@
+// ============================================================
+// Tang 138K Console ピン制約: UART TX + CFG LED
+// ============================================================
+// UART TX: BL616 USB-UART ブリッジ経由
+// LED: CFG LED READY/DONE
+// ============================================================
+// 注意: UART TX ピンはボードのスキーマティクスで確認してください
+// Tang Console 138K では BL616 の UART RX ← FPGA UART TX
+// ============================================================
+
+// UART TX (要確認: ボードのスキーマティクスで正しいピンを設定)
+IO_LOC  "uart_tx" T13;
+IO_PORT "uart_tx" IO_TYPE=LVCMOS33 DRIVE=8;
+
+// READY LED (U12, BANK10)
+IO_LOC  "led_ready" U12;
+IO_PORT "led_ready" IO_TYPE=LVCMOS33 DRIVE=8;
+
+// DONE LED (G11, BANK10)
+IO_LOC  "led_done" G11;
+IO_PORT "led_done" IO_TYPE=LVCMOS33 DRIVE=8;

@@ -1,0 +1,128 @@
+//! platform: sv
+
+// ============================================================
+// UART TX "Hello, FPGA!" 送信回路
+// ============================================================
+// ターゲット: Tang Console 138K (GW5AST-LV138PG484A)
+// クロック: Gowin 内蔵 OSC 52.5MHz
+// ボーレート: 115200 bps, 8N1
+// ============================================================
+
+// 定数定義
+const uint CLK_FREQ = 52500000;          // 内蔵OSCクロック (Hz)
+const uint CLKS_PER_BIT = 456;           // 52500000 / 115200 ≈ 455.7
+const uint MSG_LEN = 14;                  // "Hello, FPGA!\r\n"
+const uint STARTUP_DELAY = 5250000;       // 起動後0.1秒待機
+
+// Gowin 内蔵オシレータ
+extern struct OSC {
+    #[sv::param] int FREQ_DIV = 4;
+    #[output] bool OSCOUT = clk;
+}
+
+// 出力ポート
+#[output] bool uart_tx = true;     // UART TX (アイドル = HIGH)
+#[output] bool led_ready = false;  // 送信中 LED
+#[output] bool led_done = false;   // 送信完了 LED
+
+// 内部信号
+bool clk = false;
+OSC osc_inst;
+
+// ステートマシン変数
+uint phase = 0;
+uint clk_cnt = 0;
+uint bit_idx = 0;
+uint tx_data = 0;
+uint tx_bit = 0;
+uint msg_idx = 0;
+uint delay_cnt = 0;
+
+// メインプロセス: 全ロジックを1つの always_ff で駆動
+void process(posedge clk) {
+    if (phase == 0) {
+        // 起動待機
+        uart_tx = true;
+        delay_cnt = delay_cnt + 1;
+        if (delay_cnt == STARTUP_DELAY) {
+            phase = 1;
+            led_ready = true;
+        }
+    }
+    if (phase == 1) {
+        // LOAD: メッセージ ROM から tx_data にロード
+        uart_tx = true;
+        if (msg_idx == 0) { tx_data = 72; }
+        if (msg_idx == 1) { tx_data = 101; }
+        if (msg_idx == 2) { tx_data = 108; }
+        if (msg_idx == 3) { tx_data = 108; }
+        if (msg_idx == 4) { tx_data = 111; }
+        if (msg_idx == 5) { tx_data = 44; }
+        if (msg_idx == 6) { tx_data = 32; }
+        if (msg_idx == 7) { tx_data = 70; }
+        if (msg_idx == 8) { tx_data = 80; }
+        if (msg_idx == 9) { tx_data = 71; }
+        if (msg_idx == 10) { tx_data = 65; }
+        if (msg_idx == 11) { tx_data = 33; }
+        if (msg_idx == 12) { tx_data = 13; }
+        if (msg_idx == 13) { tx_data = 10; }
+        phase = 2;
+        clk_cnt = 0;
+    }
+    if (phase == 2) {
+        // START ビット
+        uart_tx = false;
+        if (clk_cnt == CLKS_PER_BIT - 1) {
+            clk_cnt = 0;
+            phase = 3;
+            bit_idx = 0;
+        } else {
+            clk_cnt = clk_cnt + 1;
+        }
+    }
+    if (phase == 3) {
+        // DATA ビット: マスク & 除算でビット抽出
+        if (bit_idx == 0) { tx_bit = tx_data & 1; }
+        if (bit_idx == 1) { tx_bit = (tx_data & 2) / 2; }
+        if (bit_idx == 2) { tx_bit = (tx_data & 4) / 4; }
+        if (bit_idx == 3) { tx_bit = (tx_data & 8) / 8; }
+        if (bit_idx == 4) { tx_bit = (tx_data & 16) / 16; }
+        if (bit_idx == 5) { tx_bit = (tx_data & 32) / 32; }
+        if (bit_idx == 6) { tx_bit = (tx_data & 64) / 64; }
+        if (bit_idx == 7) { tx_bit = (tx_data & 128) / 128; }
+
+        if (tx_bit == 1) { uart_tx = true; } else { uart_tx = false; }
+
+        if (clk_cnt == CLKS_PER_BIT - 1) {
+            clk_cnt = 0;
+            if (bit_idx == 7) {
+                phase = 4;
+            } else {
+                bit_idx = bit_idx + 1;
+            }
+        } else {
+            clk_cnt = clk_cnt + 1;
+        }
+    }
+    if (phase == 4) {
+        // STOP ビット
+        uart_tx = true;
+        if (clk_cnt == CLKS_PER_BIT - 1) {
+            clk_cnt = 0;
+            msg_idx = msg_idx + 1;
+            if (msg_idx == MSG_LEN) {
+                phase = 5;
+                led_done = true;
+                led_ready = false;
+            } else {
+                phase = 1;
+            }
+        } else {
+            clk_cnt = clk_cnt + 1;
+        }
+    }
+    if (phase == 5) {
+        // 完了: アイドル
+        uart_tx = true;
+    }
+}
