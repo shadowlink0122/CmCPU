@@ -242,4 +242,44 @@ uart-flash:
 .PHONY: uart-apply
 uart-apply: uart-build uart-gowin uart-flash
 
+# ============================================================
+# Button UART: 変数定義
+# ============================================================
+BTN_SRC := $(SRC_DIR)/uart/uart_button.cm
+BTN_SV := $(BUILD_DIR)/uart_button.sv
+BTN_TCL := $(SRC_DIR)/uart/gowin_button.tcl
+BTN_FS := $(BUILD_DIR)/uart_button/impl/pnr/uart_button.fs
+
+# ============================================================
+# Button UART: Cm → SV + リントチェック
+# ============================================================
+.PHONY: btn-build
+btn-build: $(BTN_SV)
+	@echo "Verilator リントチェック中..."
+	verilator --lint-only --timing -Wno-fatal -Wno-MODMISSING $(BTN_SV)
+	@echo ""
+	@echo "=========================================="
+	@echo "✅ Button UART ビルド完了! $(BTN_SV)"
+	@echo "=========================================="
+
+$(BTN_SV): $(BTN_SRC)
+	@echo "Cm → SystemVerilog 変換中 (Button)..."
+	@mkdir -p $(BUILD_DIR)
+	$(CM) compile --target=sv $(BTN_SRC) -o $(BTN_SV)
+	@echo "✅ SV生成完了: $(BTN_SV)"
+
+.PHONY: btn-gowin
+btn-gowin: $(BTN_SV)
+	@echo "Gowin EDA で合成中 (Button)..."
+	DYLD_LIBRARY_PATH=$(GW_LIB) DYLD_FRAMEWORK_PATH=$(GW_LIB) $(GW_SH) $(BTN_TCL)
+	@echo "✅ Gowin EDA Button ビルド完了!"
+
+.PHONY: btn-flash
+btn-flash:
+	@echo "FPGAに書き込み中 (Button)..."
+	openFPGALoader -b $(BOARD) $(BTN_FS)
+	@echo "✅ Button 書き込み完了!"
+
+.PHONY: btn-apply
+btn-apply: btn-build btn-gowin btn-flash
 

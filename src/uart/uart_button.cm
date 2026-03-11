@@ -1,0 +1,182 @@
+//! platform: sv
+
+// ============================================================
+// ボタン入力 + UART TX 送信回路
+// ============================================================
+// ターゲット: Tang Console 138K (GW5AST-LV138PG484A)
+// クロック: Gowin 内蔵 OSC 52.5MHz
+// ボーレート: 115200 bps, 8N1
+//
+// 動作:
+//   - ボタン (EX_KEY0) 押下ごとに "Pressed: N\r\n" を UART 送信
+//   - N はプレス回数 (0-9 ループ)
+//   - LED: 送信中に led_ready 点灯, 押下検出で led_done 点灯
+//   - 約20msのデバウンス処理
+// ============================================================
+
+// 定数定義
+const uint CLK_FREQ = 52500000;          // クロック周波数 (Hz)
+const uint CLKS_PER_BIT = 456;           // 52500000 / 115200 ≈ 455.7
+const uint DEBOUNCE_LIMIT = 1050000;     // 20ms = 52500000 * 0.02
+const uint MSG_LEN = 12;                  // "Pressed: N\r\n"
+
+// Gowin 内蔵オシレータ
+extern struct OSC {
+    #[sv::param] int FREQ_DIV = 4;
+    #[output] bool OSCOUT = clk;
+}
+
+// 入出力ポート
+#[input] bool btn0 = true;         // EX_KEY0 (アクティブ LOW)
+#[output] bool uart_tx = true;     // UART TX
+#[output] bool led_ready = false;  // 送信中 LED (Red)
+#[output] bool led_done = false;   // ボタン検出 LED (Blue)
+
+// 内部信号
+bool clk = false;
+OSC osc_inst;
+
+// デバウンス
+uint db_cnt = 0;
+uint btn_stable = 1;     // 安定化後のボタン状態 (1=離した, 0=押した)
+uint btn_prev = 1;       // 前回の安定状態
+
+// UART TX ステートマシン
+// phase: 0=待機, 1=LOAD, 2=START, 3=DATA, 4=STOP
+uint phase = 0;
+uint clk_cnt = 0;
+uint bit_idx = 0;
+uint tx_data = 0;
+uint tx_bit = 0;
+
+// メッセージ送信
+uint msg_idx = 0;
+uint press_count = 0;    // 0-9 ループ
+uint digit = 48;         // ASCII '0'
+
+// メインプロセス: デバウンス + エッジ検出 + UART TX
+void process(posedge clk) {
+    // ==== デバウンス処理 ====
+    if (phase == 0) {
+        if (btn0 == false) {
+            // ボタン押下中
+            if (btn_stable == 1) {
+                db_cnt = db_cnt + 1;
+                if (db_cnt == DEBOUNCE_LIMIT) {
+                    btn_stable = 0;
+                    db_cnt = 0;
+                }
+            } else {
+                db_cnt = 0;
+            }
+        } else {
+            // ボタン離し中
+            if (btn_stable == 0) {
+                db_cnt = db_cnt + 1;
+                if (db_cnt == DEBOUNCE_LIMIT) {
+                    btn_stable = 1;
+                    db_cnt = 0;
+                }
+            } else {
+                db_cnt = 0;
+            }
+        }
+    }
+
+    // ==== 押下エッジ検出 → 送信開始 ====
+    if (phase == 0) {
+        uart_tx = true;
+        if (btn_prev == 1) {
+            if (btn_stable == 0) {
+                // 立ち下がりエッジ → 送信開始
+                digit = 48 + press_count;
+                phase = 1;
+                msg_idx = 0;
+                led_ready = true;
+                led_done = true;
+            }
+        }
+        btn_prev = btn_stable;
+    }
+
+    // ==== LOAD: メッセージ ROM ====
+    if (phase == 1) {
+        // "Pressed: N\r\n" (12文字)
+        if (msg_idx == 0) { tx_data = 80; }      // 'P'
+        if (msg_idx == 1) { tx_data = 114; }     // 'r'
+        if (msg_idx == 2) { tx_data = 101; }     // 'e'
+        if (msg_idx == 3) { tx_data = 115; }     // 's'
+        if (msg_idx == 4) { tx_data = 115; }     // 's'
+        if (msg_idx == 5) { tx_data = 101; }     // 'e'
+        if (msg_idx == 6) { tx_data = 100; }     // 'd'
+        if (msg_idx == 7) { tx_data = 58; }      // ':'
+        if (msg_idx == 8) { tx_data = 32; }      // ' '
+        if (msg_idx == 9) { tx_data = digit; }   // '0'-'9'
+        if (msg_idx == 10) { tx_data = 13; }     // '\r'
+        if (msg_idx == 11) { tx_data = 10; }     // '\n'
+        phase = 2;
+        clk_cnt = 0;
+    }
+
+    // ==== START ビット ====
+    if (phase == 2) {
+        uart_tx = false;
+        if (clk_cnt == CLKS_PER_BIT - 1) {
+            clk_cnt = 0;
+            phase = 3;
+            bit_idx = 0;
+        } else {
+            clk_cnt = clk_cnt + 1;
+        }
+    }
+
+    // ==== DATA ビット (LSB first) ====
+    if (phase == 3) {
+        if (bit_idx == 0) { tx_bit = tx_data & 1; }
+        if (bit_idx == 1) { tx_bit = (tx_data & 2) / 2; }
+        if (bit_idx == 2) { tx_bit = (tx_data & 4) / 4; }
+        if (bit_idx == 3) { tx_bit = (tx_data & 8) / 8; }
+        if (bit_idx == 4) { tx_bit = (tx_data & 16) / 16; }
+        if (bit_idx == 5) { tx_bit = (tx_data & 32) / 32; }
+        if (bit_idx == 6) { tx_bit = (tx_data & 64) / 64; }
+        if (bit_idx == 7) { tx_bit = (tx_data & 128) / 128; }
+
+        if (tx_bit == 1) { uart_tx = true; } else { uart_tx = false; }
+
+        if (clk_cnt == CLKS_PER_BIT - 1) {
+            clk_cnt = 0;
+            if (bit_idx == 7) {
+                phase = 4;
+            } else {
+                bit_idx = bit_idx + 1;
+            }
+        } else {
+            clk_cnt = clk_cnt + 1;
+        }
+    }
+
+    // ==== STOP ビット ====
+    if (phase == 4) {
+        uart_tx = true;
+        if (clk_cnt == CLKS_PER_BIT - 1) {
+            clk_cnt = 0;
+            msg_idx = msg_idx + 1;
+            if (msg_idx == MSG_LEN) {
+                // 全文字送信完了 → IDLE に戻る
+                phase = 0;
+                led_ready = false;
+                led_done = false;
+                if (press_count == 9) {
+                    press_count = 0;
+                } else {
+                    press_count = press_count + 1;
+                }
+            } else {
+                // 次の文字へ
+                phase = 1;
+            }
+        } else {
+            clk_cnt = clk_cnt + 1;
+        }
+    }
+}

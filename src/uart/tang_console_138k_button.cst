@@ -1,0 +1,19 @@
+// ============================================================
+// Tang 138K Console ピン制約: UART TX + ボタン + CFG LED
+// ============================================================
+
+// UART TX (U15, Bank 5) — BL616 USB-UART → PC
+IO_LOC  "uart_tx" U15;
+IO_PORT "uart_tx" IO_TYPE=LVCMOS33 DRIVE=8;
+
+// ボタン EX_KEY0 (AA13, Bank 5) — アクティブ LOW
+IO_LOC  "btn0" AA13;
+IO_PORT "btn0" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+
+// READY LED (U12, Bank 10) — LED1 Red
+IO_LOC  "led_ready" U12;
+IO_PORT "led_ready" IO_TYPE=LVCMOS33 DRIVE=8;
+
+// DONE LED (G11, Bank 10) — LED1 Blue
+IO_LOC  "led_done" G11;
+IO_PORT "led_done" IO_TYPE=LVCMOS33 DRIVE=8;
