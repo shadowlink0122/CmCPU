@@ -109,35 +109,135 @@ extern struct rPLL {
 
 rPLL pll_inst;
 
-// OSER10: 10:1 DDR シリアライザ (×4: R, G, B, CLK)
-extern struct OSER10 {
+// OSER10: 10:1 DDR シリアライザ
+// Gowin プリミティブ: 出力ポート名は Q (Q0 ではない)
+// 各チャネルで tmds_r/g/b の 10bit を D0-D9 に接続
+// CLK チャネルは 5b'10101 パターン (DDR クロック再生)
+
+// --- OSER10 Red チャネル ---
+extern struct OSER10_R {
+    #[sv::module_name] const str _ = "OSER10";
     #[sv::param] int GSREN = 0;
     #[sv::param] int LSREN = 1;
     #[input]  bool PCLK  = pixel_clk;
     #[input]  bool FCLK  = serial_clk;
     #[input]  bool RESET = false;
-    #[input]  bool D0    = false;
-    #[input]  bool D1    = false;
-    #[input]  bool D2    = false;
-    #[input]  bool D3    = false;
-    #[input]  bool D4    = false;
+    #[input]  bool D0    = tmds_r[0];
+    #[input]  bool D1    = tmds_r[1];
+    #[input]  bool D2    = tmds_r[2];
+    #[input]  bool D3    = tmds_r[3];
+    #[input]  bool D4    = tmds_r[4];
+    #[input]  bool D5    = tmds_r[5];
+    #[input]  bool D6    = tmds_r[6];
+    #[input]  bool D7    = tmds_r[7];
+    #[input]  bool D8    = tmds_r[8];
+    #[input]  bool D9    = tmds_r[9];
+    #[output] bool Q     = ser_d2;
+}
+OSER10_R oser_r;
+
+// --- OSER10 Green チャネル ---
+extern struct OSER10_G {
+    #[sv::module_name] const str _ = "OSER10";
+    #[sv::param] int GSREN = 0;
+    #[sv::param] int LSREN = 1;
+    #[input]  bool PCLK  = pixel_clk;
+    #[input]  bool FCLK  = serial_clk;
+    #[input]  bool RESET = false;
+    #[input]  bool D0    = tmds_g[0];
+    #[input]  bool D1    = tmds_g[1];
+    #[input]  bool D2    = tmds_g[2];
+    #[input]  bool D3    = tmds_g[3];
+    #[input]  bool D4    = tmds_g[4];
+    #[input]  bool D5    = tmds_g[5];
+    #[input]  bool D6    = tmds_g[6];
+    #[input]  bool D7    = tmds_g[7];
+    #[input]  bool D8    = tmds_g[8];
+    #[input]  bool D9    = tmds_g[9];
+    #[output] bool Q     = ser_d1;
+}
+OSER10_G oser_g;
+
+// --- OSER10 Blue チャネル ---
+extern struct OSER10_B {
+    #[sv::module_name] const str _ = "OSER10";
+    #[sv::param] int GSREN = 0;
+    #[sv::param] int LSREN = 1;
+    #[input]  bool PCLK  = pixel_clk;
+    #[input]  bool FCLK  = serial_clk;
+    #[input]  bool RESET = false;
+    #[input]  bool D0    = tmds_b[0];
+    #[input]  bool D1    = tmds_b[1];
+    #[input]  bool D2    = tmds_b[2];
+    #[input]  bool D3    = tmds_b[3];
+    #[input]  bool D4    = tmds_b[4];
+    #[input]  bool D5    = tmds_b[5];
+    #[input]  bool D6    = tmds_b[6];
+    #[input]  bool D7    = tmds_b[7];
+    #[input]  bool D8    = tmds_b[8];
+    #[input]  bool D9    = tmds_b[9];
+    #[output] bool Q     = ser_d0;
+}
+OSER10_B oser_b;
+
+// --- OSER10 Clock チャネル ---
+// 10b'0000011111 = DDR クロック (pixel_clk 再生)
+extern struct OSER10_CK {
+    #[sv::module_name] const str _ = "OSER10";
+    #[sv::param] int GSREN = 0;
+    #[sv::param] int LSREN = 1;
+    #[input]  bool PCLK  = pixel_clk;
+    #[input]  bool FCLK  = serial_clk;
+    #[input]  bool RESET = false;
+    #[input]  bool D0    = true;
+    #[input]  bool D1    = true;
+    #[input]  bool D2    = true;
+    #[input]  bool D3    = true;
+    #[input]  bool D4    = true;
     #[input]  bool D5    = false;
     #[input]  bool D6    = false;
     #[input]  bool D7    = false;
     #[input]  bool D8    = false;
     #[input]  bool D9    = false;
-    #[output] bool Q0    = false;
+    #[output] bool Q     = ser_ck;
 }
+OSER10_CK oser_ck;
 
-// TLVDS_OBUF: LVDS 差動出力バッファ
-extern struct TLVDS_OBUF {
-    #[input]  bool I  = false;
-    #[output] bool O  = false;
-    #[output] bool OB = false;
+// --- TLVDS_OBUF: LVDS 差動出力バッファ ---
+// 各チャネルのシリアルデータを差動信号に変換
+
+extern struct TLVDS_D2 {
+    #[sv::module_name] const str _ = "TLVDS_OBUF";
+    #[input]  bool I  = ser_d2;
+    #[output] bool O  = tmds_d2_p;
+    #[output] bool OB = tmds_d2_n;
 }
+TLVDS_D2 tlvds_d2;
 
-// ============================================================
-// セクション 5: ビデオタイミングジェネレータ
+extern struct TLVDS_D1 {
+    #[sv::module_name] const str _ = "TLVDS_OBUF";
+    #[input]  bool I  = ser_d1;
+    #[output] bool O  = tmds_d1_p;
+    #[output] bool OB = tmds_d1_n;
+}
+TLVDS_D1 tlvds_d1;
+
+extern struct TLVDS_D0 {
+    #[sv::module_name] const str _ = "TLVDS_OBUF";
+    #[input]  bool I  = ser_d0;
+    #[output] bool O  = tmds_d0_p;
+    #[output] bool OB = tmds_d0_n;
+}
+TLVDS_D0 tlvds_d0;
+
+extern struct TLVDS_CK {
+    #[sv::module_name] const str _ = "TLVDS_OBUF";
+    #[input]  bool I  = ser_ck;
+    #[output] bool O  = tmds_clk_p;
+    #[output] bool OB = tmds_clk_n;
+}
+TLVDS_CK tlvds_ck;
+
 // ============================================================
 
 async func video_timing(posedge pixel_clk) {
@@ -369,21 +469,4 @@ async func tmds_encode(posedge pixel_clk) {
     led = pll_lock;
 }
 
-// ============================================================
-// セクション 8: OSER10 + TLVDS_OBUF インスタンス化
-// ============================================================
-// 注: extern struct のインスタンス化は Cm SV バックエンドの
-// 既存パターンに従う。実機ビルドでは手書き SV ラッパーで接続。
-
-// OSER10 × 4 インスタンス (R, G, B, CLK)
-OSER10 oser_r;
-OSER10 oser_g;
-OSER10 oser_b;
-OSER10 oser_ck;
-
-// TLVDS_OBUF × 4 インスタンス
-TLVDS_OBUF tlvds_d2;
-TLVDS_OBUF tlvds_d1;
-TLVDS_OBUF tlvds_d0;
-TLVDS_OBUF tlvds_ck;
 
