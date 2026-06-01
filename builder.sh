@@ -1,13 +1,13 @@
 #!/bin/bash
 # ============================================================
-# apply.sh — Cm → SV → Gowin EDA → FPGA デプロイスクリプト
+# builder.sh — Cm → SV → Gowin EDA → FPGA ビルド&デプロイ
 # ============================================================
 # 使い方:
-#   ./apply.sh hdmi              # src/hdmi/ をビルド&デプロイ
-#   ./apply.sh uart              # src/uart/ をビルド&デプロイ (対話選択)
-#   ./apply.sh uart hello        # src/uart/uart_hello.cm を指定
-#   ./apply.sh blink             # src/blink/ をビルド&デプロイ
-#   ./apply.sh hdmi --build-only # ビルドのみ (FPGAに書き込まない)
+#   ./builder.sh hdmi              # src/hdmi/ をビルド (Cm→SV + リント)
+#   ./builder.sh uart hello        # src/uart/uart_hello.cm を指定
+#   ./builder.sh hdmi --apply      # ビルド + Gowin合成 + FPGA書き込み
+#   ./builder.sh blink --apply     # blink を一括デプロイ
+#   ./builder.sh hdmi --apply --sram  # SRAM 書き込みモード
 # ============================================================
 
 set -euo pipefail
@@ -44,16 +44,16 @@ warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
 error() { echo -e "${RED}[ERROR]${NC} $*" >&2; }
 
 usage() {
-    echo "使い方: ./apply.sh <ディレクトリ> [プロジェクト名] [オプション]"
+    echo "使い方: ./builder.sh <ディレクトリ> [プロジェクト名] [オプション]"
     echo ""
     echo "引数:"
     echo "  <ディレクトリ>     src/ 以下のディレクトリ名 (blink, uart, hdmi)"
     echo "  [プロジェクト名]   ディレクトリ内に複数 .cm がある場合に指定"
     echo ""
     echo "オプション:"
-    echo "  --build-only       ビルドのみ (FPGA 書き込みスキップ)"
+    echo "  --apply            Gowin EDA 合成 + FPGA 書き込みまで実行"
     echo "  --skip-lint        Verilator リントをスキップ"
-    echo "  --sram             Flash 書き込みの代わりに SRAM 書き込み"
+    echo "  --sram             Flash の代わりに SRAM 書き込み (--apply と併用)"
     echo ""
     echo "利用可能なプロジェクト:"
     for dir in "${SRC_DIR}"/*/; do
@@ -249,7 +249,7 @@ step_flash() {
 # ============================================================
 
 # オプション解析
-BUILD_ONLY=false
+APPLY_MODE=false
 SKIP_LINT=false
 SRAM_MODE=false
 TARGET_DIR=""
@@ -257,7 +257,7 @@ PROJECT_HINT=""
 
 for arg in "$@"; do
     case "$arg" in
-        --build-only) BUILD_ONLY=true ;;
+        --apply)      APPLY_MODE=true ;;
         --skip-lint)  SKIP_LINT=true ;;
         --sram)       SRAM_MODE=true ;;
         --help|-h)    usage ;;
@@ -283,7 +283,7 @@ fi
 
 echo ""
 echo "=========================================="
-echo " CmCPU デプロイ: src/${TARGET_DIR}"
+echo " CmCPU ビルド: src/${TARGET_DIR}"
 echo "=========================================="
 echo ""
 
@@ -297,14 +297,16 @@ echo ""
 step_lint
 echo ""
 
-if [ "$BUILD_ONLY" = true ]; then
+if [ "$APPLY_MODE" = false ]; then
+    echo "=========================================="
+    ok "ビルド完了! src/${TARGET_DIR}/${PROJECT_NAME}"
+    echo "=========================================="
     echo ""
-    echo "=========================================="
-    ok "ビルド完了! (--build-only モード)"
-    echo "=========================================="
+    info "FPGA にデプロイするには --apply を追加してください"
     exit 0
 fi
 
+# --apply: Gowin 合成 + FPGA 書き込み
 step_gowin
 echo ""
 step_flash
