@@ -13,9 +13,9 @@ set device_pn "GW5AST-LV138PG484AC1/I0"
 set device_version "C"
 
 # ファイルパス（絶対パスで指定）
-set sv_file "${project_root}/build/blink.sv"
+set sv_file "${project_root}/build/blink/blink.sv"
 set cst_file "${project_root}/src/blink/tang_console_138k.cst"
-set output_dir "${project_root}/build"
+set output_dir "${project_root}/build/blink"
 set project_name "blink"
 
 # プロジェクト作成
@@ -39,4 +39,4 @@ set_option -use_done_as_gpio 1
 # 合成 + 配置配線 + ビットストリーム生成を一括実行
 run all
 
-puts "✅ ビルド完了! ${output_dir}/${project_name}.fs"
+puts "✅ ビルド完了! ${output_dir}/${project_name}/impl/pnr/${project_name}.fs"

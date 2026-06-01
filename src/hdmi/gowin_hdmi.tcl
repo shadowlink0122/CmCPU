@@ -58,5 +58,5 @@ if { $run_synthesis_only } {
 } else {
     puts "Gowin Synthesis + P&R + Bitstream 開始..."
     run all
-    puts "✅ HDMI ビルド完了! ${output_dir}/${project_name}.fs"
+    puts "✅ HDMI ビルド完了! ${output_dir}/${project_name}/impl/pnr/${project_name}.fs"
 }
