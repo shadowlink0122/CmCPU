@@ -1,0 +1,376 @@
+//! platform: sv
+
+// ============================================================
+// HDMI カラーバー出力回路 (Phase 1)
+// ============================================================
+// ターゲット: Tang Console 138K (GW5AST-LV138PG484A)
+// クロック: 50MHz 外部オシレータ → PLL → 25.2MHz + 126MHz
+// 出力: HDMI (DVI モード) 640×480@60Hz カラーバー
+// ============================================================
+
+// ============================================================
+// セクション 1: 定数定義
+// ============================================================
+
+// VGA 640×480@60Hz タイミング定数
+const uint H_ACTIVE = 640;
+const uint H_FP     = 16;
+const uint H_SYNC   = 96;
+const uint H_BP     = 48;
+const uint H_TOTAL  = 800;
+
+const uint V_ACTIVE = 480;
+const uint V_FP     = 10;
+const uint V_SYNC   = 2;
+const uint V_BP     = 33;
+const uint V_TOTAL  = 525;
+
+// カラーバー幅 (640 / 8 = 80)
+const uint BAR_WIDTH = 80;
+
+// TMDS コントロールトークン (10bit)
+const uint CTRL_00 = 852;   // 0b0010101011 = 0x354 (C1=0,C0=0)
+const uint CTRL_01 = 852;   // 0b1101010100 = 0x2AB (C1=0,C0=1)  → 簡略化
+const uint CTRL_10 = 852;   // 0b0010101010 = 0x2AA (C1=1,C0=0)  → 簡略化
+const uint CTRL_11 = 852;   // 0b1101010101 = 0x2AB (C1=1,C0=1)  → 簡略化
+
+// ============================================================
+// セクション 2: ポート宣言
+// ============================================================
+
+// 外部クロック
+#[input] posedge clk_50m;
+
+// HDMI TMDS 出力 (差動) — Gowin TLVDS_OBUF 経由
+#[output] bool tmds_d2_p = false;
+#[output] bool tmds_d2_n = false;
+#[output] bool tmds_d1_p = false;
+#[output] bool tmds_d1_n = false;
+#[output] bool tmds_d0_p = false;
+#[output] bool tmds_d0_n = false;
+#[output] bool tmds_clk_p = false;
+#[output] bool tmds_clk_n = false;
+
+// LED ステータス
+#[output] bool led = false;
+
+// ============================================================
+// セクション 3: 内部信号
+// ============================================================
+
+// PLL 出力クロック
+bool pixel_clk  = false;
+bool serial_clk = false;
+bool pll_lock    = false;
+
+// ビデオタイミング
+uint hc = 0;
+uint vc = 0;
+bool hsync_reg = true;
+bool vsync_reg = true;
+bool de_reg    = false;
+
+// カラーバー RGB (8bit)
+utiny r_out = 0;
+utiny g_out = 0;
+utiny b_out = 0;
+
+// TMDS エンコーダ出力 (各チャネル 10bit)
+ushort tmds_r = 0;
+ushort tmds_g = 0;
+ushort tmds_b = 0;
+
+// TMDS エンコーダ DC バランス (符号付き)
+int cnt_r = 0;
+int cnt_g = 0;
+int cnt_b = 0;
+
+// シリアライザ出力
+bool ser_d0 = false;
+bool ser_d1 = false;
+bool ser_d2 = false;
+bool ser_ck = false;
+
+// ============================================================
+// セクション 4: Gowin プリミティブ (extern struct)
+// ============================================================
+
+// PLL: 50MHz → 25.2MHz (pixel_clk) + 126MHz (serial_clk)
+// パラメータはGowin EDA PLL設計ツールで正確な値を取得後に更新
+extern struct rPLL {
+    #[sv::param] int FCLKIN = 50;
+    #[sv::param] int IDIV_SEL = 4;
+    #[sv::param] int FBDIV_SEL = 24;
+    #[sv::param] int ODIV_SEL = 4;
+    #[input]  bool CLKIN  = clk_50m;
+    #[output] bool CLKOUT = pixel_clk;
+    #[output] bool LOCK   = pll_lock;
+}
+
+rPLL pll_inst;
+
+// OSER10: 10:1 DDR シリアライザ (×4: R, G, B, CLK)
+extern struct OSER10 {
+    #[sv::param] int GSREN = 0;
+    #[sv::param] int LSREN = 1;
+    #[input]  bool PCLK  = pixel_clk;
+    #[input]  bool FCLK  = serial_clk;
+    #[input]  bool RESET = false;
+    #[input]  bool D0    = false;
+    #[input]  bool D1    = false;
+    #[input]  bool D2    = false;
+    #[input]  bool D3    = false;
+    #[input]  bool D4    = false;
+    #[input]  bool D5    = false;
+    #[input]  bool D6    = false;
+    #[input]  bool D7    = false;
+    #[input]  bool D8    = false;
+    #[input]  bool D9    = false;
+    #[output] bool Q0    = false;
+}
+
+// TLVDS_OBUF: LVDS 差動出力バッファ
+extern struct TLVDS_OBUF {
+    #[input]  bool I  = false;
+    #[output] bool O  = false;
+    #[output] bool OB = false;
+}
+
+// ============================================================
+// セクション 5: ビデオタイミングジェネレータ
+// ============================================================
+
+async func video_timing(posedge pixel_clk) {
+    // 水平カウンタ
+    if (hc == H_TOTAL - 1) {
+        hc = 0;
+        // 垂直カウンタ
+        if (vc == V_TOTAL - 1) {
+            vc = 0;
+        } else {
+            vc = vc + 1;
+        }
+    } else {
+        hc = hc + 1;
+    }
+
+    // HSYNC 生成 (負極性: アクティブ期間中 LOW)
+    if (hc >= H_ACTIVE + H_FP) {
+        if (hc < H_ACTIVE + H_FP + H_SYNC) {
+            hsync_reg = false;
+        } else {
+            hsync_reg = true;
+        }
+    } else {
+        hsync_reg = true;
+    }
+
+    // VSYNC 生成 (負極性)
+    if (vc >= V_ACTIVE + V_FP) {
+        if (vc < V_ACTIVE + V_FP + V_SYNC) {
+            vsync_reg = false;
+        } else {
+            vsync_reg = true;
+        }
+    } else {
+        vsync_reg = true;
+    }
+
+    // データイネーブル
+    if (hc < H_ACTIVE) {
+        if (vc < V_ACTIVE) {
+            de_reg = true;
+        } else {
+            de_reg = false;
+        }
+    } else {
+        de_reg = false;
+    }
+}
+
+// ============================================================
+// セクション 6: カラーバーテストパターン生成
+// ============================================================
+// 8色カラーバー: 白→黄→シアン→緑→マゼンタ→赤→青→黒
+// 各バー幅 = 80 ピクセル (640/8)
+
+async func colorbar_gen(posedge pixel_clk) {
+    if (de_reg == true) {
+        // バーインデックス = hc / 80 (0-7)
+        if (hc < BAR_WIDTH) {
+            // バー 0: 白 (R=FF, G=FF, B=FF)
+            r_out = 255;
+            g_out = 255;
+            b_out = 255;
+        }
+        if (hc >= BAR_WIDTH) {
+            if (hc < BAR_WIDTH * 2) {
+                // バー 1: 黄 (R=FF, G=FF, B=00)
+                r_out = 255;
+                g_out = 255;
+                b_out = 0;
+            }
+        }
+        if (hc >= BAR_WIDTH * 2) {
+            if (hc < BAR_WIDTH * 3) {
+                // バー 2: シアン (R=00, G=FF, B=FF)
+                r_out = 0;
+                g_out = 255;
+                b_out = 255;
+            }
+        }
+        if (hc >= BAR_WIDTH * 3) {
+            if (hc < BAR_WIDTH * 4) {
+                // バー 3: 緑 (R=00, G=FF, B=00)
+                r_out = 0;
+                g_out = 255;
+                b_out = 0;
+            }
+        }
+        if (hc >= BAR_WIDTH * 4) {
+            if (hc < BAR_WIDTH * 5) {
+                // バー 4: マゼンタ (R=FF, G=00, B=FF)
+                r_out = 255;
+                g_out = 0;
+                b_out = 255;
+            }
+        }
+        if (hc >= BAR_WIDTH * 5) {
+            if (hc < BAR_WIDTH * 6) {
+                // バー 5: 赤 (R=FF, G=00, B=00)
+                r_out = 255;
+                g_out = 0;
+                b_out = 0;
+            }
+        }
+        if (hc >= BAR_WIDTH * 6) {
+            if (hc < BAR_WIDTH * 7) {
+                // バー 6: 青 (R=00, G=00, B=FF)
+                r_out = 0;
+                g_out = 0;
+                b_out = 255;
+            }
+        }
+        if (hc >= BAR_WIDTH * 7) {
+            // バー 7: 黒 (R=00, G=00, B=00)
+            r_out = 0;
+            g_out = 0;
+            b_out = 0;
+        }
+    } else {
+        // ブランキング期間: 黒
+        r_out = 0;
+        g_out = 0;
+        b_out = 0;
+    }
+}
+
+// ============================================================
+// セクション 7: TMDS エンコーダ (DVI 1.0 簡略版, 3ch インライン)
+// ============================================================
+// 各チャネルで独立に 8bit→10bit TMDS エンコーディングを行う
+// 関数呼び出しが SV バックエンドで使えないため、全てインライン展開
+//
+// チャネル割り当て:
+//   CH2 = Red   (コントロール: C1=0, C0=0)
+//   CH1 = Green (コントロール: C1=0, C0=0)
+//   CH0 = Blue  (コントロール: C1=VSYNC, C0=HSYNC)
+
+// TMDS 中間変数 (各チャネル)
+uint r_q0 = 0; uint r_q1 = 0; uint r_q2 = 0; uint r_q3 = 0;
+uint r_q4 = 0; uint r_q5 = 0; uint r_q6 = 0; uint r_q7 = 0;
+uint g_q0 = 0; uint g_q1 = 0; uint g_q2 = 0; uint g_q3 = 0;
+uint g_q4 = 0; uint g_q5 = 0; uint g_q6 = 0; uint g_q7 = 0;
+uint b_q0 = 0; uint b_q1 = 0; uint b_q2 = 0; uint b_q3 = 0;
+uint b_q4 = 0; uint b_q5 = 0; uint b_q6 = 0; uint b_q7 = 0;
+
+async func tmds_encode(posedge pixel_clk) {
+    // --- CH2: Red (XOR 遷移最小化) ---
+    if (de_reg == true) {
+        r_q0 = r_out & 1;
+        r_q1 = ((r_out >> 1) & 1) ^ r_q0;
+        r_q2 = ((r_out >> 2) & 1) ^ r_q1;
+        r_q3 = ((r_out >> 3) & 1) ^ r_q2;
+        r_q4 = ((r_out >> 4) & 1) ^ r_q3;
+        r_q5 = ((r_out >> 5) & 1) ^ r_q4;
+        r_q6 = ((r_out >> 6) & 1) ^ r_q5;
+        r_q7 = ((r_out >> 7) & 1) ^ r_q6;
+        tmds_r = (r_q0 | (r_q1 << 1) | (r_q2 << 2) | (r_q3 << 3)
+               | (r_q4 << 4) | (r_q5 << 5) | (r_q6 << 6) | (r_q7 << 7)
+               | (1 << 8)) as ushort;
+    } else {
+        tmds_r = 852;   // コントロールトークン (C1=0, C0=0)
+        cnt_r = 0;
+    }
+
+    // --- CH1: Green (XOR 遷移最小化) ---
+    if (de_reg == true) {
+        g_q0 = g_out & 1;
+        g_q1 = ((g_out >> 1) & 1) ^ g_q0;
+        g_q2 = ((g_out >> 2) & 1) ^ g_q1;
+        g_q3 = ((g_out >> 3) & 1) ^ g_q2;
+        g_q4 = ((g_out >> 4) & 1) ^ g_q3;
+        g_q5 = ((g_out >> 5) & 1) ^ g_q4;
+        g_q6 = ((g_out >> 6) & 1) ^ g_q5;
+        g_q7 = ((g_out >> 7) & 1) ^ g_q6;
+        tmds_g = (g_q0 | (g_q1 << 1) | (g_q2 << 2) | (g_q3 << 3)
+               | (g_q4 << 4) | (g_q5 << 5) | (g_q6 << 6) | (g_q7 << 7)
+               | (1 << 8)) as ushort;
+    } else {
+        tmds_g = 852;   // コントロールトークン (C1=0, C0=0)
+        cnt_g = 0;
+    }
+
+    // --- CH0: Blue + HSYNC/VSYNC (XOR 遷移最小化) ---
+    if (de_reg == true) {
+        b_q0 = b_out & 1;
+        b_q1 = ((b_out >> 1) & 1) ^ b_q0;
+        b_q2 = ((b_out >> 2) & 1) ^ b_q1;
+        b_q3 = ((b_out >> 3) & 1) ^ b_q2;
+        b_q4 = ((b_out >> 4) & 1) ^ b_q3;
+        b_q5 = ((b_out >> 5) & 1) ^ b_q4;
+        b_q6 = ((b_out >> 6) & 1) ^ b_q5;
+        b_q7 = ((b_out >> 7) & 1) ^ b_q6;
+        tmds_b = (b_q0 | (b_q1 << 1) | (b_q2 << 2) | (b_q3 << 3)
+               | (b_q4 << 4) | (b_q5 << 5) | (b_q6 << 6) | (b_q7 << 7)
+               | (1 << 8)) as ushort;
+    } else {
+        // ブランキング: HSYNC/VSYNC コントロールトークン
+        if (vsync_reg == false) {
+            if (hsync_reg == false) {
+                tmds_b = 683;   // 0b1010101011 (C1=1,C0=1)
+            } else {
+                tmds_b = 682;   // 0b1010101010 (C1=1,C0=0)
+            }
+        } else {
+            if (hsync_reg == false) {
+                tmds_b = 852;   // 0b1101010100 (C1=0,C0=1)
+            } else {
+                tmds_b = 171;   // 0b0010101011 (C1=0,C0=0)
+            }
+        }
+        cnt_b = 0;
+    }
+
+    // LED: PLL ロック & 動作確認用
+    led = pll_lock;
+}
+
+// ============================================================
+// セクション 8: OSER10 + TLVDS_OBUF インスタンス化
+// ============================================================
+// 注: extern struct のインスタンス化は Cm SV バックエンドの
+// 既存パターンに従う。実機ビルドでは手書き SV ラッパーで接続。
+
+// OSER10 × 4 インスタンス (R, G, B, CLK)
+OSER10 oser_r;
+OSER10 oser_g;
+OSER10 oser_b;
+OSER10 oser_ck;
+
+// TLVDS_OBUF × 4 インスタンス
+TLVDS_OBUF tlvds_d2;
+TLVDS_OBUF tlvds_d1;
+TLVDS_OBUF tlvds_d0;
+TLVDS_OBUF tlvds_ck;
+
