@@ -17,10 +17,10 @@ fi
 
 # --- モジュール名の修正 ---
 # OSER10_R/G/B/CK → OSER10
-sed -i '' 's/OSER10_R #/OSER10 #/g' "$SV_FILE"
-sed -i '' 's/OSER10_G #/OSER10 #/g' "$SV_FILE"
-sed -i '' 's/OSER10_B #/OSER10 #/g' "$SV_FILE"
-sed -i '' 's/OSER10_CK #/OSER10 #/g' "$SV_FILE"
+sed -i '' 's/OSER10_R/OSER10/g' "$SV_FILE"
+sed -i '' 's/OSER10_G/OSER10/g' "$SV_FILE"
+sed -i '' 's/OSER10_B/OSER10/g' "$SV_FILE"
+sed -i '' 's/OSER10_CK/OSER10/g' "$SV_FILE"
 
 # TLVDS_D2/D1/D0/CK → TLVDS_OBUF
 sed -i '' 's/TLVDS_D2 tlvds_d2/TLVDS_OBUF tlvds_d2/g' "$SV_FILE"

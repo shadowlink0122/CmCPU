@@ -236,6 +236,10 @@ step_gowin() {
 # ============================================================
 step_flash() {
     if [ ! -f "$FS_FILE" ]; then
+        if [ -f "${PROJECT_BUILD_DIR}/${PROJECT_NAME}/impl/gwsynthesis/${PROJECT_NAME}.vg" ]; then
+            warn "ビットストリームファイルが見つかりません (合成のみ実行されたため、書き込みをスキップします)"
+            return
+        fi
         error "ビットストリームファイルが見つかりません: ${FS_FILE}"
         error "Gowin EDA の出力パスを確認してください"
         exit 1

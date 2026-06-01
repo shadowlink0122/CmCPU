@@ -29,10 +29,10 @@ const uint V_TOTAL  = 525;
 const uint BAR_WIDTH = 80;
 
 // TMDS コントロールトークン (10bit)
-const uint CTRL_00 = 852;   // 0b0010101011 = 0x354 (C1=0,C0=0)
-const uint CTRL_01 = 852;   // 0b1101010100 = 0x2AB (C1=0,C0=1)  → 簡略化
-const uint CTRL_10 = 852;   // 0b0010101010 = 0x2AA (C1=1,C0=0)  → 簡略化
-const uint CTRL_11 = 852;   // 0b1101010101 = 0x2AB (C1=1,C0=1)  → 簡略化
+const uint CTRL_00 = 852;  // 0b0010101011 = 0x354 (C1=0,C0=0)
+const uint CTRL_01 = 852;  // 0b1101010100 = 0x2AB (C1=0,C0=1)  → 簡略化
+const uint CTRL_10 = 852;  // 0b0010101010 = 0x2AA (C1=1,C0=0)  → 簡略化
+const uint CTRL_11 = 852;  // 0b1101010101 = 0x2AB (C1=1,C0=1)  → 簡略化
 
 // ============================================================
 // セクション 2: ポート宣言
@@ -71,9 +71,9 @@ bool vsync_reg = true;
 bool de_reg    = false;
 
 // カラーバー RGB (8bit)
-utiny r_out = 0;
-utiny g_out = 0;
-utiny b_out = 0;
+ushort r_out = 0;
+ushort g_out = 0;
+ushort b_out = 0;
 
 // TMDS エンコーダ出力 (各チャネル 10bit)
 ushort tmds_r = 0;
@@ -96,18 +96,33 @@ bool ser_ck = false;
 // ============================================================
 
 // PLL: 50MHz → 25.2MHz (pixel_clk) + 126MHz (serial_clk)
-// パラメータはGowin EDA PLL設計ツールで正確な値を取得後に更新
-extern struct rPLL {
+extern struct PLL {
     #[sv::param] int FCLKIN = 50;
-    #[sv::param] int IDIV_SEL = 4;
-    #[sv::param] int FBDIV_SEL = 24;
-    #[sv::param] int ODIV_SEL = 4;
-    #[input]  bool CLKIN  = clk_50m;
-    #[output] bool CLKOUT = pixel_clk;
-    #[output] bool LOCK   = pll_lock;
+    #[sv::param] int IDIV_SEL = 2;
+    #[sv::param] int FBDIV_SEL = 1;
+    #[sv::param] int MDIV_SEL = 30;
+    #[sv::param] int MDIV_FRAC_SEL = 2;
+    #[sv::param] int ODIV0_SEL = 30;
+    #[sv::param] int ODIV1_SEL = 6;
+    #[sv::param] str CLKOUT0_EN = "\"TRUE\"";
+    #[sv::param] str CLKOUT1_EN = "\"TRUE\"";
+    #[sv::param] str CLKFB_SEL = "\"INTERNAL\"";
+
+    #[input]  bool CLKIN   = clk_50m;
+    #[input]  bool CLKFB   = false;
+    #[input]  bool RESET   = false;
+    #[input]  bool PLLPWD  = false;
+    #[input]  bool RESET_I = false;
+    #[input]  bool RESET_O = false;
+    #[input]  bool ENCLK0  = true;
+    #[input]  bool ENCLK1  = true;
+
+    #[output] bool CLKOUT0 = pixel_clk;
+    #[output] bool CLKOUT1 = serial_clk;
+    #[output] bool LOCK    = pll_lock;
 }
 
-rPLL pll_inst;
+PLL pll_inst;
 
 // OSER10: 10:1 DDR シリアライザ
 // Gowin プリミティブ: 出力ポート名は Q (Q0 ではない)
@@ -117,8 +132,6 @@ rPLL pll_inst;
 // --- OSER10 Red チャネル ---
 extern struct OSER10_R {
     #[sv::module_name] const str _ = "OSER10";
-    #[sv::param] int GSREN = 0;
-    #[sv::param] int LSREN = 1;
     #[input]  bool PCLK  = pixel_clk;
     #[input]  bool FCLK  = serial_clk;
     #[input]  bool RESET = false;
@@ -139,8 +152,6 @@ OSER10_R oser_r;
 // --- OSER10 Green チャネル ---
 extern struct OSER10_G {
     #[sv::module_name] const str _ = "OSER10";
-    #[sv::param] int GSREN = 0;
-    #[sv::param] int LSREN = 1;
     #[input]  bool PCLK  = pixel_clk;
     #[input]  bool FCLK  = serial_clk;
     #[input]  bool RESET = false;
@@ -161,8 +172,6 @@ OSER10_G oser_g;
 // --- OSER10 Blue チャネル ---
 extern struct OSER10_B {
     #[sv::module_name] const str _ = "OSER10";
-    #[sv::param] int GSREN = 0;
-    #[sv::param] int LSREN = 1;
     #[input]  bool PCLK  = pixel_clk;
     #[input]  bool FCLK  = serial_clk;
     #[input]  bool RESET = false;
@@ -184,8 +193,6 @@ OSER10_B oser_b;
 // 10b'0000011111 = DDR クロック (pixel_clk 再生)
 extern struct OSER10_CK {
     #[sv::module_name] const str _ = "OSER10";
-    #[sv::param] int GSREN = 0;
-    #[sv::param] int LSREN = 1;
     #[input]  bool PCLK  = pixel_clk;
     #[input]  bool FCLK  = serial_clk;
     #[input]  bool RESET = false;
@@ -299,69 +306,69 @@ async func colorbar_gen(posedge pixel_clk) {
         // バーインデックス = hc / 80 (0-7)
         if (hc < BAR_WIDTH) {
             // バー 0: 白 (R=FF, G=FF, B=FF)
-            r_out = 255;
-            g_out = 255;
-            b_out = 255;
+            r_out = 16'd255;
+            g_out = 16'd255;
+            b_out = 16'd255;
         }
         if (hc >= BAR_WIDTH) {
             if (hc < BAR_WIDTH * 2) {
                 // バー 1: 黄 (R=FF, G=FF, B=00)
-                r_out = 255;
-                g_out = 255;
-                b_out = 0;
+                r_out = 16'd255;
+                g_out = 16'd255;
+                b_out = 16'd0;
             }
         }
         if (hc >= BAR_WIDTH * 2) {
             if (hc < BAR_WIDTH * 3) {
                 // バー 2: シアン (R=00, G=FF, B=FF)
-                r_out = 0;
-                g_out = 255;
-                b_out = 255;
+                r_out = 16'd0;
+                g_out = 16'd255;
+                b_out = 16'd255;
             }
         }
         if (hc >= BAR_WIDTH * 3) {
             if (hc < BAR_WIDTH * 4) {
                 // バー 3: 緑 (R=00, G=FF, B=00)
-                r_out = 0;
-                g_out = 255;
-                b_out = 0;
+                r_out = 16'd0;
+                g_out = 16'd255;
+                b_out = 16'd0;
             }
         }
         if (hc >= BAR_WIDTH * 4) {
             if (hc < BAR_WIDTH * 5) {
                 // バー 4: マゼンタ (R=FF, G=00, B=FF)
-                r_out = 255;
-                g_out = 0;
-                b_out = 255;
+                r_out = 16'd255;
+                g_out = 16'd0;
+                b_out = 16'd255;
             }
         }
         if (hc >= BAR_WIDTH * 5) {
             if (hc < BAR_WIDTH * 6) {
                 // バー 5: 赤 (R=FF, G=00, B=00)
-                r_out = 255;
-                g_out = 0;
-                b_out = 0;
+                r_out = 16'd255;
+                g_out = 16'd0;
+                b_out = 16'd0;
             }
         }
         if (hc >= BAR_WIDTH * 6) {
             if (hc < BAR_WIDTH * 7) {
                 // バー 6: 青 (R=00, G=00, B=FF)
-                r_out = 0;
-                g_out = 0;
-                b_out = 255;
+                r_out = 16'd0;
+                g_out = 16'd0;
+                b_out = 16'd255;
             }
         }
         if (hc >= BAR_WIDTH * 7) {
             // バー 7: 黒 (R=00, G=00, B=00)
-            r_out = 0;
-            g_out = 0;
-            b_out = 0;
+            r_out = 16'd0;
+            g_out = 16'd0;
+            b_out = 16'd0;
         }
     } else {
         // ブランキング期間: 黒
-        r_out = 0;
-        g_out = 0;
-        b_out = 0;
+        r_out = 16'd0;
+        g_out = 16'd0;
+        b_out = 16'd0;
     }
 }
 
@@ -377,96 +384,94 @@ async func colorbar_gen(posedge pixel_clk) {
 //   CH0 = Blue  (コントロール: C1=VSYNC, C0=HSYNC)
 
 // TMDS 中間変数 (各チャネル)
-uint r_q0 = 0; uint r_q1 = 0; uint r_q2 = 0; uint r_q3 = 0;
-uint r_q4 = 0; uint r_q5 = 0; uint r_q6 = 0; uint r_q7 = 0;
-uint g_q0 = 0; uint g_q1 = 0; uint g_q2 = 0; uint g_q3 = 0;
-uint g_q4 = 0; uint g_q5 = 0; uint g_q6 = 0; uint g_q7 = 0;
-uint b_q0 = 0; uint b_q1 = 0; uint b_q2 = 0; uint b_q3 = 0;
-uint b_q4 = 0; uint b_q5 = 0; uint b_q6 = 0; uint b_q7 = 0;
+ushort r_q0 = 0; ushort r_q1 = 0; ushort r_q2 = 0; ushort r_q3 = 0;
+ushort r_q4 = 0; ushort g_q0 = 0; ushort g_q1 = 0; ushort g_q2 = 0;
+ushort g_q3 = 0; ushort g_q4 = 0; ushort g_q5 = 0; ushort g_q6 = 0;
+ushort g_q7 = 0; ushort b_q0 = 0; ushort b_q1 = 0; ushort b_q2 = 0;
+ushort b_q3 = 0; ushort b_q4 = 0; ushort b_q5 = 0; ushort b_q6 = 0;
+ushort b_q7 = 0; ushort r_q5 = 0; ushort r_q6 = 0; ushort r_q7 = 0;
 
 async func tmds_encode(posedge pixel_clk) {
     // --- CH2: Red (XOR 遷移最小化) ---
     if (de_reg == true) {
-        r_q0 = r_out & 1;
-        r_q1 = ((r_out >> 1) & 1) ^ r_q0;
-        r_q2 = ((r_out >> 2) & 1) ^ r_q1;
-        r_q3 = ((r_out >> 3) & 1) ^ r_q2;
-        r_q4 = ((r_out >> 4) & 1) ^ r_q3;
-        r_q5 = ((r_out >> 5) & 1) ^ r_q4;
-        r_q6 = ((r_out >> 6) & 1) ^ r_q5;
-        r_q7 = ((r_out >> 7) & 1) ^ r_q6;
-        tmds_r = (r_q0 | (r_q1 << 1) | (r_q2 << 2) | (r_q3 << 3)
-               | (r_q4 << 4) | (r_q5 << 5) | (r_q6 << 6) | (r_q7 << 7)
-               | (1 << 8)) as ushort;
-    } else {
-        tmds_r = 852;   // コントロールトークン (C1=0, C0=0)
-        cnt_r = 0;
-    }
+        r_q0 = r_out & 16'd1;
+        r_q1 = ((r_out >> 16'd1) & 16'd1) ^ r_q0;
+            r_q2 = ((r_out >> 16'd2) & 16'd1) ^ r_q1;
+                r_q3 = ((r_out >> 16'd3) & 16'd1) ^ r_q2;
+                    r_q4 = ((r_out >> 16'd4) & 16'd1) ^ r_q3;
+                        r_q5 = ((r_out >> 16'd5) & 16'd1) ^ r_q4;
+                            r_q6 = ((r_out >> 16'd6) & 16'd1) ^ r_q5;
+                                r_q7 = ((r_out >> 16'd7) & 16'd1) ^ r_q6;
+                                    tmds_r = r_q0 | (r_q1 << 16'd1) | (r_q2 << 16'd2) | (r_q3 << 16'd3)
+                                        | (r_q4 << 16'd4) | (r_q5 << 16'd5) | (r_q6 << 16'd6) | (r_q7 << 16'd7)
+                                        | (16'd1 << 16'd8);
+                                    } else {
+                                        tmds_r = 16'd852;   // コントロールトークン (C1=0, C0=0)
+                                        cnt_r = 0;
+                                    }
 
-    // --- CH1: Green (XOR 遷移最小化) ---
-    if (de_reg == true) {
-        g_q0 = g_out & 1;
-        g_q1 = ((g_out >> 1) & 1) ^ g_q0;
-        g_q2 = ((g_out >> 2) & 1) ^ g_q1;
-        g_q3 = ((g_out >> 3) & 1) ^ g_q2;
-        g_q4 = ((g_out >> 4) & 1) ^ g_q3;
-        g_q5 = ((g_out >> 5) & 1) ^ g_q4;
-        g_q6 = ((g_out >> 6) & 1) ^ g_q5;
-        g_q7 = ((g_out >> 7) & 1) ^ g_q6;
-        tmds_g = (g_q0 | (g_q1 << 1) | (g_q2 << 2) | (g_q3 << 3)
-               | (g_q4 << 4) | (g_q5 << 5) | (g_q6 << 6) | (g_q7 << 7)
-               | (1 << 8)) as ushort;
-    } else {
-        tmds_g = 852;   // コントロールトークン (C1=0, C0=0)
-        cnt_g = 0;
-    }
+                                    // --- CH1: Green (XOR 遷移最小化) ---
+                                    if (de_reg == true) {
+                                        g_q0 = g_out & 16'd1;
+                                        g_q1 = ((g_out >> 16'd1) & 16'd1) ^ g_q0;
+                                            g_q2 = ((g_out >> 16'd2) & 16'd1) ^ g_q1;
+                                                g_q3 = ((g_out >> 16'd3) & 16'd1) ^ g_q2;
+                                                    g_q4 = ((g_out >> 16'd4) & 16'd1) ^ g_q3;
+                                                        g_q5 = ((g_out >> 16'd5) & 16'd1) ^ g_q4;
+                                                            g_q6 = ((g_out >> 16'd6) & 16'd1) ^ g_q5;
+                                                                g_q7 = ((g_out >> 16'd7) & 16'd1) ^ g_q6;
+                                                                    tmds_g = g_q0 | (g_q1 << 16'd1) | (g_q2 << 16'd2) | (g_q3 << 16'd3)
+                                                                        | (g_q4 << 16'd4) | (g_q5 << 16'd5) | (g_q6 << 16'd6) | (g_q7 << 16'd7)
+                                                                        | (16'd1 << 16'd8);
+                                                                    } else {
+                                                                        tmds_g = 16'd852;   // コントロールトークン (C1=0, C0=0)
+                                                                        cnt_g = 0;
+                                                                    }
 
-    // --- CH0: Blue + HSYNC/VSYNC (XOR 遷移最小化) ---
-    if (de_reg == true) {
-        b_q0 = b_out & 1;
-        b_q1 = ((b_out >> 1) & 1) ^ b_q0;
-        b_q2 = ((b_out >> 2) & 1) ^ b_q1;
-        b_q3 = ((b_out >> 3) & 1) ^ b_q2;
-        b_q4 = ((b_out >> 4) & 1) ^ b_q3;
-        b_q5 = ((b_out >> 5) & 1) ^ b_q4;
-        b_q6 = ((b_out >> 6) & 1) ^ b_q5;
-        b_q7 = ((b_out >> 7) & 1) ^ b_q6;
-        tmds_b = (b_q0 | (b_q1 << 1) | (b_q2 << 2) | (b_q3 << 3)
-               | (b_q4 << 4) | (b_q5 << 5) | (b_q6 << 6) | (b_q7 << 7)
-               | (1 << 8)) as ushort;
-    } else {
-        // ブランキング: HSYNC/VSYNC コントロールトークン (DVI 1.0 仕様)
-        // Blue チャネル: C0 = HSYNC 信号値, C1 = VSYNC 信号値
-        // 負極性: false(LOW)=sync active → C=0, true(HIGH)=inactive → C=1
-        // DVI 1.0 コントロールトークン:
-        //   {C1=0,C0=0} = 1101010100 = 852
-        //   {C1=0,C0=1} = 0010101011 = 171
-        //   {C1=1,C0=0} = 0101010100 = 340
-        //   {C1=1,C0=1} = 1010101011 = 683
-        if (vsync_reg == false) {
-            // VSYNC アクティブ → C1=0
-            if (hsync_reg == false) {
-                // HSYNC アクティブ → C0=0 → {C1=0,C0=0}
-                tmds_b = 852;
-            } else {
-                // HSYNC 非アクティブ → C0=1 → {C1=0,C0=1}
-                tmds_b = 171;
-            }
-        } else {
-            // VSYNC 非アクティブ → C1=1
-            if (hsync_reg == false) {
-                // HSYNC アクティブ → C0=0 → {C1=1,C0=0}
-                tmds_b = 340;
-            } else {
-                // HSYNC 非アクティブ → C0=1 → {C1=1,C0=1}
-                tmds_b = 683;
-            }
-        }
-        cnt_b = 0;
-    }
+                                                                    // --- CH0: Blue + HSYNC/VSYNC (XOR 遷移最小化) ---
+                                                                    if (de_reg == true) {
+                                                                        b_q0 = b_out & 16'd1;
+                                                                        b_q1 = ((b_out >> 16'd1) & 16'd1) ^ b_q0;
+                                                                            b_q2 = ((b_out >> 16'd2) & 16'd1) ^ b_q1;
+                                                                                b_q3 = ((b_out >> 16'd3) & 16'd1) ^ b_q2;
+                                                                                    b_q4 = ((b_out >> 16'd4) & 16'd1) ^ b_q3;
+                                                                                        b_q5 = ((b_out >> 16'd5) & 16'd1) ^ b_q4;
+                                                                                            b_q6 = ((b_out >> 16'd6) & 16'd1) ^ b_q5;
+                                                                                                b_q7 = ((b_out >> 16'd7) & 16'd1) ^ b_q6;
+                                                                                                    tmds_b = b_q0 | (b_q1 << 16'd1) | (b_q2 << 16'd2) | (b_q3 << 16'd3)
+                                                                                                        | (b_q4 << 16'd4) | (b_q5 << 16'd5) | (b_q6 << 16'd6) | (b_q7 << 16'd7)
+                                                                                                        | (16'd1 << 16'd8);
+                                                                                                    } else {
+                                                                                                        // ブランキング: HSYNC/VSYNC コントロールトークン (DVI 1.0 仕様)
+                                                                                                        // Blue チャネル: C0 = HSYNC 信号値, C1 = VSYNC 信号値
+                                                                                                        // 負極性: false(LOW)=sync active → C=0, true(HIGH)=inactive → C=1
+                                                                                                        // DVI 1.0 コントロールトークン:
+                                                                                                        //   {C1=0,C0=0} = 1101010100 = 852
+                                                                                                        //   {C1=0,C0=1} = 0010101011 = 171
+                                                                                                        //   {C1=1,C0=0} = 0101010100 = 340
+                                                                                                        //   {C1=1,C0=1} = 1010101011 = 683
+                                                                                                        if (vsync_reg == false) {
+                                                                                                            // VSYNC アクティブ → C1=0
+                                                                                                            if (hsync_reg == false) {
+                                                                                                                // HSYNC アクティブ → C0=0 → {C1=0,C0=0}
+                                                                                                                tmds_b = 16'd852;
+                                                                                                            } else {
+                                                                                                                // HSYNC 非アクティブ → C0=1 → {C1=0,C0=1}
+                                                                                                                tmds_b = 16'd171;
+                                                                                                            }
+                                                                                                        } else {
+                                                                                                            // VSYNC 非アクティブ → C1=1
+                                                                                                            if (hsync_reg == false) {
+                                                                                                                // HSYNC アクティブ → C0=0 → {C1=1,C0=0}
+                                                                                                                tmds_b = 16'd340;
+                                                                                                            } else {
+                                                                                                                // HSYNC 非アクティブ → C0=1 → {C1=1,C0=1}
+                                                                                                                tmds_b = 16'd683;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        cnt_b = 0;
+                                                                                                    }
 
-    // LED: PLL ロック & 動作確認用
-    led = pll_lock;
-}
-
-
+                                                                                                    // LED: PLL ロック & 動作確認用
+                                                                                                    led = pll_lock;
+                                                                                                }
