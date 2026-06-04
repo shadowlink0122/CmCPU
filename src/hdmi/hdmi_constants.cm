@@ -1,0 +1,27 @@
+// ============================================================
+// HDMI 定数ライブラリ
+// ============================================================
+// VGA タイミング定数、TMDS コントロールトークン、カラーバー定数
+// 他モジュールから import して再利用可能
+
+// VGA 640×480@60Hz タイミング定数
+export const uint H_ACTIVE = 640;
+export const uint H_FP     = 16;
+export const uint H_SYNC   = 96;
+export const uint H_BP     = 48;
+export const uint H_TOTAL  = 800;
+
+export const uint V_ACTIVE = 480;
+export const uint V_FP     = 10;
+export const uint V_SYNC   = 2;
+export const uint V_BP     = 33;
+export const uint V_TOTAL  = 525;
+
+// カラーバー幅 (640 / 8 = 80)
+export const uint BAR_WIDTH = 80;
+
+// TMDS コントロールトークン (10bit, DVI 1.0 仕様)
+export const uint CTRL_00 = 852;  // 0b1101010100 (C1=0,C0=0)
+export const uint CTRL_01 = 171;  // 0b0010101011 (C1=0,C0=1)
+export const uint CTRL_10 = 340;  // 0b0101010100 (C1=1,C0=0)
+export const uint CTRL_11 = 683;  // 0b1010101011 (C1=1,C0=1)

@@ -9,30 +9,10 @@
 // ============================================================
 
 // ============================================================
-// セクション 1: 定数定義
+// セクション 1: 定数インポート
 // ============================================================
 
-// VGA 640×480@60Hz タイミング定数
-const uint H_ACTIVE = 640;
-const uint H_FP     = 16;
-const uint H_SYNC   = 96;
-const uint H_BP     = 48;
-const uint H_TOTAL  = 800;
-
-const uint V_ACTIVE = 480;
-const uint V_FP     = 10;
-const uint V_SYNC   = 2;
-const uint V_BP     = 33;
-const uint V_TOTAL  = 525;
-
-// カラーバー幅 (640 / 8 = 80)
-const uint BAR_WIDTH = 80;
-
-// TMDS コントロールトークン (10bit, DVI 1.0 仕様)
-const uint CTRL_00 = 852;  // 0b1101010100 (C1=0,C0=0)
-const uint CTRL_01 = 171;  // 0b0010101011 (C1=0,C0=1)
-const uint CTRL_10 = 340;  // 0b0101010100 (C1=1,C0=0)
-const uint CTRL_11 = 683;  // 0b1010101011 (C1=1,C0=1)
+import hdmi_constants;
 
 // ============================================================
 // セクション 2: ポート宣言
