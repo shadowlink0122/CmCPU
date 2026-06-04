@@ -200,10 +200,23 @@ step_lint() {
     fi
 
     info "ステップ 2/4: Verilator リントチェック"
-    if ! verilator --lint-only --timing -Wno-fatal -Wno-MODMISSING "$SV_OUT" 2>&1; then
-        warn "Verilator リント警告あり (FATAL なし)"
+
+    # リント実行: -Wno-MODMISSING は Gowin プリミティブ (OSER10, PLL 等) 用
+    local lint_output
+    lint_output=$(verilator --lint-only --timing -Wno-MODMISSING "$SV_OUT" 2>&1) || true
+
+    # 警告・エラーのカウント
+    local warn_count
+    warn_count=$(echo "$lint_output" | grep -c "%Warning\|%Error" || true)
+
+    if [ "$warn_count" -gt 0 ]; then
+        echo "$lint_output"
+        echo ""
+        error "Verilator リント違反: ${warn_count} 件"
+        error "リントをスキップするには --skip-lint を指定してください"
+        exit 1
     fi
-    ok "リントチェック完了"
+    ok "リントチェック完了 (警告 0 件)"
 }
 
 # ============================================================
@@ -224,6 +237,12 @@ step_gowin() {
         exit 1
     fi
 
+    # 古い P&R 出力を削除 (合成のみフォールバック時に誤書き込みを防止)
+    if [ -f "$FS_FILE" ]; then
+        warn "古いビットストリームを削除: ${FS_FILE}"
+        rm -f "$FS_FILE"
+    fi
+
     if ! DYLD_LIBRARY_PATH="$GW_LIB" DYLD_FRAMEWORK_PATH="$GW_LIB" "$GW_SH" "$TCL_FILE"; then
         error "Gowin EDA 合成失敗"
         exit 1
@@ -237,20 +256,27 @@ step_gowin() {
 step_flash() {
     if [ ! -f "$FS_FILE" ]; then
         if [ -f "${PROJECT_BUILD_DIR}/${PROJECT_NAME}/impl/gwsynthesis/${PROJECT_NAME}.vg" ]; then
-            warn "ビットストリームファイルが見つかりません (合成のみ実行されたため、書き込みをスキップします)"
-            return
+            error "ビットストリームファイルが見つかりません (合成のみ実行されたため P&R 未完了)"
+            error "FPG676 パッケージ対応環境で P&R を実行してください"
+        else
+            error "ビットストリームファイルが見つかりません: ${FS_FILE}"
+            error "Gowin EDA の出力パスを確認してください"
         fi
-        error "ビットストリームファイルが見つかりません: ${FS_FILE}"
-        error "Gowin EDA の出力パスを確認してください"
         exit 1
     fi
 
     if [ "$SRAM_MODE" = true ]; then
         info "ステップ 4/4: FPGA SRAM 書き込み"
-        openFPGALoader -b "$BOARD" --sram "$FS_FILE"
+        if ! openFPGALoader -b "$BOARD" --sram "$FS_FILE"; then
+            error "FPGA SRAM 書き込み失敗 (デバイスが接続されているか確認してください)"
+            exit 1
+        fi
     else
         info "ステップ 4/4: FPGA Flash 書き込み"
-        openFPGALoader -b "$BOARD" "$FS_FILE"
+        if ! openFPGALoader -b "$BOARD" "$FS_FILE"; then
+            error "FPGA Flash 書き込み失敗 (デバイスが接続されているか確認してください)"
+            exit 1
+        fi
     fi
     ok "FPGA 書き込み完了!"
 }
