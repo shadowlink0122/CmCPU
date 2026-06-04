@@ -138,6 +138,13 @@ detect_project() {
 
     # プロジェクト名 (拡張子なしのベース名)
     PROJECT_NAME=$(basename "$CM_SRC" .cm)
+    if [ "$PROJECT_NAME" = "main" ]; then
+        if [ "$dir" = "hdmi" ]; then
+            PROJECT_NAME="hdmi_colorbar"
+        else
+            PROJECT_NAME="$dir"
+        fi
+    fi
     info "プロジェクト: ${PROJECT_NAME}"
 
     # ビルド出力ディレクトリ
