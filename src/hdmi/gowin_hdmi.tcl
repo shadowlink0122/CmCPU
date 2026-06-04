@@ -43,7 +43,7 @@ add_file $cst_file
 
 # 合成設定
 set_option -verilog_std sysv2017
-set_option -top_module hdmi_colorbar
+set_option -top_module main
 set_option -output_base_name hdmi_colorbar
 
 # デュアルパーパスピンをGPIOとして使用

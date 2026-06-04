@@ -292,7 +292,7 @@ btn-apply: btn-build btn-gowin btn-flash
 # ============================================================
 # HDMI カラーバー: 変数定義
 # ============================================================
-HDMI_SRC := $(SRC_DIR)/hdmi/hdmi_colorbar.cm
+HDMI_SRC := $(SRC_DIR)/hdmi/main.cm
 HDMI_SV := $(BUILD_DIR)/hdmi/hdmi_colorbar.sv
 HDMI_TCL := $(SRC_DIR)/hdmi/gowin_hdmi.tcl
 HDMI_FS := $(BUILD_DIR)/hdmi/hdmi_colorbar/impl/pnr/hdmi_colorbar.fs

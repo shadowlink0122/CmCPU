@@ -1,4 +1,5 @@
 //! platform: sv
+module hdmi_colorbar;
 
 // ============================================================
 // HDMI カラーバー出力回路 (トップレベルモジュール - 細分化リファクタリング版)
@@ -42,7 +43,7 @@ bool pll_lock    = false;
 // セクション 3: 階層サブモジュールのインポート
 // ============================================================
 
-import hdmi_constants;
+import ./constants/hdmi_constants;
 import ./pll/pll;
 import ./timing/timing;
 import ./pattern/pattern;

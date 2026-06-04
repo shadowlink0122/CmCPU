@@ -1,6 +1,6 @@
 module pattern;
 
-import ../hdmi_constants;
+import ../constants/hdmi_constants;
 import ../timing/timing;
 
 // カラーバー RGB 出力 (各8bit相当)
