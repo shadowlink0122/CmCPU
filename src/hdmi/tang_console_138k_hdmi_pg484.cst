@@ -1,29 +1,31 @@
 // ============================================================
-// Tang Console 138K ピン制約: HDMI TMDS 出力 (PG484フォールバック用ダミーマッピング)
+// Tang Console 138K (PG484) HDMI ピン制約
 // ============================================================
-// ターゲット: GW5AST-LV138PG484AC1/I0 (Bank 3)
+// ターゲット: GW5AST-LV138PG484AC1/I0
+// ソース: Sipeed 公式リポジトリ (TangMega-138K-example)
+//   https://github.com/sipeed/TangMega-138K-example/blob/main/hdmi_colorbar/eda_proj/src/hdmi.cst
+//
+// TLVDS_OBUF プリミティブが RTL に含まれているため、
+// IO_TYPE は指定不要（ツールが自動で差動出力を処理）。
+// 差動ペアは P,N を1行で指定する。
 // ============================================================
 
-// システムクロック (50MHz, Bank 5)
-IO_LOC  "clk_50m" V10;
-IO_PORT "clk_50m" IO_TYPE=LVCMOS33;
+// システムクロック (50MHz)
+IO_LOC  "clk_50m" V22;
+IO_PORT "clk_50m" IO_TYPE=LVCMOS33 PULL_MODE=NONE;
 
-// HDMI Data Channel 2 (Red)
-IO_LOC  "tmds_d2_p" L19;
-IO_PORT "tmds_d2_p" IO_TYPE=LVDS25;
+// HDMI Data Channel 0 (Blue + HSYNC/VSYNC) — 差動ペア P,N
+IO_LOC  "tmds_d0_p" J14,H14;
 
-// HDMI Data Channel 1 (Green)
-IO_LOC  "tmds_d1_p" N20;
-IO_PORT "tmds_d1_p" IO_TYPE=LVDS25;
+// HDMI Data Channel 1 (Green) — 差動ペア P,N
+IO_LOC  "tmds_d1_p" J15,H15;
 
-// HDMI Data Channel 0 (Blue + HSYNC/VSYNC)
-IO_LOC  "tmds_d0_p" K17;
-IO_PORT "tmds_d0_p" IO_TYPE=LVDS25;
+// HDMI Data Channel 2 (Red) — 差動ペア P,N
+IO_LOC  "tmds_d2_p" K17,J17;
 
-// HDMI Clock Channel
-IO_LOC  "tmds_clk_p" K18;
-IO_PORT "tmds_clk_p" IO_TYPE=LVDS25;
+// HDMI Clock Channel — 差動ペア P,N
+IO_LOC  "tmds_clk_p" G15,G16;
 
-// ステータス LED (Bank 10)
+// ステータス LED
 IO_LOC  "led" U12;
 IO_PORT "led" IO_TYPE=LVCMOS33 DRIVE=8;

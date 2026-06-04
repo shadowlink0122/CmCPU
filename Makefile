@@ -62,6 +62,12 @@ help:
 	@echo "  make uart-flash   - FPGAに書き込み (.fs)"
 	@echo "  make uart-apply   - build + gowin + flash 一括実行"
 	@echo ""
+	@echo "HDMI カラーバー:"
+	@echo "  make hdmi-build   - Cm → SV 変換 + ポスト処理"
+	@echo "  make hdmi-gowin   - Gowin EDA フルフロー (SV → FS)"
+	@echo "  make hdmi-flash   - FPGAに書き込み (.fs)"
+	@echo "  make hdmi-apply   - build + gowin + flash 一括実行"
+	@echo ""
 	@echo "共通:"
 	@echo "  make build-cm     - Cmコンパイラ自体をビルド"
 	@echo "  make clean        - ビルド出力をクリーン"
@@ -282,4 +288,59 @@ btn-flash:
 
 .PHONY: btn-apply
 btn-apply: btn-build btn-gowin btn-flash
+
+# ============================================================
+# HDMI カラーバー: 変数定義
+# ============================================================
+HDMI_SRC := $(SRC_DIR)/hdmi/hdmi_colorbar.cm
+HDMI_SV := $(BUILD_DIR)/hdmi/hdmi_colorbar.sv
+HDMI_TCL := $(SRC_DIR)/hdmi/gowin_hdmi.tcl
+HDMI_FS := $(BUILD_DIR)/hdmi/hdmi_colorbar/impl/pnr/hdmi_colorbar.fs
+HDMI_POSTPROCESS := $(SRC_DIR)/hdmi/postprocess_sv.sh
+
+# ============================================================
+# HDMI カラーバー: Cm → SV + ポスト処理
+# ============================================================
+.PHONY: hdmi-build
+hdmi-build: $(HDMI_SV)
+	@echo "ポスト処理中 (Gowin プリミティブ修正)..."
+	bash $(HDMI_POSTPROCESS) $(HDMI_SV)
+	@echo ""
+	@echo "=========================================="
+	@echo "✅ HDMI ビルド完了! $(HDMI_SV)"
+	@echo "=========================================="
+
+$(HDMI_SV): $(HDMI_SRC)
+	@echo "Cm → SystemVerilog 変換中 (HDMI)..."
+	@mkdir -p $(BUILD_DIR)/hdmi
+	$(CM) compile --target=sv $(HDMI_SRC) -o $(HDMI_SV)
+	@echo "✅ SV生成完了: $(HDMI_SV)"
+
+# ============================================================
+# HDMI カラーバー: Gowin EDA フルフロー
+# ============================================================
+.PHONY: hdmi-gowin
+hdmi-gowin: $(HDMI_SV)
+	@echo "ポスト処理中..."
+	bash $(HDMI_POSTPROCESS) $(HDMI_SV)
+	@echo "Gowin EDA で合成・配置配線・ビットストリーム生成中 (HDMI)..."
+	@if [ -f "$(HDMI_FS)" ]; then echo "[WARN] 古いビットストリームを削除: $(HDMI_FS)"; rm -f "$(HDMI_FS)"; fi
+	DYLD_LIBRARY_PATH=$(GW_LIB) DYLD_FRAMEWORK_PATH=$(GW_LIB) $(GW_SH) $(HDMI_TCL)
+	@echo ""
+	@echo "=========================================="
+	@echo "✅ Gowin EDA HDMI ビルド完了! $(HDMI_FS)"
+	@echo "=========================================="
+
+# ============================================================
+# HDMI カラーバー: FPGA書き込み
+# ============================================================
+.PHONY: hdmi-flash
+hdmi-flash:
+	@echo "FPGAに書き込み中 (HDMI)..."
+	eval "$$(/opt/homebrew/bin/brew shellenv)" && openFPGALoader --cable ft2232 -b $(BOARD) $(HDMI_FS)
+	@echo "✅ HDMI 書き込み完了!"
+
+# HDMI: Cm → SV → FS → FPGA 一括実行
+.PHONY: hdmi-apply
+hdmi-apply: hdmi-build hdmi-gowin hdmi-flash
 

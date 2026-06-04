@@ -17,17 +17,19 @@ set cst_file "${project_root}/src/hdmi/tang_console_138k_hdmi.cst"
 set output_dir "${project_root}/build/hdmi"
 set project_name "hdmi_colorbar"
 
+# フォールバックフラグ
+set is_fallback 0
+
 # 一時プロジェクトを作成してデバイスのサポート状況をチェック
 set check_dir "${project_root}/.tmp/device_check"
 file mkdir $check_dir
 
 if { [catch {create_project -name check_dev -dir $check_dir -pn $device_pn -device_version $device_version -force} msg] } {
-    puts "⚠️  GW5AST-LV138FPG676AC2/I1 が見つからないため、GW5AST-LV138PG484AC1/I0 にフォールバックします（PG484用ダミーピンマップでフルビルド）。"
+    puts "⚠️  FPG676 パッケージが未登録のため、PG484 にフォールバックします。"
+    puts "   ピン配置は PG484 用となり、実機 (FPG676/Tang Console 138K) のピンとは異なります。"
     set device_pn "GW5AST-LV138PG484AC1/I0"
     set cst_file "${project_root}/src/hdmi/tang_console_138k_hdmi_pg484.cst"
-    set run_synthesis_only 0
-} else {
-    set run_synthesis_only 0
+    set is_fallback 1
 }
 
 # 本番のプロジェクト作成
@@ -36,10 +38,8 @@ create_project -name $project_name -dir $output_dir -pn $device_pn -device_versi
 # ソースファイルの追加
 add_file $sv_file
 
-# ピン制約ファイルの追加（フルビルド時のみ）
-if { !$run_synthesis_only } {
-    add_file $cst_file
-}
+# ピン制約ファイル追加（PG484 フォールバック時は PG484 用 CST を使用）
+add_file $cst_file
 
 # 合成設定
 set_option -verilog_std sysv2017
@@ -50,12 +50,13 @@ set_option -output_base_name hdmi_colorbar
 set_option -use_ready_as_gpio 1
 set_option -use_done_as_gpio 1
 
-if { $run_synthesis_only } {
-    puts "Gowin Synthesis 開始..."
-    run syn
-    puts "✅ Gowin Synthesis 完了! (PG484フォールバックのためP&Rはスキップしました)"
+# 合成 + P&R + ビットストリーム生成 (PG484 フォールバック時も実行)
+puts "Gowin Synthesis + P&R + Bitstream 開始..."
+run all
+
+if { $is_fallback } {
+    puts "✅ ビルド完了! (PG484 フォールバック: ピン配置は実機と異なります)"
 } else {
-    puts "Gowin Synthesis + P&R + Bitstream 開始..."
-    run all
-    puts "✅ HDMI ビルド完了! ${output_dir}/${project_name}/impl/pnr/${project_name}.fs"
+    puts "✅ ビルド完了! (FPG676: 実機デプロイ可能)"
 }
+puts "ビットストリーム: ${output_dir}/${project_name}/impl/pnr/${project_name}.fs"
