@@ -1,0 +1,81 @@
+module pattern;
+
+import ../hdmi_constants;
+import ../timing/timing;
+
+// カラーバー RGB 出力 (各8bit相当)
+export int r_out = 0;
+export int g_out = 0;
+export int b_out = 0;
+
+// タイミング情報に基づいてピクセルデータを生成するロジック
+export async func colorbar_gen(posedge pixel_clk) {
+    if (de_reg == true) {
+        // バーインデックス = hc / 80 (0-7)
+        if (hc < BAR_WIDTH) {
+            // バー 0: 白 (R=FF, G=FF, B=FF)
+            r_out = 255;
+            g_out = 255;
+            b_out = 255;
+        }
+        if (hc >= BAR_WIDTH) {
+            if (hc < BAR_WIDTH * 2) {
+                // バー 1: 黄 (R=FF, G=FF, B=00)
+                r_out = 255;
+                g_out = 255;
+                b_out = 0;
+            }
+        }
+        if (hc >= BAR_WIDTH * 2) {
+            if (hc < BAR_WIDTH * 3) {
+                // バー 2: シアン (R=00, G=FF, B=FF)
+                r_out = 0;
+                g_out = 255;
+                b_out = 255;
+            }
+        }
+        if (hc >= BAR_WIDTH * 3) {
+            if (hc < BAR_WIDTH * 4) {
+                // バー 3: 緑 (R=00, G=FF, B=00)
+                r_out = 0;
+                g_out = 255;
+                b_out = 0;
+            }
+        }
+        if (hc >= BAR_WIDTH * 4) {
+            if (hc < BAR_WIDTH * 5) {
+                // バー 4: マゼンタ (R=FF, G=00, B=FF)
+                r_out = 255;
+                g_out = 0;
+                b_out = 255;
+            }
+        }
+        if (hc >= BAR_WIDTH * 5) {
+            if (hc < BAR_WIDTH * 6) {
+                // バー 5: 赤 (R=FF, G=00, B=00)
+                r_out = 255;
+                g_out = 0;
+                b_out = 0;
+            }
+        }
+        if (hc >= BAR_WIDTH * 6) {
+            if (hc < BAR_WIDTH * 7) {
+                // バー 6: 青 (R=00, G=00, B=FF)
+                r_out = 0;
+                g_out = 0;
+                b_out = 255;
+            }
+        }
+        if (hc >= BAR_WIDTH * 7) {
+            // バー 7: 黒 (R=00, G=00, B=00)
+            r_out = 0;
+            g_out = 0;
+            b_out = 0;
+        }
+    } else {
+        // ブランキング期間: 黒
+        r_out = 0;
+        g_out = 0;
+        b_out = 0;
+    }
+}

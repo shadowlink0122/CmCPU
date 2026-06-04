@@ -1,0 +1,85 @@
+module oser;
+
+import ../encoder/encoder;
+
+// シリアライザ出力信号
+export bool ser_d0 = false;
+export bool ser_d1 = false;
+export bool ser_d2 = false;
+export bool ser_ck = false;
+
+// --- OSER10 Red チャネル ---
+export extern struct OSER10_R {
+    #[sv::module_name] const str _ = "OSER10";
+    #[input]  bool PCLK  = pixel_clk;
+    #[input]  bool FCLK  = serial_clk;
+    #[input]  bool RESET = false;
+    #[input]  bool D0    = tmds_r[0];
+    #[input]  bool D1    = tmds_r[1];
+    #[input]  bool D2    = tmds_r[2];
+    #[input]  bool D3    = tmds_r[3];
+    #[input]  bool D4    = tmds_r[4];
+    #[input]  bool D5    = tmds_r[5];
+    #[input]  bool D6    = tmds_r[6];
+    #[input]  bool D7    = tmds_r[7];
+    #[input]  bool D8    = tmds_r[8];
+    #[input]  bool D9    = tmds_r[9];
+    #[output] bool Q     = ser_d2;
+}
+
+// --- OSER10 Green チャネル ---
+export extern struct OSER10_G {
+    #[sv::module_name] const str _ = "OSER10";
+    #[input]  bool PCLK  = pixel_clk;
+    #[input]  bool FCLK  = serial_clk;
+    #[input]  bool RESET = false;
+    #[input]  bool D0    = tmds_g[0];
+    #[input]  bool D1    = tmds_g[1];
+    #[input]  bool D2    = tmds_g[2];
+    #[input]  bool D3    = tmds_g[3];
+    #[input]  bool D4    = tmds_g[4];
+    #[input]  bool D5    = tmds_g[5];
+    #[input]  bool D6    = tmds_g[6];
+    #[input]  bool D7    = tmds_g[7];
+    #[input]  bool D8    = tmds_g[8];
+    #[input]  bool D9    = tmds_g[9];
+    #[output] bool Q     = ser_d1;
+}
+
+// --- OSER10 Blue チャネル ---
+export extern struct OSER10_B {
+    #[sv::module_name] const str _ = "OSER10";
+    #[input]  bool PCLK  = pixel_clk;
+    #[input]  bool FCLK  = serial_clk;
+    #[input]  bool RESET = false;
+    #[input]  bool D0    = tmds_b[0];
+    #[input]  bool D1    = tmds_b[1];
+    #[input]  bool D2    = tmds_b[2];
+    #[input]  bool D3    = tmds_b[3];
+    #[input]  bool D4    = tmds_b[4];
+    #[input]  bool D5    = tmds_b[5];
+    #[input]  bool D6    = tmds_b[6];
+    #[input]  bool D7    = tmds_b[7];
+    #[input]  bool D8    = tmds_b[8];
+    #[input]  bool D9    = tmds_b[9];
+    #[output] bool Q     = ser_d0;
+}
+
+// --- OSER10 Clock チャネル (DDRピクセルクロック再生用) ---
+export extern struct OSER10_CK {
+    #[sv::module_name] const str _ = "OSER10";
+    #[input]  bool PCLK  = pixel_clk;
+    #[input]  bool FCLK  = serial_clk;
+    #[input]  bool RESET = false;
+    #[input]  bool D0    = true;
+    #[input]  bool D1    = true;
+    #[input]  bool D2    = true;
+    #[input]  bool D3    = true;
+    #[input]  bool D4    = true;
+    #[input]  bool D5    = false;
+    #[input]  bool D6    = false;
+    #[input]  bool D7    = false;
+    #[input]  bool D8    = false;
+    #[input]  bool D9    = false;
+    #[output] bool Q     = ser_ck;
+}

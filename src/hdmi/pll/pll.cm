@@ -1,0 +1,30 @@
+module pll;
+
+// ============================================================
+// Gowin PLL プリミティブ定義 (50MHz -> 25.2MHz & 126MHz)
+// ============================================================
+export extern struct PLL {
+    #[sv::param] int FCLKIN = 50;
+    #[sv::param] int IDIV_SEL = 2;
+    #[sv::param] int FBDIV_SEL = 1;
+    #[sv::param] int MDIV_SEL = 30;
+    #[sv::param] int MDIV_FRAC_SEL = 2;
+    #[sv::param] int ODIV0_SEL = 30;
+    #[sv::param] int ODIV1_SEL = 6;
+    #[sv::param] str CLKOUT0_EN = "\"TRUE\"";
+    #[sv::param] str CLKOUT1_EN = "\"TRUE\"";
+    #[sv::param] str CLKFB_SEL = "\"INTERNAL\"";
+
+    #[input]  bool CLKIN   = clk_50m;
+    #[input]  bool CLKFB   = false;
+    #[input]  bool RESET   = false;
+    #[input]  bool PLLPWD  = false;
+    #[input]  bool RESET_I = false;
+    #[input]  bool RESET_O = false;
+    #[input]  bool ENCLK0  = true;
+    #[input]  bool ENCLK1  = true;
+
+    #[output] bool CLKOUT0 = pixel_clk;
+    #[output] bool CLKOUT1 = serial_clk;
+    #[output] bool LOCK    = pll_lock;
+}

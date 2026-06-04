@@ -1,27 +1,21 @@
 //! platform: sv
 
 // ============================================================
-// HDMI カラーバー出力回路 (Phase 1)
+// HDMI カラーバー出力回路 (トップレベルモジュール - 細分化リファクタリング版)
 // ============================================================
 // ターゲット: Tang Console 138K (GW5AST-LV138FPG676)
-// クロック: 50MHz 外部オシレータ → PLL → 25.2MHz + 126MHz
+// クロック: 50MHz 外部オシレータ -> PLL -> 25.2MHz + 126MHz
 // 出力: HDMI (DVI モード) 640×480@60Hz カラーバー
 // ============================================================
 
 // ============================================================
-// セクション 1: 定数インポート
+// セクション 1: 外部ポート宣言
 // ============================================================
 
-import hdmi_constants;
-
-// ============================================================
-// セクション 2: ポート宣言
-// ============================================================
-
-// 外部クロック
+// 50MHz 外部システムクロック
 #[input] posedge clk_50m;
 
-// HDMI TMDS 出力 (差動) — Gowin TLVDS_OBUF 経由
+// HDMI TMDS 差動出力ピン (Gowin TLVDS_OBUF 経由で駆動)
 #[output] bool tmds_d2_p = false;
 #[output] bool tmds_d2_n = false;
 #[output] bool tmds_d1_p = false;
@@ -31,643 +25,54 @@ import hdmi_constants;
 #[output] bool tmds_clk_p = false;
 #[output] bool tmds_clk_n = false;
 
-// LED ステータス
+// ボード上のステータスLED
 #[output] bool led = false;
 
 // ============================================================
-// セクション 3: 内部信号
+// セクション 2: グローバル・共有内部信号
 // ============================================================
+// これらの変数は、インポートされた各モジュール内のポート設定から
+// グローバルスコープとして参照・バインドされます。
 
-// PLL 出力クロック
 bool pixel_clk  = false;
 bool serial_clk = false;
 bool pll_lock    = false;
 
-// ビデオタイミング
-uint hc = 0;
-uint vc = 0;
-bool hsync_reg = true;
-bool vsync_reg = true;
-bool de_reg    = false;
-
-// カラーバー RGB (8bit 相当の値を int で保持)
-int r_out = 0;
-int g_out = 0;
-int b_out = 0;
-
-// TMDS エンコーダ出力 (各チャネル 10bit 相当の値を int で保持)
-int tmds_r = 0;
-int tmds_g = 0;
-int tmds_b = 0;
-
-// TMDS エンコーダ DC バランス (符号付き)
-int cnt_r = 0;
-int cnt_g = 0;
-int cnt_b = 0;
-
-// シリアライザ出力
-bool ser_d0 = false;
-bool ser_d1 = false;
-bool ser_d2 = false;
-bool ser_ck = false;
-
 // ============================================================
-// セクション 4: Gowin プリミティブ (extern struct)
+// セクション 3: 階層サブモジュールのインポート
 // ============================================================
 
-// PLL: 50MHz → 25.2MHz (pixel_clk) + 126MHz (serial_clk)
-extern struct PLL {
-    #[sv::param] int FCLKIN = 50;
-    #[sv::param] int IDIV_SEL = 2;
-    #[sv::param] int FBDIV_SEL = 1;
-    #[sv::param] int MDIV_SEL = 30;
-    #[sv::param] int MDIV_FRAC_SEL = 2;
-    #[sv::param] int ODIV0_SEL = 30;
-    #[sv::param] int ODIV1_SEL = 6;
-    #[sv::param] str CLKOUT0_EN = "\"TRUE\"";
-    #[sv::param] str CLKOUT1_EN = "\"TRUE\"";
-    #[sv::param] str CLKFB_SEL = "\"INTERNAL\"";
+import hdmi_constants;
+import ./pll/pll;
+import ./timing/timing;
+import ./pattern/pattern;
+import ./encoder/encoder;
+import ./serdes/oser;
+import ./serdes/obuf;
 
-    #[input]  bool CLKIN   = clk_50m;
-    #[input]  bool CLKFB   = false;
-    #[input]  bool RESET   = false;
-    #[input]  bool PLLPWD  = false;
-    #[input]  bool RESET_I = false;
-    #[input]  bool RESET_O = false;
-    #[input]  bool ENCLK0  = true;
-    #[input]  bool ENCLK1  = true;
+// ============================================================
+// セクション 4: 各種プリミティブのインスタンス化
+// ============================================================
 
-    #[output] bool CLKOUT0 = pixel_clk;
-    #[output] bool CLKOUT1 = serial_clk;
-    #[output] bool LOCK    = pll_lock;
-}
-
+// PLLインスタンス
 PLL pll_inst;
 
-// OSER10: 10:1 DDR シリアライザ
-// Gowin プリミティブ: 出力ポート名は Q (Q0 ではない)
-// 各チャネルで tmds_r/g/b の 10bit を D0-D9 に接続
-// CLK チャネルは 5b'10101 パターン (DDR クロック再生)
-
-// --- OSER10 Red チャネル ---
-extern struct OSER10_R {
-    #[sv::module_name] const str _ = "OSER10";
-    #[input]  bool PCLK  = pixel_clk;
-    #[input]  bool FCLK  = serial_clk;
-    #[input]  bool RESET = false;
-    #[input]  bool D0    = tmds_r[0];
-    #[input]  bool D1    = tmds_r[1];
-    #[input]  bool D2    = tmds_r[2];
-    #[input]  bool D3    = tmds_r[3];
-    #[input]  bool D4    = tmds_r[4];
-    #[input]  bool D5    = tmds_r[5];
-    #[input]  bool D6    = tmds_r[6];
-    #[input]  bool D7    = tmds_r[7];
-    #[input]  bool D8    = tmds_r[8];
-    #[input]  bool D9    = tmds_r[9];
-    #[output] bool Q     = ser_d2;
-}
+// OSER10 10:1 シリアライザインスタンス
 OSER10_R oser_r;
-
-// --- OSER10 Green チャネル ---
-extern struct OSER10_G {
-    #[sv::module_name] const str _ = "OSER10";
-    #[input]  bool PCLK  = pixel_clk;
-    #[input]  bool FCLK  = serial_clk;
-    #[input]  bool RESET = false;
-    #[input]  bool D0    = tmds_g[0];
-    #[input]  bool D1    = tmds_g[1];
-    #[input]  bool D2    = tmds_g[2];
-    #[input]  bool D3    = tmds_g[3];
-    #[input]  bool D4    = tmds_g[4];
-    #[input]  bool D5    = tmds_g[5];
-    #[input]  bool D6    = tmds_g[6];
-    #[input]  bool D7    = tmds_g[7];
-    #[input]  bool D8    = tmds_g[8];
-    #[input]  bool D9    = tmds_g[9];
-    #[output] bool Q     = ser_d1;
-}
 OSER10_G oser_g;
-
-// --- OSER10 Blue チャネル ---
-extern struct OSER10_B {
-    #[sv::module_name] const str _ = "OSER10";
-    #[input]  bool PCLK  = pixel_clk;
-    #[input]  bool FCLK  = serial_clk;
-    #[input]  bool RESET = false;
-    #[input]  bool D0    = tmds_b[0];
-    #[input]  bool D1    = tmds_b[1];
-    #[input]  bool D2    = tmds_b[2];
-    #[input]  bool D3    = tmds_b[3];
-    #[input]  bool D4    = tmds_b[4];
-    #[input]  bool D5    = tmds_b[5];
-    #[input]  bool D6    = tmds_b[6];
-    #[input]  bool D7    = tmds_b[7];
-    #[input]  bool D8    = tmds_b[8];
-    #[input]  bool D9    = tmds_b[9];
-    #[output] bool Q     = ser_d0;
-}
 OSER10_B oser_b;
-
-// --- OSER10 Clock チャネル ---
-// 10b'0000011111 = DDR クロック (pixel_clk 再生)
-extern struct OSER10_CK {
-    #[sv::module_name] const str _ = "OSER10";
-    #[input]  bool PCLK  = pixel_clk;
-    #[input]  bool FCLK  = serial_clk;
-    #[input]  bool RESET = false;
-    #[input]  bool D0    = true;
-    #[input]  bool D1    = true;
-    #[input]  bool D2    = true;
-    #[input]  bool D3    = true;
-    #[input]  bool D4    = true;
-    #[input]  bool D5    = false;
-    #[input]  bool D6    = false;
-    #[input]  bool D7    = false;
-    #[input]  bool D8    = false;
-    #[input]  bool D9    = false;
-    #[output] bool Q     = ser_ck;
-}
 OSER10_CK oser_ck;
 
-// --- TLVDS_OBUF: LVDS 差動出力バッファ ---
-// 各チャネルのシリアルデータを差動信号に変換
-
-extern struct TLVDS_D2 {
-    #[sv::module_name] const str _ = "TLVDS_OBUF";
-    #[input]  bool I  = ser_d2;
-    #[output] bool O  = tmds_d2_p;
-    #[output] bool OB = tmds_d2_n;
-}
+// TLVDS_OBUF 差動バッファインスタンス
 TLVDS_D2 tlvds_d2;
-
-extern struct TLVDS_D1 {
-    #[sv::module_name] const str _ = "TLVDS_OBUF";
-    #[input]  bool I  = ser_d1;
-    #[output] bool O  = tmds_d1_p;
-    #[output] bool OB = tmds_d1_n;
-}
 TLVDS_D1 tlvds_d1;
-
-extern struct TLVDS_D0 {
-    #[sv::module_name] const str _ = "TLVDS_OBUF";
-    #[input]  bool I  = ser_d0;
-    #[output] bool O  = tmds_d0_p;
-    #[output] bool OB = tmds_d0_n;
-}
 TLVDS_D0 tlvds_d0;
-
-extern struct TLVDS_CK {
-    #[sv::module_name] const str _ = "TLVDS_OBUF";
-    #[input]  bool I  = ser_ck;
-    #[output] bool O  = tmds_clk_p;
-    #[output] bool OB = tmds_clk_n;
-}
 TLVDS_CK tlvds_ck;
 
 // ============================================================
-
-async func video_timing(posedge pixel_clk) {
-    // 水平カウンタ
-    if (hc == H_TOTAL - 1) {
-        hc = 0;
-        // 垂直カウンタ
-        if (vc == V_TOTAL - 1) {
-            vc = 0;
-        } else {
-            vc = vc + 1;
-        }
-    } else {
-        hc = hc + 1;
-    }
-
-    // HSYNC 生成 (負極性: アクティブ期間中 LOW)
-    if (hc >= H_ACTIVE + H_FP) {
-        if (hc < H_ACTIVE + H_FP + H_SYNC) {
-            hsync_reg = false;
-        } else {
-            hsync_reg = true;
-        }
-    } else {
-        hsync_reg = true;
-    }
-
-    // VSYNC 生成 (負極性)
-    if (vc >= V_ACTIVE + V_FP) {
-        if (vc < V_ACTIVE + V_FP + V_SYNC) {
-            vsync_reg = false;
-        } else {
-            vsync_reg = true;
-        }
-    } else {
-        vsync_reg = true;
-    }
-
-    // データイネーブル
-    if (hc < H_ACTIVE) {
-        if (vc < V_ACTIVE) {
-            de_reg = true;
-        } else {
-            de_reg = false;
-        }
-    } else {
-        de_reg = false;
-    }
-}
-
+// セクション 5: LEDステータス同期制御
 // ============================================================
-// セクション 6: カラーバーテストパターン生成
-// ============================================================
-// 8色カラーバー: 白→黄→シアン→緑→マゼンタ→赤→青→黒
-// 各バー幅 = 80 ピクセル (640/8)
 
-async func colorbar_gen(posedge pixel_clk) {
-    if (de_reg == true) {
-        // バーインデックス = hc / 80 (0-7)
-        if (hc < BAR_WIDTH) {
-            // バー 0: 白 (R=FF, G=FF, B=FF)
-            r_out = 255;
-            g_out = 255;
-            b_out = 255;
-        }
-        if (hc >= BAR_WIDTH) {
-            if (hc < BAR_WIDTH * 2) {
-                // バー 1: 黄 (R=FF, G=FF, B=00)
-                r_out = 255;
-                g_out = 255;
-                b_out = 0;
-            }
-        }
-        if (hc >= BAR_WIDTH * 2) {
-            if (hc < BAR_WIDTH * 3) {
-                // バー 2: シアン (R=00, G=FF, B=FF)
-                r_out = 0;
-                g_out = 255;
-                b_out = 255;
-            }
-        }
-        if (hc >= BAR_WIDTH * 3) {
-            if (hc < BAR_WIDTH * 4) {
-                // バー 3: 緑 (R=00, G=FF, B=00)
-                r_out = 0;
-                g_out = 255;
-                b_out = 0;
-            }
-        }
-        if (hc >= BAR_WIDTH * 4) {
-            if (hc < BAR_WIDTH * 5) {
-                // バー 4: マゼンタ (R=FF, G=00, B=FF)
-                r_out = 255;
-                g_out = 0;
-                b_out = 255;
-            }
-        }
-        if (hc >= BAR_WIDTH * 5) {
-            if (hc < BAR_WIDTH * 6) {
-                // バー 5: 赤 (R=FF, G=00, B=00)
-                r_out = 255;
-                g_out = 0;
-                b_out = 0;
-            }
-        }
-        if (hc >= BAR_WIDTH * 6) {
-            if (hc < BAR_WIDTH * 7) {
-                // バー 6: 青 (R=00, G=00, B=FF)
-                r_out = 0;
-                g_out = 0;
-                b_out = 255;
-            }
-        }
-        if (hc >= BAR_WIDTH * 7) {
-            // バー 7: 黒 (R=00, G=00, B=00)
-            r_out = 0;
-            g_out = 0;
-            b_out = 0;
-        }
-    } else {
-        // ブランキング期間: 黒
-        r_out = 0;
-        g_out = 0;
-        b_out = 0;
-    }
-}
-
-// ============================================================
-// セクション 7: TMDS エンコーダ (DVI 1.0 準拠, 3ch インライン)
-// ============================================================
-// 各チャネルで独立に 8bit→10bit TMDS エンコーディングを行う
-// ステージ 1: popcount → XOR/XNOR 動的選択 → 遷移最小化
-// ステージ 2: 累積不均衡 (Running Disparity) の追跡 → DC バランス
-//
-// チャネル割り当て:
-//   CH2 = Red   (コントロール: C1=0, C0=0)
-//   CH1 = Green (コントロール: C1=0, C0=0)
-//   CH0 = Blue  (コントロール: C1=VSYNC, C0=HSYNC)
-
-// TMDS エンコーダ中間変数
-// 注: int(32bit) を使用。cnt_r/g/b (int) との混合演算でビット幅不一致を防止。
-
-// 入力データの popcount (1 のビット数)
-int r_n1 = 0; int g_n1 = 0; int b_n1 = 0;
-
-// XOR/XNOR 選択フラグ (0=XOR, 1=XNOR)
-int r_use_xnor = 0; int g_use_xnor = 0; int b_use_xnor = 0;
-
-// 遷移最小化ビット (各チャネル bit0-bit7)
-int r_q0 = 0; int r_q1 = 0; int r_q2 = 0; int r_q3 = 0;
-int r_q4 = 0; int r_q5 = 0; int r_q6 = 0; int r_q7 = 0;
-int g_q0 = 0; int g_q1 = 0; int g_q2 = 0; int g_q3 = 0;
-int g_q4 = 0; int g_q5 = 0; int g_q6 = 0; int g_q7 = 0;
-int b_q0 = 0; int b_q1 = 0; int b_q2 = 0; int b_q3 = 0;
-int b_q4 = 0; int b_q5 = 0; int b_q6 = 0; int b_q7 = 0;
-
-// 9 ビット中間コード (q_m[8:0])
-int r_qm = 0; int g_qm = 0; int b_qm = 0;
-
-// q_m[7:0] の popcount
-int r_n1_qm = 0; int g_n1_qm = 0; int b_n1_qm = 0;
-
-async func tmds_encode(posedge pixel_clk) {
-
-    // =======================================================
-    // CH2: Red (コントロール: C1=0, C0=0)
-    // =======================================================
-    if (de_reg == true) {
-        // ステップ 1: popcount (入力データ中の 1 の数)
-        r_n1 = (r_out & 1) + ((r_out >> 1) & 1)
-            + ((r_out >> 2) & 1) + ((r_out >> 3) & 1)
-            + ((r_out >> 4) & 1) + ((r_out >> 5) & 1)
-            + ((r_out >> 6) & 1) + ((r_out >> 7) & 1);
-        // ステップ 2: XOR/XNOR 選択
-        if (r_n1 > 4) {
-            r_use_xnor = 1;
-        } else {
-            if (r_n1 == 4) {
-                if ((r_out & 1) == 0) {
-                    r_use_xnor = 1;
-                } else {
-                    r_use_xnor = 0;
-                }
-            } else {
-                r_use_xnor = 0;
-            }
-        }
-        // ステップ 3: 遷移最小化 q_m[i] = D[i] XOR/XNOR q_m[i-1]
-        r_q0 = r_out & 1;
-        r_q1 = ((r_out >> 1) & 1) ^ r_q0 ^ r_use_xnor;
-        r_q2 = ((r_out >> 2) & 1) ^ r_q1 ^ r_use_xnor;
-        r_q3 = ((r_out >> 3) & 1) ^ r_q2 ^ r_use_xnor;
-        r_q4 = ((r_out >> 4) & 1) ^ r_q3 ^ r_use_xnor;
-        r_q5 = ((r_out >> 5) & 1) ^ r_q4 ^ r_use_xnor;
-        r_q6 = ((r_out >> 6) & 1) ^ r_q5 ^ r_use_xnor;
-        r_q7 = ((r_out >> 7) & 1) ^ r_q6 ^ r_use_xnor;
-        // q_m[8:0] 構築 (bit8: XOR=1, XNOR=0)
-        r_qm = r_q0 | (r_q1 << 1) | (r_q2 << 2) | (r_q3 << 3)
-            | (r_q4 << 4) | (r_q5 << 5) | (r_q6 << 6)
-            | (r_q7 << 7) | ((r_use_xnor ^ 1) << 8);
-        // ステップ 4: DC バランス
-        r_n1_qm = r_q0 + r_q1 + r_q2 + r_q3 + r_q4 + r_q5 + r_q6 + r_q7;
-        if (r_n1_qm == 4) {
-            // N0 == N1: ディスパリティ変化なし
-            if ((r_qm & 256) == 0) {
-                tmds_r = ((r_qm ^ 255) & 255) | (1 << 9);
-            } else {
-                tmds_r = r_qm & 511;
-            }
-        } else {
-            if (cnt_r == 0) {
-                // ディスパリティ = 0
-                if ((r_qm & 256) == 0) {
-                    tmds_r = ((r_qm ^ 255) & 255) | (1 << 9);
-                    cnt_r = cnt_r + 8 - r_n1_qm - r_n1_qm;
-                } else {
-                    tmds_r = r_qm & 511;
-                    cnt_r = cnt_r - 8 + r_n1_qm + r_n1_qm;
-                }
-            } else {
-                if (cnt_r > 0) {
-                    if (r_n1_qm > 4) {
-                        // ケース B: cnt>0, N1>N0 → データ反転
-                        tmds_r = ((r_qm ^ 255) & 255)
-                            | (r_qm & 256) | (1 << 9);
-                        cnt_r = cnt_r + ((r_qm >> 8) & 1)
-                            + ((r_qm >> 8) & 1) + 8
-                            - r_n1_qm - r_n1_qm;
-                    } else {
-                        // ケース C: cnt>0, N1<N0 → データそのまま
-                        tmds_r = r_qm & 511;
-                        cnt_r = cnt_r + ((r_qm >> 8) & 1)
-                            + ((r_qm >> 8) & 1)
-                            + r_n1_qm + r_n1_qm - 10;
-                    }
-                } else {
-                    if (r_n1_qm < 4) {
-                        // ケース B: cnt<0, N0>N1 → データ反転
-                        tmds_r = ((r_qm ^ 255) & 255)
-                            | (r_qm & 256) | (1 << 9);
-                        cnt_r = cnt_r + ((r_qm >> 8) & 1)
-                            + ((r_qm >> 8) & 1) + 8
-                            - r_n1_qm - r_n1_qm;
-                    } else {
-                        // ケース C: cnt<0, N1>N0 → データそのまま
-                        tmds_r = r_qm & 511;
-                        cnt_r = cnt_r + ((r_qm >> 8) & 1)
-                            + ((r_qm >> 8) & 1)
-                            + r_n1_qm + r_n1_qm - 10;
-                    }
-                }
-            }
-        }
-    } else {
-        // ブランキング: コントロールトークン (C1=0, C0=0)
-        tmds_r = 852;
-        cnt_r = 0;
-    }
-
-    // =======================================================
-    // CH1: Green (コントロール: C1=0, C0=0)
-    // =======================================================
-    if (de_reg == true) {
-        g_n1 = (g_out & 1) + ((g_out >> 1) & 1)
-            + ((g_out >> 2) & 1) + ((g_out >> 3) & 1)
-            + ((g_out >> 4) & 1) + ((g_out >> 5) & 1)
-            + ((g_out >> 6) & 1) + ((g_out >> 7) & 1);
-        if (g_n1 > 4) {
-            g_use_xnor = 1;
-        } else {
-            if (g_n1 == 4) {
-                if ((g_out & 1) == 0) {
-                    g_use_xnor = 1;
-                } else {
-                    g_use_xnor = 0;
-                }
-            } else {
-                g_use_xnor = 0;
-            }
-        }
-        g_q0 = g_out & 1;
-        g_q1 = ((g_out >> 1) & 1) ^ g_q0 ^ g_use_xnor;
-        g_q2 = ((g_out >> 2) & 1) ^ g_q1 ^ g_use_xnor;
-        g_q3 = ((g_out >> 3) & 1) ^ g_q2 ^ g_use_xnor;
-        g_q4 = ((g_out >> 4) & 1) ^ g_q3 ^ g_use_xnor;
-        g_q5 = ((g_out >> 5) & 1) ^ g_q4 ^ g_use_xnor;
-        g_q6 = ((g_out >> 6) & 1) ^ g_q5 ^ g_use_xnor;
-        g_q7 = ((g_out >> 7) & 1) ^ g_q6 ^ g_use_xnor;
-        g_qm = g_q0 | (g_q1 << 1) | (g_q2 << 2) | (g_q3 << 3)
-            | (g_q4 << 4) | (g_q5 << 5) | (g_q6 << 6)
-            | (g_q7 << 7) | ((g_use_xnor ^ 1) << 8);
-        g_n1_qm = g_q0 + g_q1 + g_q2 + g_q3 + g_q4 + g_q5 + g_q6 + g_q7;
-        if (g_n1_qm == 4) {
-            if ((g_qm & 256) == 0) {
-                tmds_g = ((g_qm ^ 255) & 255) | (1 << 9);
-            } else {
-                tmds_g = g_qm & 511;
-            }
-        } else {
-            if (cnt_g == 0) {
-                if ((g_qm & 256) == 0) {
-                    tmds_g = ((g_qm ^ 255) & 255) | (1 << 9);
-                    cnt_g = cnt_g + 8 - g_n1_qm - g_n1_qm;
-                } else {
-                    tmds_g = g_qm & 511;
-                    cnt_g = cnt_g - 8 + g_n1_qm + g_n1_qm;
-                }
-            } else {
-                if (cnt_g > 0) {
-                    if (g_n1_qm > 4) {
-                        tmds_g = ((g_qm ^ 255) & 255)
-                            | (g_qm & 256) | (1 << 9);
-                        cnt_g = cnt_g + ((g_qm >> 8) & 1)
-                            + ((g_qm >> 8) & 1) + 8
-                            - g_n1_qm - g_n1_qm;
-                    } else {
-                        tmds_g = g_qm & 511;
-                        cnt_g = cnt_g + ((g_qm >> 8) & 1)
-                            + ((g_qm >> 8) & 1)
-                            + g_n1_qm + g_n1_qm - 10;
-                    }
-                } else {
-                    if (g_n1_qm < 4) {
-                        tmds_g = ((g_qm ^ 255) & 255)
-                            | (g_qm & 256) | (1 << 9);
-                        cnt_g = cnt_g + ((g_qm >> 8) & 1)
-                            + ((g_qm >> 8) & 1) + 8
-                            - g_n1_qm - g_n1_qm;
-                    } else {
-                        tmds_g = g_qm & 511;
-                        cnt_g = cnt_g + ((g_qm >> 8) & 1)
-                            + ((g_qm >> 8) & 1)
-                            + g_n1_qm + g_n1_qm - 10;
-                    }
-                }
-            }
-        }
-    } else {
-        tmds_g = 852;
-        cnt_g = 0;
-    }
-
-    // =======================================================
-    // CH0: Blue (コントロール: C1=VSYNC, C0=HSYNC)
-    // =======================================================
-    if (de_reg == true) {
-        b_n1 = (b_out & 1) + ((b_out >> 1) & 1)
-            + ((b_out >> 2) & 1) + ((b_out >> 3) & 1)
-            + ((b_out >> 4) & 1) + ((b_out >> 5) & 1)
-            + ((b_out >> 6) & 1) + ((b_out >> 7) & 1);
-        if (b_n1 > 4) {
-            b_use_xnor = 1;
-        } else {
-            if (b_n1 == 4) {
-                if ((b_out & 1) == 0) {
-                    b_use_xnor = 1;
-                } else {
-                    b_use_xnor = 0;
-                }
-            } else {
-                b_use_xnor = 0;
-            }
-        }
-        b_q0 = b_out & 1;
-        b_q1 = ((b_out >> 1) & 1) ^ b_q0 ^ b_use_xnor;
-        b_q2 = ((b_out >> 2) & 1) ^ b_q1 ^ b_use_xnor;
-        b_q3 = ((b_out >> 3) & 1) ^ b_q2 ^ b_use_xnor;
-        b_q4 = ((b_out >> 4) & 1) ^ b_q3 ^ b_use_xnor;
-        b_q5 = ((b_out >> 5) & 1) ^ b_q4 ^ b_use_xnor;
-        b_q6 = ((b_out >> 6) & 1) ^ b_q5 ^ b_use_xnor;
-        b_q7 = ((b_out >> 7) & 1) ^ b_q6 ^ b_use_xnor;
-        b_qm = b_q0 | (b_q1 << 1) | (b_q2 << 2) | (b_q3 << 3)
-            | (b_q4 << 4) | (b_q5 << 5) | (b_q6 << 6)
-            | (b_q7 << 7) | ((b_use_xnor ^ 1) << 8);
-        b_n1_qm = b_q0 + b_q1 + b_q2 + b_q3 + b_q4 + b_q5 + b_q6 + b_q7;
-        if (b_n1_qm == 4) {
-            if ((b_qm & 256) == 0) {
-                tmds_b = ((b_qm ^ 255) & 255) | (1 << 9);
-            } else {
-                tmds_b = b_qm & 511;
-            }
-        } else {
-            if (cnt_b == 0) {
-                if ((b_qm & 256) == 0) {
-                    tmds_b = ((b_qm ^ 255) & 255) | (1 << 9);
-                    cnt_b = cnt_b + 8 - b_n1_qm - b_n1_qm;
-                } else {
-                    tmds_b = b_qm & 511;
-                    cnt_b = cnt_b - 8 + b_n1_qm + b_n1_qm;
-                }
-            } else {
-                if (cnt_b > 0) {
-                    if (b_n1_qm > 4) {
-                        tmds_b = ((b_qm ^ 255) & 255)
-                            | (b_qm & 256) | (1 << 9);
-                        cnt_b = cnt_b + ((b_qm >> 8) & 1)
-                            + ((b_qm >> 8) & 1) + 8
-                            - b_n1_qm - b_n1_qm;
-                    } else {
-                        tmds_b = b_qm & 511;
-                        cnt_b = cnt_b + ((b_qm >> 8) & 1)
-                            + ((b_qm >> 8) & 1)
-                            + b_n1_qm + b_n1_qm - 10;
-                    }
-                } else {
-                    if (b_n1_qm < 4) {
-                        tmds_b = ((b_qm ^ 255) & 255)
-                            | (b_qm & 256) | (1 << 9);
-                        cnt_b = cnt_b + ((b_qm >> 8) & 1)
-                            + ((b_qm >> 8) & 1) + 8
-                            - b_n1_qm - b_n1_qm;
-                    } else {
-                        tmds_b = b_qm & 511;
-                        cnt_b = cnt_b + ((b_qm >> 8) & 1)
-                            + ((b_qm >> 8) & 1)
-                            + b_n1_qm + b_n1_qm - 10;
-                    }
-                }
-            }
-        }
-    } else {
-        // ブランキング: HSYNC/VSYNC コントロールトークン (DVI 1.0 仕様)
-        // Blue チャネル: C0 = HSYNC, C1 = VSYNC
-        if (vsync_reg == false) {
-            if (hsync_reg == false) {
-                // {C1=0,C0=0} = 1101010100 = 852
-                tmds_b = 852;
-            } else {
-                // {C1=0,C0=1} = 0010101011 = 171
-                tmds_b = 171;
-            }
-        } else {
-            if (hsync_reg == false) {
-                // {C1=1,C0=0} = 0101010100 = 340
-                tmds_b = 340;
-            } else {
-                // {C1=1,C0=1} = 1010101011 = 683
-                tmds_b = 683;
-            }
-        }
-        cnt_b = 0;
-    }
-
-    // LED: PLL ロック & 動作確認用
+async func led_control(posedge pixel_clk) {
     led = pll_lock;
 }

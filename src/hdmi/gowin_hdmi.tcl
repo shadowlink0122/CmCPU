@@ -12,7 +12,7 @@ set device_pn "GW5AST-LV138FPG676AC2/I1"
 set device_version "C"
 
 # ファイルパス（絶対パスで指定）
-set sv_file "${project_root}/src/hdmi/hdmi_colorbar_top.sv"
+set sv_file "${project_root}/build/hdmi/hdmi_colorbar.sv"
 set cst_file "${project_root}/src/hdmi/tang_console_138k_hdmi.cst"
 set output_dir "${project_root}/build/hdmi"
 set project_name "hdmi_colorbar"

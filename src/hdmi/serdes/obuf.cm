@@ -1,0 +1,34 @@
+module obuf;
+
+import ./oser;
+
+// --- TLVDS_OBUF: LVDS 差動出力バッファ ---
+// 各チャネルのシリアルデータを差動信号に変換
+
+export extern struct TLVDS_D2 {
+    #[sv::module_name] const str _ = "TLVDS_OBUF";
+    #[input]  bool I  = ser_d2;
+    #[output] bool O  = tmds_d2_p;
+    #[output] bool OB = tmds_d2_n;
+}
+
+export extern struct TLVDS_D1 {
+    #[sv::module_name] const str _ = "TLVDS_OBUF";
+    #[input]  bool I  = ser_d1;
+    #[output] bool O  = tmds_d1_p;
+    #[output] bool OB = tmds_d1_n;
+}
+
+export extern struct TLVDS_D0 {
+    #[sv::module_name] const str _ = "TLVDS_OBUF";
+    #[input]  bool I  = ser_d0;
+    #[output] bool O  = tmds_d0_p;
+    #[output] bool OB = tmds_d0_n;
+}
+
+export extern struct TLVDS_CK {
+    #[sv::module_name] const str _ = "TLVDS_OBUF";
+    #[input]  bool I  = ser_ck;
+    #[output] bool O  = tmds_clk_p;
+    #[output] bool OB = tmds_clk_n;
+}

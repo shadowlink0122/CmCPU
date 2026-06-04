@@ -1,0 +1,59 @@
+module timing;
+
+import ../hdmi_constants;
+
+// ビデオタイミングカウンタおよび制御信号
+export uint hc = 0;
+export uint vc = 0;
+export bool hsync_reg = true;
+export bool vsync_reg = true;
+export bool de_reg    = false;
+
+// ピクセルクロックに同期したビデオタイミング生成ロジック
+export async func video_timing(posedge pixel_clk) {
+    // 水平カウンタ
+    if (hc == H_TOTAL - 1) {
+        hc = 0;
+        // 垂直カウンタ
+        if (vc == V_TOTAL - 1) {
+            vc = 0;
+        } else {
+            vc = vc + 1;
+        }
+    } else {
+        hc = hc + 1;
+    }
+
+    // HSYNC 生成 (負極性: アクティブ期間中 LOW)
+    if (hc >= H_ACTIVE + H_FP) {
+        if (hc < H_ACTIVE + H_FP + H_SYNC) {
+            hsync_reg = false;
+        } else {
+            hsync_reg = true;
+        }
+    } else {
+        hsync_reg = true;
+    }
+
+    // VSYNC 生成 (負極性)
+    if (vc >= V_ACTIVE + V_FP) {
+        if (vc < V_ACTIVE + V_FP + V_SYNC) {
+            vsync_reg = false;
+        } else {
+            vsync_reg = true;
+        }
+    } else {
+        vsync_reg = true;
+    }
+
+    // データイネーブル
+    if (hc < H_ACTIVE) {
+        if (vc < V_ACTIVE) {
+            de_reg = true;
+        } else {
+            de_reg = false;
+        }
+    } else {
+        de_reg = false;
+    }
+}
