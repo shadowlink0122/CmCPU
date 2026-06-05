@@ -130,8 +130,11 @@ sed -i '' '/oser_ck (/,/);/{
 # _n ポートは TLVDS_OBUF の OB 出力として自動的にドライブされる
 # (CST で P,N を1行で指定する形式と組み合わせて動作)
 
-# === 修正 6: always_ff → always 変換 ===
-# コンパイラ側で非グローバルローカル変数がある場合に always を直接出力するようになったため不要
+# === 修正 6: always_ff → always に変換 ===
+# Gowin EDA は always_ff ブロック内でブロッキング代入（中間計算変数）と
+# 非ブロッキング代入（レジスタ出力）を混合すると合成エラーを起こす。
+# 汎用の always ブロックに変換することで回避する。
+sed -i '' 's/always_ff @/always @/g' "$SV_FILE"
 
 
 echo "✅ HDMI SV ポスト処理完了: $SV_FILE"
