@@ -5,29 +5,29 @@ import ../timing/timing;
 import ../pattern/pattern;
 
 // 10bit TMDS 出力信号
-export short tmds_r = 0 as short;
-export short tmds_g = 0 as short;
-export short tmds_b = 0 as short;
+export int tmds_r = 0;
+export int tmds_g = 0;
+export int tmds_b = 0;
 
 // DCバランス用累積不均衡カウンタ
-export tiny cnt_r = 0 as tiny;
-export tiny cnt_g = 0 as tiny;
-export tiny cnt_b = 0 as tiny;
+export int cnt_r = 0;
+export int cnt_g = 0;
+export int cnt_b = 0;
 
 // CH2: Red (コントロール: C1=0, C0=0)
 export async func tmds_encode_r(posedge pixel_clk) {
-    tiny r_n1 = 0;
-    tiny r_use_xnor = 0;
-    tiny r_q0 = 0;
-    tiny r_q1 = 0;
-    tiny r_q2 = 0;
-    tiny r_q3 = 0;
-    tiny r_q4 = 0;
-    tiny r_q5 = 0;
-    tiny r_q6 = 0;
-    tiny r_q7 = 0;
-    short r_qm = 0;
-    tiny r_n1_qm = 0;
+    int r_n1 = 0;
+    int r_use_xnor = 0;
+    int r_q0 = 0;
+    int r_q1 = 0;
+    int r_q2 = 0;
+    int r_q3 = 0;
+    int r_q4 = 0;
+    int r_q5 = 0;
+    int r_q6 = 0;
+    int r_q7 = 0;
+    int r_qm = 0;
+    int r_n1_qm = 0;
 
     if (de_del == true) {
         // ステップ 1: popcount
@@ -106,18 +106,18 @@ export async func tmds_encode_r(posedge pixel_clk) {
 
 // CH1: Green (コントロール: C1=0, C0=0)
 export async func tmds_encode_g(posedge pixel_clk) {
-    tiny g_n1 = 0;
-    tiny g_use_xnor = 0;
-    tiny g_q0 = 0;
-    tiny g_q1 = 0;
-    tiny g_q2 = 0;
-    tiny g_q3 = 0;
-    tiny g_q4 = 0;
-    tiny g_q5 = 0;
-    tiny g_q6 = 0;
-    tiny g_q7 = 0;
-    short g_qm = 0;
-    tiny g_n1_qm = 0;
+    int g_n1 = 0;
+    int g_use_xnor = 0;
+    int g_q0 = 0;
+    int g_q1 = 0;
+    int g_q2 = 0;
+    int g_q3 = 0;
+    int g_q4 = 0;
+    int g_q5 = 0;
+    int g_q6 = 0;
+    int g_q7 = 0;
+    int g_qm = 0;
+    int g_n1_qm = 0;
 
     if (de_del == true) {
         g_n1 = (g_out & 1) + ((g_out >> 1) & 1)
@@ -192,18 +192,18 @@ export async func tmds_encode_g(posedge pixel_clk) {
 
 // CH0: Blue (コントロール: C1=VSYNC, C0=HSYNC)
 export async func tmds_encode_b(posedge pixel_clk) {
-    tiny b_n1 = 0;
-    tiny b_use_xnor = 0;
-    tiny b_q0 = 0;
-    tiny b_q1 = 0;
-    tiny b_q2 = 0;
-    tiny b_q3 = 0;
-    tiny b_q4 = 0;
-    tiny b_q5 = 0;
-    tiny b_q6 = 0;
-    tiny b_q7 = 0;
-    short b_qm = 0;
-    tiny b_n1_qm = 0;
+    int b_n1 = 0;
+    int b_use_xnor = 0;
+    int b_q0 = 0;
+    int b_q1 = 0;
+    int b_q2 = 0;
+    int b_q3 = 0;
+    int b_q4 = 0;
+    int b_q5 = 0;
+    int b_q6 = 0;
+    int b_q7 = 0;
+    int b_qm = 0;
+    int b_n1_qm = 0;
 
     if (de_del == true) {
         b_n1 = (b_out & 1) + ((b_out >> 1) & 1)
