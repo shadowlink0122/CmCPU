@@ -9,8 +9,15 @@ export bool hsync_reg = true;
 export bool vsync_reg = true;
 export bool de_reg    = false;
 
+export bool hsync_del = true;
+export bool vsync_del = true;
+export bool de_del    = false;
+
 // ピクセルクロックに同期したビデオタイミング生成ロジック
 export async func video_timing(posedge pixel_clk) {
+    de_del = de_reg;
+    hsync_del = hsync_reg;
+    vsync_del = vsync_reg;
     // 水平カウンタ
     if (hc == H_TOTAL - 1) {
         hc = 0;

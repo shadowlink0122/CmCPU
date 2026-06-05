@@ -4,9 +4,9 @@ import ../constants/hdmi_constants;
 import ../timing/timing;
 
 // カラーバー RGB 出力 (各8bit相当)
-export int r_out = 0;
-export int g_out = 0;
-export int b_out = 0;
+export utiny r_out = 0 as utiny;
+export utiny g_out = 0 as utiny;
+export utiny b_out = 0 as utiny;
 
 // タイミング情報に基づいてピクセルデータを生成するロジック
 export async func colorbar_gen(posedge pixel_clk) {

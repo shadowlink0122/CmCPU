@@ -30,6 +30,9 @@ if { [catch {create_project -name check_dev -dir $check_dir -pn $device_pn -devi
     set device_pn "GW5AST-LV138PG484AC1/I0"
     set cst_file "${project_root}/src/hdmi/tang_console_138k_hdmi_pg484.cst"
     set is_fallback 1
+} else {
+    # 一時プロジェクトが開いた状態になっているのでクローズする
+    close_project
 }
 
 # 本番のプロジェクト作成
