@@ -43,13 +43,13 @@ bool pll_lock    = false;
 // セクション 3: 階層サブモジュールのインポート
 // ============================================================
 
-import ./main/constants/hdmi_constants;
-import ./main/pll/pll;
-import ./main/timing/timing;
-import ./main/pattern/pattern;
-import ./main/encoder/encoder;
-import ./main/serdes/oser;
-import ./main/serdes/obuf;
+import ./constants/hdmi_constants;
+import ./pll/pll;
+import ./timing/timing;
+import ./pattern/pattern;
+import ./encoder/encoder;
+import ./serdes/oser;
+import ./serdes/obuf;
 
 // ============================================================
 // セクション 4: 各種プリミティブのインスタンス化
