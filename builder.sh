@@ -209,8 +209,9 @@ step_lint() {
     info "ステップ 2/4: Verilator リントチェック"
 
     # リント実行: -Wno-MODMISSING は Gowin プリミティブ (OSER10, PLL 等) 用
+    # -Wno-UNUSED/WIDTHTRUNC/WIDTHEXPAND/UNDRIVEN は Cm自動生成コード特有の警告を抑止
     local lint_output
-    lint_output=$(verilator --lint-only --timing -Wno-MODMISSING "$SV_OUT" 2>&1) || true
+    lint_output=$(verilator --lint-only --timing -Wno-MODMISSING -Wno-UNUSED -Wno-WIDTHTRUNC -Wno-WIDTHEXPAND -Wno-UNDRIVEN "$SV_OUT" 2>&1) || true
 
     # 警告・エラーのカウント
     local warn_count

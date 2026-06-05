@@ -138,16 +138,18 @@ sed -i '' '/oser_ck (/,/);/{
 sed -i '' 's/always_ff @/always @/g' "$SV_FILE"
 sed -i '' 's/always_comb begin/always @(*) begin/g' "$SV_FILE"
 
-# === 修正 7: Verilator リント警告の一括無視ディレクティブをファイルの先頭に挿入 ===
-# 自動生成コード特有のリント警告を抑止するため、ファイルの先頭に lint_off ディレクティブを挿入する。
+# === 修正 7: Verilator リント警告の一括無視ディレクティブをモジュール内に挿入 ===
+# 自動生成コード特有のリント警告を抑止するため、モジュール宣言の直後に lint_off ディレクティブを挿入する。
+# (Verilatorの仕様上、モジュール定義の外部にあるメタコメントは無視されることがあるため)
 TEMP_FILE=$(mktemp)
-cat << 'EOF' > "$TEMP_FILE"
-/* verilator lint_off UNUSED */
-/* verilator lint_off WIDTHTRUNC */
-/* verilator lint_off WIDTHEXPAND */
-/* verilator lint_off UNDRIVEN */
-EOF
-cat "$SV_FILE" >> "$TEMP_FILE"
+awk '/^module / {
+  print
+  print "/* verilator lint_off UNUSED */"
+  print "/* verilator lint_off WIDTHTRUNC */"
+  print "/* verilator lint_off WIDTHEXPAND */"
+  print "/* verilator lint_off UNDRIVEN */"
+  next
+}1' "$SV_FILE" > "$TEMP_FILE"
 mv "$TEMP_FILE" "$SV_FILE"
 
 echo "✅ HDMI SV ポスト処理完了: $SV_FILE"
