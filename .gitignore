@@ -27,3 +27,6 @@ Thumbs.db
 # Gowin EDA プロジェクトファイル（大きいバイナリ）
 *.gprj.user
 impl/
+
+# 生成後 SystemVerilog ファイル
+*.sv
