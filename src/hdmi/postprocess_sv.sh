@@ -130,11 +130,24 @@ sed -i '' '/oser_ck (/,/);/{
 # _n ポートは TLVDS_OBUF の OB 出力として自動的にドライブされる
 # (CST で P,N を1行で指定する形式と組み合わせて動作)
 
-# === 修正 6: always_ff → always に変換 ===
+# === 修正 6: always_ff → always / always_comb → always @(*) に変換 ===
 # Gowin EDA は always_ff ブロック内でブロッキング代入（中間計算変数）と
 # 非ブロッキング代入（レジスタ出力）を混合すると合成エラーを起こす。
 # 汎用の always ブロックに変換することで回避する。
+# また、always_combでの合成時クラッシュを避けるため、always @(*) に置換する。
 sed -i '' 's/always_ff @/always @/g' "$SV_FILE"
+sed -i '' 's/always_comb begin/always @(*) begin/g' "$SV_FILE"
 
+# === 修正 7: Verilator リント警告の一括無視ディレクティブをファイルの先頭に挿入 ===
+# 自動生成コード特有のリント警告を抑止するため、ファイルの先頭に lint_off ディレクティブを挿入する。
+TEMP_FILE=$(mktemp)
+cat << 'EOF' > "$TEMP_FILE"
+/* verilator lint_off UNUSED */
+/* verilator lint_off WIDTHTRUNC */
+/* verilator lint_off WIDTHEXPAND */
+/* verilator lint_off UNDRIVEN */
+EOF
+cat "$SV_FILE" >> "$TEMP_FILE"
+mv "$TEMP_FILE" "$SV_FILE"
 
 echo "✅ HDMI SV ポスト処理完了: $SV_FILE"
