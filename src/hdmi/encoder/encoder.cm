@@ -14,46 +14,48 @@ export int cnt_r = 0;
 export int cnt_g = 0;
 export int cnt_b = 0;
 
-// エンコード用中間変数
-int r_n1 = 0;
-int g_n1 = 0;
-int b_n1 = 0;
-int r_use_xnor = 0;
-int g_use_xnor = 0;
-int b_use_xnor = 0;
-int r_q0 = 0;
-int r_q1 = 0;
-int r_q2 = 0;
-int r_q3 = 0;
-int r_q4 = 0;
-int r_q5 = 0;
-int r_q6 = 0;
-int r_q7 = 0;
-int g_q0 = 0;
-int g_q1 = 0;
-int g_q2 = 0;
-int g_q3 = 0;
-int g_q4 = 0;
-int g_q5 = 0;
-int g_q6 = 0;
-int g_q7 = 0;
-int b_q0 = 0;
-int b_q1 = 0;
-int b_q2 = 0;
-int b_q3 = 0;
-int b_q4 = 0;
-int b_q5 = 0;
-int b_q6 = 0;
-int b_q7 = 0;
-int r_qm = 0;
-int g_qm = 0;
-int b_qm = 0;
-int r_n1_qm = 0;
-int g_n1_qm = 0;
-int b_n1_qm = 0;
-
 // DVI 1.0 準拠の 8b/10b エンコード処理
+// 中間変数は関数ローカルとして宣言し、コンパイラが always ブロック内で
+// integer 型として出力する。ブロッキング代入により同一クロック内の
+// 逐次計算を保証し、色ずれを防止する。
 export async func tmds_encode(posedge pixel_clk) {
+    // エンコード用中間変数（各チャネル共通構造）
+    int r_n1 = 0;
+    int r_use_xnor = 0;
+    int r_q0 = 0;
+    int r_q1 = 0;
+    int r_q2 = 0;
+    int r_q3 = 0;
+    int r_q4 = 0;
+    int r_q5 = 0;
+    int r_q6 = 0;
+    int r_q7 = 0;
+    int r_qm = 0;
+    int r_n1_qm = 0;
+    int g_n1 = 0;
+    int g_use_xnor = 0;
+    int g_q0 = 0;
+    int g_q1 = 0;
+    int g_q2 = 0;
+    int g_q3 = 0;
+    int g_q4 = 0;
+    int g_q5 = 0;
+    int g_q6 = 0;
+    int g_q7 = 0;
+    int g_qm = 0;
+    int g_n1_qm = 0;
+    int b_n1 = 0;
+    int b_use_xnor = 0;
+    int b_q0 = 0;
+    int b_q1 = 0;
+    int b_q2 = 0;
+    int b_q3 = 0;
+    int b_q4 = 0;
+    int b_q5 = 0;
+    int b_q6 = 0;
+    int b_q7 = 0;
+    int b_qm = 0;
+    int b_n1_qm = 0;
     // =======================================================
     // CH2: Red (コントロール: C1=0, C0=0)
     // =======================================================
