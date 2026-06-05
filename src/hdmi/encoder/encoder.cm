@@ -90,7 +90,7 @@ assign int b_qm = b_q0 | (b_q1 << 1) | (b_q2 << 2) | (b_q3 << 3)
 assign int b_n1_qm = b_q0 + b_q1 + b_q2 + b_q3 + b_q4 + b_q5 + b_q6 + b_q7;
 
 // DVI 1.0 準拠の 8b/10b エンコード処理 (クロック同期によるFFロードのみ)
-export async func tmds_encode(posedge pixel_clk) {
+export async void tmds_encode(posedge pixel_clk) {
     // =======================================================
     // CH2: Red (コントロール: C1=0, C0=0)
     // =======================================================

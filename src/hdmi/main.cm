@@ -74,6 +74,6 @@ TLVDS_CK tlvds_ck;
 // セクション 5: LEDステータス同期制御
 // ============================================================
 
-async func led_control(posedge pixel_clk) {
+async void led_control(posedge pixel_clk) {
     led = pll_lock;
 }

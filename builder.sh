@@ -188,13 +188,6 @@ step_build() {
         exit 1
     fi
     ok "SV 生成完了: ${SV_OUT}"
-
-    # ポスト処理スクリプトがあれば実行
-    local postprocess="${SRC_DIR}/${TARGET_DIR}/postprocess_sv.sh"
-    if [ -f "$postprocess" ]; then
-        info "SV ポスト処理実行中..."
-        bash "$postprocess" "$SV_OUT"
-    fi
 }
 
 # ============================================================

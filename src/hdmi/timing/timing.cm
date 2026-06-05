@@ -10,7 +10,7 @@ export bool vsync_reg = true;
 export bool de_reg    = false;
 
 // ピクセルクロックに同期したビデオタイミング生成ロジック
-export async func video_timing(posedge pixel_clk) {
+export async void video_timing(posedge pixel_clk) {
     // 水平カウンタ
     if (hc == H_TOTAL - 1) {
         hc = 0;

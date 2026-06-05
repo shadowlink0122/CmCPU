@@ -296,15 +296,14 @@ HDMI_SRC := $(SRC_DIR)/hdmi/main.cm
 HDMI_SV := $(BUILD_DIR)/hdmi/hdmi_colorbar.sv
 HDMI_TCL := $(SRC_DIR)/hdmi/gowin_hdmi.tcl
 HDMI_FS := $(BUILD_DIR)/hdmi/hdmi_colorbar/impl/pnr/hdmi_colorbar.fs
-HDMI_POSTPROCESS := $(SRC_DIR)/hdmi/postprocess_sv.sh
 
 # ============================================================
-# HDMI カラーバー: Cm → SV + ポスト処理
+# HDMI カラーバー: Cm → SV
 # ============================================================
 .PHONY: hdmi-build
 hdmi-build: $(HDMI_SV)
-	@echo "ポスト処理中 (Gowin プリミティブ修正)..."
-	bash $(HDMI_POSTPROCESS) $(HDMI_SV)
+	@echo "Verilator リントチェック中..."
+	/usr/local/bin/verilator --lint-only --timing -Wno-MODMISSING $(HDMI_SV)
 	@echo ""
 	@echo "=========================================="
 	@echo "✅ HDMI ビルド完了! $(HDMI_SV)"
@@ -321,8 +320,6 @@ $(HDMI_SV): $(HDMI_SRC)
 # ============================================================
 .PHONY: hdmi-gowin
 hdmi-gowin: $(HDMI_SV)
-	@echo "ポスト処理中..."
-	bash $(HDMI_POSTPROCESS) $(HDMI_SV)
 	@echo "Gowin EDA で合成・配置配線・ビットストリーム生成中 (HDMI)..."
 	@if [ -f "$(HDMI_FS)" ]; then echo "[WARN] 古いビットストリームを削除: $(HDMI_FS)"; rm -f "$(HDMI_FS)"; fi
 	DYLD_LIBRARY_PATH=$(GW_LIB) DYLD_FRAMEWORK_PATH=$(GW_LIB) $(GW_SH) $(HDMI_TCL)
