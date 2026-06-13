@@ -93,23 +93,23 @@ export uint lookup_font(utiny char_code, utiny row) {
         if (row == 4) { font_byte = 0x24; }
     }
     if (char_code == 43 as utiny) {
-        if (row == 0) { font_byte = 0x10; }
-        if (row == 1) { font_byte = 0x10; }
-        if (row == 2) { font_byte = 0x38; }
+        if (row == 2) { font_byte = 0x10; }
         if (row == 3) { font_byte = 0x10; }
-        if (row == 4) { font_byte = 0x10; }
+        if (row == 4) { font_byte = 0x38; }
+        if (row == 5) { font_byte = 0x10; }
+        if (row == 6) { font_byte = 0x10; }
     }
     if (char_code == 44 as utiny) {
-        if (row == 0) { font_byte = 0x18; }
-        if (row == 1) { font_byte = 0x18; }
-        if (row == 2) { font_byte = 0x10; }
+        if (row == 5) { font_byte = 0x18; }
+        if (row == 6) { font_byte = 0x18; }
+        if (row == 7) { font_byte = 0x10; }
     }
     if (char_code == 45 as utiny) {
-        if (row == 0) { font_byte = 0x7C; }
+        if (row == 3) { font_byte = 0x7C; }
     }
     if (char_code == 46 as utiny) {
-        if (row == 0) { font_byte = 0x18; }
-        if (row == 1) { font_byte = 0x18; }
+        if (row == 5) { font_byte = 0x18; }
+        if (row == 6) { font_byte = 0x18; }
     }
     if (char_code == 47 as utiny) {
         if (row == 0) { font_byte = 0x04; }
@@ -210,17 +210,17 @@ export uint lookup_font(utiny char_code, utiny row) {
         if (row == 6) { font_byte = 0x38; }
     }
     if (char_code == 58 as utiny) {
-        if (row == 0) { font_byte = 0x18; }
-        if (row == 1) { font_byte = 0x18; }
+        if (row == 2) { font_byte = 0x18; }
         if (row == 3) { font_byte = 0x18; }
-        if (row == 4) { font_byte = 0x18; }
+        if (row == 5) { font_byte = 0x18; }
+        if (row == 6) { font_byte = 0x18; }
     }
     if (char_code == 59 as utiny) {
-        if (row == 0) { font_byte = 0x18; }
-        if (row == 1) { font_byte = 0x18; }
+        if (row == 2) { font_byte = 0x18; }
         if (row == 3) { font_byte = 0x18; }
-        if (row == 4) { font_byte = 0x18; }
-        if (row == 5) { font_byte = 0x10; }
+        if (row == 5) { font_byte = 0x18; }
+        if (row == 6) { font_byte = 0x18; }
+        if (row == 7) { font_byte = 0x10; }
     }
     if (char_code == 60 as utiny) {
         if (row == 0) { font_byte = 0x0C; }
@@ -232,8 +232,8 @@ export uint lookup_font(utiny char_code, utiny row) {
         if (row == 6) { font_byte = 0x0C; }
     }
     if (char_code == 61 as utiny) {
-        if (row == 0) { font_byte = 0x7C; }
         if (row == 2) { font_byte = 0x7C; }
+        if (row == 4) { font_byte = 0x7C; }
     }
     if (char_code == 62 as utiny) {
         if (row == 0) { font_byte = 0x60; }
@@ -535,11 +535,11 @@ export uint lookup_font(utiny char_code, utiny row) {
         if (row == 1) { font_byte = 0x20; }
     }
     if (char_code == 97 as utiny) {
-        if (row == 0) { font_byte = 0x38; }
-        if (row == 1) { font_byte = 0x04; }
-        if (row == 2) { font_byte = 0x3C; }
-        if (row == 3) { font_byte = 0x44; }
+        if (row == 2) { font_byte = 0x38; }
+        if (row == 3) { font_byte = 0x04; }
         if (row == 4) { font_byte = 0x3C; }
+        if (row == 5) { font_byte = 0x44; }
+        if (row == 6) { font_byte = 0x3C; }
     }
     if (char_code == 98 as utiny) {
         if (row == 0) { font_byte = 0x40; }
@@ -551,11 +551,11 @@ export uint lookup_font(utiny char_code, utiny row) {
         if (row == 6) { font_byte = 0x78; }
     }
     if (char_code == 99 as utiny) {
-        if (row == 0) { font_byte = 0x38; }
-        if (row == 1) { font_byte = 0x40; }
-        if (row == 2) { font_byte = 0x40; }
-        if (row == 3) { font_byte = 0x44; }
-        if (row == 4) { font_byte = 0x38; }
+        if (row == 2) { font_byte = 0x38; }
+        if (row == 3) { font_byte = 0x40; }
+        if (row == 4) { font_byte = 0x40; }
+        if (row == 5) { font_byte = 0x44; }
+        if (row == 6) { font_byte = 0x38; }
     }
     if (char_code == 100 as utiny) {
         if (row == 0) { font_byte = 0x04; }
@@ -567,11 +567,11 @@ export uint lookup_font(utiny char_code, utiny row) {
         if (row == 6) { font_byte = 0x3C; }
     }
     if (char_code == 101 as utiny) {
-        if (row == 0) { font_byte = 0x38; }
-        if (row == 1) { font_byte = 0x44; }
-        if (row == 2) { font_byte = 0x7C; }
-        if (row == 3) { font_byte = 0x40; }
-        if (row == 4) { font_byte = 0x38; }
+        if (row == 2) { font_byte = 0x38; }
+        if (row == 3) { font_byte = 0x44; }
+        if (row == 4) { font_byte = 0x7C; }
+        if (row == 5) { font_byte = 0x40; }
+        if (row == 6) { font_byte = 0x38; }
     }
     if (char_code == 102 as utiny) {
         if (row == 0) { font_byte = 0x38; }
@@ -583,12 +583,12 @@ export uint lookup_font(utiny char_code, utiny row) {
         if (row == 6) { font_byte = 0x40; }
     }
     if (char_code == 103 as utiny) {
-        if (row == 0) { font_byte = 0x3C; }
-        if (row == 1) { font_byte = 0x44; }
-        if (row == 2) { font_byte = 0x44; }
-        if (row == 3) { font_byte = 0x3C; }
-        if (row == 4) { font_byte = 0x04; }
-        if (row == 5) { font_byte = 0x38; }
+        if (row == 2) { font_byte = 0x3C; }
+        if (row == 3) { font_byte = 0x44; }
+        if (row == 4) { font_byte = 0x44; }
+        if (row == 5) { font_byte = 0x3C; }
+        if (row == 6) { font_byte = 0x04; }
+        if (row == 7) { font_byte = 0x38; }
     }
     if (char_code == 104 as utiny) {
         if (row == 0) { font_byte = 0x40; }
@@ -609,12 +609,12 @@ export uint lookup_font(utiny char_code, utiny row) {
         if (row == 6) { font_byte = 0x38; }
     }
     if (char_code == 106 as utiny) {
-        if (row == 0) { font_byte = 0x10; }
-        if (row == 1) { font_byte = 0x30; }
         if (row == 2) { font_byte = 0x10; }
-        if (row == 3) { font_byte = 0x10; }
-        if (row == 4) { font_byte = 0x50; }
-        if (row == 5) { font_byte = 0x20; }
+        if (row == 3) { font_byte = 0x30; }
+        if (row == 4) { font_byte = 0x10; }
+        if (row == 5) { font_byte = 0x10; }
+        if (row == 6) { font_byte = 0x50; }
+        if (row == 7) { font_byte = 0x20; }
     }
     if (char_code == 107 as utiny) {
         if (row == 0) { font_byte = 0x40; }
@@ -635,55 +635,55 @@ export uint lookup_font(utiny char_code, utiny row) {
         if (row == 6) { font_byte = 0x38; }
     }
     if (char_code == 109 as utiny) {
-        if (row == 0) { font_byte = 0x6C; }
-        if (row == 1) { font_byte = 0x54; }
-        if (row == 2) { font_byte = 0x44; }
-        if (row == 3) { font_byte = 0x44; }
+        if (row == 2) { font_byte = 0x6C; }
+        if (row == 3) { font_byte = 0x54; }
         if (row == 4) { font_byte = 0x44; }
+        if (row == 5) { font_byte = 0x44; }
+        if (row == 6) { font_byte = 0x44; }
     }
     if (char_code == 110 as utiny) {
-        if (row == 0) { font_byte = 0x78; }
-        if (row == 1) { font_byte = 0x44; }
-        if (row == 2) { font_byte = 0x44; }
+        if (row == 2) { font_byte = 0x78; }
         if (row == 3) { font_byte = 0x44; }
         if (row == 4) { font_byte = 0x44; }
+        if (row == 5) { font_byte = 0x44; }
+        if (row == 6) { font_byte = 0x44; }
     }
     if (char_code == 111 as utiny) {
-        if (row == 0) { font_byte = 0x38; }
-        if (row == 1) { font_byte = 0x44; }
-        if (row == 2) { font_byte = 0x44; }
+        if (row == 2) { font_byte = 0x38; }
         if (row == 3) { font_byte = 0x44; }
-        if (row == 4) { font_byte = 0x38; }
+        if (row == 4) { font_byte = 0x44; }
+        if (row == 5) { font_byte = 0x44; }
+        if (row == 6) { font_byte = 0x38; }
     }
     if (char_code == 112 as utiny) {
-        if (row == 0) { font_byte = 0x78; }
-        if (row == 1) { font_byte = 0x44; }
-        if (row == 2) { font_byte = 0x44; }
-        if (row == 3) { font_byte = 0x78; }
-        if (row == 4) { font_byte = 0x40; }
-        if (row == 5) { font_byte = 0x40; }
+        if (row == 2) { font_byte = 0x78; }
+        if (row == 3) { font_byte = 0x44; }
+        if (row == 4) { font_byte = 0x44; }
+        if (row == 5) { font_byte = 0x78; }
+        if (row == 6) { font_byte = 0x40; }
+        if (row == 7) { font_byte = 0x40; }
     }
     if (char_code == 113 as utiny) {
-        if (row == 0) { font_byte = 0x3C; }
-        if (row == 1) { font_byte = 0x44; }
-        if (row == 2) { font_byte = 0x44; }
-        if (row == 3) { font_byte = 0x3C; }
-        if (row == 4) { font_byte = 0x04; }
-        if (row == 5) { font_byte = 0x04; }
+        if (row == 2) { font_byte = 0x3C; }
+        if (row == 3) { font_byte = 0x44; }
+        if (row == 4) { font_byte = 0x44; }
+        if (row == 5) { font_byte = 0x3C; }
+        if (row == 6) { font_byte = 0x04; }
+        if (row == 7) { font_byte = 0x04; }
     }
     if (char_code == 114 as utiny) {
-        if (row == 0) { font_byte = 0x58; }
-        if (row == 1) { font_byte = 0x64; }
-        if (row == 2) { font_byte = 0x40; }
-        if (row == 3) { font_byte = 0x40; }
+        if (row == 2) { font_byte = 0x58; }
+        if (row == 3) { font_byte = 0x64; }
         if (row == 4) { font_byte = 0x40; }
+        if (row == 5) { font_byte = 0x40; }
+        if (row == 6) { font_byte = 0x40; }
     }
     if (char_code == 115 as utiny) {
-        if (row == 0) { font_byte = 0x3C; }
-        if (row == 1) { font_byte = 0x40; }
-        if (row == 2) { font_byte = 0x38; }
-        if (row == 3) { font_byte = 0x04; }
-        if (row == 4) { font_byte = 0x78; }
+        if (row == 2) { font_byte = 0x3C; }
+        if (row == 3) { font_byte = 0x40; }
+        if (row == 4) { font_byte = 0x38; }
+        if (row == 5) { font_byte = 0x04; }
+        if (row == 6) { font_byte = 0x78; }
     }
     if (char_code == 116 as utiny) {
         if (row == 0) { font_byte = 0x20; }
@@ -695,46 +695,46 @@ export uint lookup_font(utiny char_code, utiny row) {
         if (row == 6) { font_byte = 0x18; }
     }
     if (char_code == 117 as utiny) {
-        if (row == 0) { font_byte = 0x44; }
-        if (row == 1) { font_byte = 0x44; }
         if (row == 2) { font_byte = 0x44; }
         if (row == 3) { font_byte = 0x44; }
-        if (row == 4) { font_byte = 0x3C; }
+        if (row == 4) { font_byte = 0x44; }
+        if (row == 5) { font_byte = 0x44; }
+        if (row == 6) { font_byte = 0x3C; }
     }
     if (char_code == 118 as utiny) {
-        if (row == 0) { font_byte = 0x44; }
-        if (row == 1) { font_byte = 0x44; }
-        if (row == 2) { font_byte = 0x28; }
-        if (row == 3) { font_byte = 0x28; }
-        if (row == 4) { font_byte = 0x10; }
+        if (row == 2) { font_byte = 0x44; }
+        if (row == 3) { font_byte = 0x44; }
+        if (row == 4) { font_byte = 0x28; }
+        if (row == 5) { font_byte = 0x28; }
+        if (row == 6) { font_byte = 0x10; }
     }
     if (char_code == 119 as utiny) {
-        if (row == 0) { font_byte = 0x44; }
-        if (row == 1) { font_byte = 0x44; }
-        if (row == 2) { font_byte = 0x54; }
-        if (row == 3) { font_byte = 0x54; }
-        if (row == 4) { font_byte = 0x6C; }
+        if (row == 2) { font_byte = 0x44; }
+        if (row == 3) { font_byte = 0x44; }
+        if (row == 4) { font_byte = 0x54; }
+        if (row == 5) { font_byte = 0x54; }
+        if (row == 6) { font_byte = 0x6C; }
     }
     if (char_code == 120 as utiny) {
-        if (row == 0) { font_byte = 0x44; }
-        if (row == 1) { font_byte = 0x28; }
-        if (row == 2) { font_byte = 0x10; }
+        if (row == 2) { font_byte = 0x44; }
         if (row == 3) { font_byte = 0x28; }
-        if (row == 4) { font_byte = 0x44; }
+        if (row == 4) { font_byte = 0x10; }
+        if (row == 5) { font_byte = 0x28; }
+        if (row == 6) { font_byte = 0x44; }
     }
     if (char_code == 121 as utiny) {
-        if (row == 0) { font_byte = 0x44; }
-        if (row == 1) { font_byte = 0x44; }
-        if (row == 2) { font_byte = 0x3C; }
-        if (row == 3) { font_byte = 0x04; }
-        if (row == 4) { font_byte = 0x38; }
+        if (row == 3) { font_byte = 0x44; }
+        if (row == 4) { font_byte = 0x44; }
+        if (row == 5) { font_byte = 0x3C; }
+        if (row == 6) { font_byte = 0x04; }
+        if (row == 7) { font_byte = 0x38; }
     }
     if (char_code == 122 as utiny) {
-        if (row == 0) { font_byte = 0x7C; }
-        if (row == 1) { font_byte = 0x08; }
-        if (row == 2) { font_byte = 0x10; }
-        if (row == 3) { font_byte = 0x20; }
-        if (row == 4) { font_byte = 0x7C; }
+        if (row == 2) { font_byte = 0x7C; }
+        if (row == 3) { font_byte = 0x08; }
+        if (row == 4) { font_byte = 0x10; }
+        if (row == 5) { font_byte = 0x20; }
+        if (row == 6) { font_byte = 0x7C; }
     }
     if (char_code == 123 as utiny) {
         if (row == 0) { font_byte = 0x38; }
@@ -764,8 +764,8 @@ export uint lookup_font(utiny char_code, utiny row) {
         if (row == 6) { font_byte = 0x38; }
     }
     if (char_code == 126 as utiny) {
-        if (row == 0) { font_byte = 0x68; }
-        if (row == 1) { font_byte = 0x2C; }
+        if (row == 2) { font_byte = 0x68; }
+        if (row == 3) { font_byte = 0x2C; }
     }
 
     return font_byte;

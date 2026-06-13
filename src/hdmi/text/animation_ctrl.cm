@@ -180,7 +180,7 @@ export async void process_anim(posedge pixel_clk) {
         if (row_delay == 0) {
             if (row_idx == 0) {
                 // ヘッダー描画
-                text_addr = (36 * (TEXT_COLS as ushort) + 28 + (write_cnt as ushort)) as ushort;
+                text_addr = (8 * (TEXT_COLS as ushort) + 28 + (write_cnt as ushort)) as ushort;
                 text_char = get_header_char(write_cnt);
                 text_we = true;
                 write_cnt = write_cnt + 1;
@@ -192,7 +192,7 @@ export async void process_anim(posedge pixel_clk) {
             }
             else if (row_idx == 1) {
                 // カラム見出し描画
-                text_addr = (40 * (TEXT_COLS as ushort) + 10 + (write_cnt as ushort)) as ushort;
+                text_addr = (12 * (TEXT_COLS as ushort) + 10 + (write_cnt as ushort)) as ushort;
                 text_char = get_col_header_char(write_cnt);
                 text_we = true;
                 write_cnt = write_cnt + 1;
@@ -206,7 +206,7 @@ export async void process_anim(posedge pixel_clk) {
                 if (row_idx <= 17) {
                     // グリッドデータ行の描画
                     utiny r = row_idx - 2;
-                    text_addr = (((43 + r as ushort) * (TEXT_COLS as ushort)) + 10 + (write_cnt as ushort)) as ushort;
+                    text_addr = (((15 + r as ushort) * (TEXT_COLS as ushort)) + 10 + (write_cnt as ushort)) as ushort;
                     text_char = get_table_char(r, write_cnt);
                     text_we = true;
                     write_cnt = write_cnt + 1;
