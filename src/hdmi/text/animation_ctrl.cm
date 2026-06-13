@@ -285,6 +285,14 @@ ushort get_table_char(utiny r, utiny idx) {
 
     digit1 = temp as utiny;
 
+    bool is_ctrl = false;
+    if (val <= 32) { is_ctrl = true; }
+    if (val == 127) { is_ctrl = true; }
+
+    utiny abbrev0 = get_ctrl_abbrev(val as utiny, 0);
+    utiny abbrev1 = get_ctrl_abbrev(val as utiny, 1);
+    utiny abbrev2 = get_ctrl_abbrev(val as utiny, 2);
+
     ushort res_char = ' ' as ushort;
 
     if (offset == 0) { res_char = (digit100 + 48) as ushort; }
@@ -293,24 +301,21 @@ ushort get_table_char(utiny r, utiny idx) {
     if (offset == 3) { res_char = ':' as ushort; }
     if (offset == 4) { res_char = '[' as ushort; }
     if (offset == 5) {
-        if (val <= 32 || val == 127) {
-            res_char = get_ctrl_abbrev(val as utiny, 0) as ushort;
-        } else {
-            res_char = ' ' as ushort;
+        res_char = ' ' as ushort;
+        if (is_ctrl) {
+            res_char = abbrev0 as ushort;
         }
     }
     if (offset == 6) {
-        if (val <= 32 || val == 127) {
-            res_char = get_ctrl_abbrev(val as utiny, 1) as ushort;
-        } else {
-            res_char = val;
+        res_char = val;
+        if (is_ctrl) {
+            res_char = abbrev1 as ushort;
         }
     }
     if (offset == 7) {
-        if (val <= 32 || val == 127) {
-            res_char = get_ctrl_abbrev(val as utiny, 2) as ushort;
-        } else {
-            res_char = ' ' as ushort;
+        res_char = ' ' as ushort;
+        if (is_ctrl) {
+            res_char = abbrev2 as ushort;
         }
     }
     if (offset == 8) { res_char = ']' as ushort; }
