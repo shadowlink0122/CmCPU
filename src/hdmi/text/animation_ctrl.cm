@@ -26,20 +26,20 @@ uint cursor_on = 0;     // カーソル点滅トグル
 utiny msg_char = 0;     // 現在ロードされた文字
 
 void load_msg_char() {
-    msg_char = 0;                            // デフォルト設定によるラッチ回避
-    if (char_idx == 0)  { msg_char = 72; }   // 'H'
-    if (char_idx == 1)  { msg_char = 101; }  // 'e'
-    if (char_idx == 2)  { msg_char = 108; }  // 'l'
-    if (char_idx == 3)  { msg_char = 108; }  // 'l'
-    if (char_idx == 4)  { msg_char = 111; }  // 'o'
-    if (char_idx == 5)  { msg_char = 44; }   // ','
-    if (char_idx == 6)  { msg_char = 32; }   // ' '
-    if (char_idx == 7)  { msg_char = 87; }   // 'W'
-    if (char_idx == 8)  { msg_char = 111; }  // 'o'
-    if (char_idx == 9)  { msg_char = 114; }  // 'r'
-    if (char_idx == 10) { msg_char = 108; }  // 'l'
-    if (char_idx == 11) { msg_char = 100; }  // 'd'
-    if (char_idx == 12) { msg_char = 33; }   // '!'
+    msg_char = 0;  // デフォルト設定によるラッチ回避
+    if (char_idx == 0)  { msg_char = 'H' as utiny; }
+    if (char_idx == 1)  { msg_char = 'e' as utiny; }
+    if (char_idx == 2)  { msg_char = 'l' as utiny; }
+    if (char_idx == 3)  { msg_char = 'l' as utiny; }
+    if (char_idx == 4)  { msg_char = 'o' as utiny; }
+    if (char_idx == 5)  { msg_char = ',' as utiny; }
+    if (char_idx == 6)  { msg_char = ' ' as utiny; }
+    if (char_idx == 7)  { msg_char = 'W' as utiny; }
+    if (char_idx == 8)  { msg_char = 'o' as utiny; }
+    if (char_idx == 9)  { msg_char = 'r' as utiny; }
+    if (char_idx == 10) { msg_char = 'l' as utiny; }
+    if (char_idx == 11) { msg_char = 'd' as utiny; }
+    if (char_idx == 12) { msg_char = '!' as utiny; }
 }
 
 export async void process_anim(posedge pixel_clk) {
