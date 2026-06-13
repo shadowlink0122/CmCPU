@@ -3,10 +3,10 @@ module font_rom;
 
 export const uint FONT_SIZE = 8;
 export const uint LOG2_FONT_SIZE = 3;
-export const uint TEXT_COLS = 20;
-export const uint TEXT_ROWS = 18;
-export const uint TEXT_BUF_SIZE = 360;
-export const uint MSG_LEN = 95;
+export const uint TEXT_COLS = 80;
+export const uint TEXT_ROWS = 60;
+export const uint TEXT_BUF_SIZE = 4800;
+export const uint MSG_LEN = 96;
 
 export uint lookup_font(utiny char_code, utiny row) {
     uint font_byte = 0;

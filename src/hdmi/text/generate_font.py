@@ -71,11 +71,11 @@ def main():
 
     # 設計定数の計算
     log2_N = int(math.log2(N))
-    text_cols = 160 // N
-    text_rows = 144 // N
+    text_cols = 640 // N
+    text_rows = 480 // N
     text_buf_size = text_cols * text_rows
-    # 上部2行を空けるため、タイピング可能な最大文字数を制限 (最大95)
-    msg_len = min(95, text_buf_size - 2 * text_cols)
+    # ASCII 32〜127 (合計96文字) を表示するため、メッセージ長は 96 固定
+    msg_len = 96
 
     # font_rom.cm の出力
     with open(output_path, "w", encoding="utf-8") as out:

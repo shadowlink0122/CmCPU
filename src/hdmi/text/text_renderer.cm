@@ -5,7 +5,7 @@ import ./gbc_display;
 import ./font_rom;
 
 // テキストバッファ (列数×行数 = バッファサイズ)
-export utiny[360] text_buf;
+export utiny[4800] text_buf;
 
 // 書き込みIF
 export ushort text_addr = 0;
@@ -49,8 +49,8 @@ export async void render_process(posedge pixel_clk) {
     }
 
     // 座標分割・入力情報のレジスタ化 (Stage 1 更新用)
-    font_col_reg = gbc_x & ((FONT_SIZE - 1) as utiny);
-    font_row_reg = gbc_y & ((FONT_SIZE - 1) as utiny);
+    font_col_reg = (gbc_x & ((FONT_SIZE - 1) as ushort)) as utiny;
+    font_row_reg = (gbc_y & ((FONT_SIZE - 1) as ushort)) as utiny;
     gbc_active_d1 = gbc_active;
 
     // バッファアドレス計算 (Stage 1 更新用)
@@ -63,10 +63,10 @@ export async void render_process(posedge pixel_clk) {
     }
 
     // カーソル位置判定 (Stage 1 更新用)
-    utiny col_pos = gbc_x >> LOG2_FONT_SIZE;
+    utiny col_pos = (gbc_x >> LOG2_FONT_SIZE) as utiny;
     if (col_pos >= cursor_col) {
         if (col_pos < cursor_col + 11) {
-            if ((gbc_y >> LOG2_FONT_SIZE) == cursor_row) {
+            if (((gbc_y >> LOG2_FONT_SIZE) as utiny) == cursor_row) {
                 is_cursor_pos = true;
                 cursor_char_idx = col_pos - cursor_col;
             } else {
