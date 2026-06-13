@@ -4,12 +4,10 @@ import ../timing/timing;
 import ./text_renderer;
 
 const uint FRAME_CLOCKS   = 420000;  // 1フレーム = 800 × 525 クロック
-const uint TYPE_INTERVAL  = 6;       // 文字表示間隔 (フレーム数)
+const uint TYPE_INTERVAL  = 2;       // 文字表示間隔 (フレーム数)
 const uint CURSOR_INTERVAL = 30;     // カーソル点滅間隔 (フレーム数)
 const uint STARTUP_FRAMES = 60;      // 起動待機 (フレーム数)
-const uint MSG_LEN = 13;             // "Hello, World!" の長さ
-const uint TEXT_COL_START = 3;       // 表示開始列
-const uint TEXT_ROW_START = 8;       // 表示開始行
+const uint MSG_LEN = 65;             // メッセージの長さ (Hello, World! + A-Z + a-z)
 const uint TEXT_COLS = 20;           // テキストバッファ幅
 
 export bool anim_ready = false;
@@ -54,34 +52,68 @@ export async void process_anim(posedge pixel_clk) {
 
         // 文字のロード (インライン処理)
         msg_char = 0;
-        if (char_idx == 0)  { msg_char = 'H' as utiny; }
-        else if (char_idx == 1)  { msg_char = 'e' as utiny; }
-        else if (char_idx == 2)  { msg_char = 'l' as utiny; }
-        else if (char_idx == 3)  { msg_char = 'l' as utiny; }
-        else if (char_idx == 4)  { msg_char = 'o' as utiny; }
-        else if (char_idx == 5)  { msg_char = ',' as utiny; }
-        else if (char_idx == 6)  { msg_char = ' ' as utiny; }
-        else if (char_idx == 7)  { msg_char = 'W' as utiny; }
-        else if (char_idx == 8)  { msg_char = 'o' as utiny; }
-        else if (char_idx == 9)  { msg_char = 'r' as utiny; }
-        else if (char_idx == 10) { msg_char = 'l' as utiny; }
-        else if (char_idx == 11) { msg_char = 'd' as utiny; }
-        else if (char_idx == 12) { msg_char = '!' as utiny; }
+        if (char_idx < 13) {
+            if (char_idx == 0)       { msg_char = 'H' as utiny; }
+            else if (char_idx == 1)  { msg_char = 'e' as utiny; }
+            else if (char_idx == 2)  { msg_char = 'l' as utiny; }
+            else if (char_idx == 3)  { msg_char = 'l' as utiny; }
+            else if (char_idx == 4)  { msg_char = 'o' as utiny; }
+            else if (char_idx == 5)  { msg_char = ',' as utiny; }
+            else if (char_idx == 6)  { msg_char = ' ' as utiny; }
+            else if (char_idx == 7)  { msg_char = 'W' as utiny; }
+            else if (char_idx == 8)  { msg_char = 'o' as utiny; }
+            else if (char_idx == 9)  { msg_char = 'r' as utiny; }
+            else if (char_idx == 10) { msg_char = 'l' as utiny; }
+            else if (char_idx == 11) { msg_char = 'd' as utiny; }
+            else if (char_idx == 12) { msg_char = '!' as utiny; }
+        } else if (char_idx < 39) {
+            // 大文字 'A' - 'Z'
+            msg_char = (char_idx + 52) as utiny;
+        } else {
+            // 小文字 'a' - 'z'
+            msg_char = (char_idx + 58) as utiny;
+        }
 
         if (frame_cnt == 0) {
             type_timer = type_timer + 1;
             if (type_timer == TYPE_INTERVAL) {
                 type_timer = 0;
-                // 文字をテキストバッファに書き込む
-                text_addr = (TEXT_ROW_START * TEXT_COLS + TEXT_COL_START + char_idx) as ushort;
+
+                // アドレスの動的計算 (折り返し対応)
+                ushort row = 0;
+                ushort col = 0;
+                if (char_idx < 13) {
+                    row = 2;
+                    col = (3 + char_idx) as ushort;
+                } else if (char_idx < 39) {
+                    ushort idx = (char_idx - 13) as ushort;
+                    if (idx < 13) {
+                        row = 4;
+                        col = (3 + idx) as ushort;
+                    } else {
+                        row = 5;
+                        col = (3 + idx - 13) as ushort;
+                    }
+                } else {
+                    ushort idx = (char_idx - 39) as ushort;
+                    if (idx < 13) {
+                        row = 7;
+                        col = (3 + idx) as ushort;
+                    } else {
+                        row = 8;
+                        col = (3 + idx - 13) as ushort;
+                    }
+                }
+
+                text_addr = row * (TEXT_COLS as ushort) + col;
                 text_char = msg_char;
                 text_we = true;
 
                 char_idx = char_idx + 1;
 
                 // カーソル位置更新
-                cursor_col = (TEXT_COL_START + char_idx) as utiny;
-                cursor_row = TEXT_ROW_START as utiny;
+                cursor_col = col as utiny;
+                cursor_row = row as utiny;
                 cursor_visible = true;
 
                 if (char_idx == MSG_LEN) {
