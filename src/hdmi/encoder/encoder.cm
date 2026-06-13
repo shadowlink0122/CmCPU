@@ -13,84 +13,87 @@ export int cnt_r = 0;
 export int cnt_g = 0;
 export int cnt_b = 0;
 
-// エンコード用中間変数
-int r_n1 = 0;
-int g_n1 = 0;
-int b_n1 = 0;
-int r_use_xnor = 0;
-int g_use_xnor = 0;
-int b_use_xnor = 0;
-int r_q0 = 0;
-int r_q1 = 0;
-int r_q2 = 0;
-int r_q3 = 0;
-int r_q4 = 0;
-int r_q5 = 0;
-int r_q6 = 0;
-int r_q7 = 0;
-int g_q0 = 0;
-int g_q1 = 0;
-int g_q2 = 0;
-int g_q3 = 0;
-int g_q4 = 0;
-int g_q5 = 0;
-int g_q6 = 0;
-int g_q7 = 0;
-int b_q0 = 0;
-int b_q1 = 0;
-int b_q2 = 0;
-int b_q3 = 0;
-int b_q4 = 0;
-int b_q5 = 0;
-int b_q6 = 0;
-int b_q7 = 0;
-int r_qm = 0;
-int g_qm = 0;
-int b_qm = 0;
-int r_n1_qm = 0;
-int g_n1_qm = 0;
-int b_n1_qm = 0;
+// =======================================================
+// Red (CH2) 組み合わせ回路中間変数（assign連続代入によるピクセル遅延の解消）
+// =======================================================
+assign int r_n1 = (r_out & 1) + ((r_out >> 1) & 1)
++ ((r_out >> 2) & 1) + ((r_out >> 3) & 1)
++ ((r_out >> 4) & 1) + ((r_out >> 5) & 1)
++ ((r_out >> 6) & 1) + ((r_out >> 7) & 1);
 
-// DVI 1.0 準拠の 8b/10b エンコード処理
+assign int r_use_xnor = (r_n1 > 4) ? 1 : ((r_n1 == 4 && (r_out & 1) == 0) ? 1 : 0);
+
+assign int r_q0 = r_out & 1;
+assign int r_q1 = ((r_out >> 1) & 1) ^ r_q0 ^ r_use_xnor;
+assign int r_q2 = ((r_out >> 2) & 1) ^ r_q1 ^ r_use_xnor;
+assign int r_q3 = ((r_out >> 3) & 1) ^ r_q2 ^ r_use_xnor;
+assign int r_q4 = ((r_out >> 4) & 1) ^ r_q3 ^ r_use_xnor;
+assign int r_q5 = ((r_out >> 5) & 1) ^ r_q4 ^ r_use_xnor;
+assign int r_q6 = ((r_out >> 6) & 1) ^ r_q5 ^ r_use_xnor;
+assign int r_q7 = ((r_out >> 7) & 1) ^ r_q6 ^ r_use_xnor;
+
+assign int r_qm = r_q0 | (r_q1 << 1) | (r_q2 << 2) | (r_q3 << 3)
+| (r_q4 << 4) | (r_q5 << 5) | (r_q6 << 6)
+| (r_q7 << 7) | ((r_use_xnor ^ 1) << 8);
+
+assign int r_n1_qm = r_q0 + r_q1 + r_q2 + r_q3 + r_q4 + r_q5 + r_q6 + r_q7;
+
+// =======================================================
+// Green (CH1) 組み合わせ回路中間変数（assign連続代入によるピクセル遅延の解消）
+// =======================================================
+assign int g_n1 = (g_out & 1) + ((g_out >> 1) & 1)
++ ((g_out >> 2) & 1) + ((g_out >> 3) & 1)
++ ((g_out >> 4) & 1) + ((g_out >> 5) & 1)
++ ((g_out >> 6) & 1) + ((g_out >> 7) & 1);
+
+assign int g_use_xnor = (g_n1 > 4) ? 1 : ((g_n1 == 4 && (g_out & 1) == 0) ? 1 : 0);
+
+assign int g_q0 = g_out & 1;
+assign int g_q1 = ((g_out >> 1) & 1) ^ g_q0 ^ g_use_xnor;
+assign int g_q2 = ((g_out >> 2) & 1) ^ g_q1 ^ g_use_xnor;
+assign int g_q3 = ((g_out >> 3) & 1) ^ g_q2 ^ g_use_xnor;
+assign int g_q4 = ((g_out >> 4) & 1) ^ g_q3 ^ g_use_xnor;
+assign int g_q5 = ((g_out >> 5) & 1) ^ g_q4 ^ g_use_xnor;
+assign int g_q6 = ((g_out >> 6) & 1) ^ g_q5 ^ g_use_xnor;
+assign int g_q7 = ((g_out >> 7) & 1) ^ g_q6 ^ g_use_xnor;
+
+assign int g_qm = g_q0 | (g_q1 << 1) | (g_q2 << 2) | (g_q3 << 3)
+| (g_q4 << 4) | (g_q5 << 5) | (g_q6 << 6)
+| (g_q7 << 7) | ((g_use_xnor ^ 1) << 8);
+
+assign int g_n1_qm = g_q0 + g_q1 + g_q2 + g_q3 + g_q4 + g_q5 + g_q6 + g_q7;
+
+// =======================================================
+// Blue (CH0) 組み合わせ回路中間変数（assign連続代入によるピクセル遅延の解消）
+// =======================================================
+assign int b_n1 = (b_out & 1) + ((b_out >> 1) & 1)
++ ((b_out >> 2) & 1) + ((b_out >> 3) & 1)
++ ((b_out >> 4) & 1) + ((b_out >> 5) & 1)
++ ((b_out >> 6) & 1) + ((b_out >> 7) & 1);
+
+assign int b_use_xnor = (b_n1 > 4) ? 1 : ((b_n1 == 4 && (b_out & 1) == 0) ? 1 : 0);
+
+assign int b_q0 = b_out & 1;
+assign int b_q1 = ((b_out >> 1) & 1) ^ b_q0 ^ b_use_xnor;
+assign int b_q2 = ((b_out >> 2) & 1) ^ b_q1 ^ b_use_xnor;
+assign int b_q3 = ((b_out >> 3) & 1) ^ b_q2 ^ b_use_xnor;
+assign int b_q4 = ((b_out >> 4) & 1) ^ b_q3 ^ b_use_xnor;
+assign int b_q5 = ((b_out >> 5) & 1) ^ b_q4 ^ b_use_xnor;
+assign int b_q6 = ((b_out >> 6) & 1) ^ b_q5 ^ b_use_xnor;
+assign int b_q7 = ((b_out >> 7) & 1) ^ b_q6 ^ b_use_xnor;
+
+assign int b_qm = b_q0 | (b_q1 << 1) | (b_q2 << 2) | (b_q3 << 3)
+| (b_q4 << 4) | (b_q5 << 5) | (b_q6 << 6)
+| (b_q7 << 7) | ((b_use_xnor ^ 1) << 8);
+
+assign int b_n1_qm = b_q0 + b_q1 + b_q2 + b_q3 + b_q4 + b_q5 + b_q6 + b_q7;
+
+// DVI 1.0 準拠の 8b/10b エンコード処理 (クロック同期によるFFロードのみ)
 export async void tmds_encode(posedge pixel_clk) {
     // =======================================================
     // CH2: Red (コントロール: C1=0, C0=0)
     // =======================================================
     if (de_reg == true) {
-        // ステップ 1: popcount (入力データ中の 1 の数)
-        r_n1 = (r_out & 1) + ((r_out >> 1) & 1)
-        + ((r_out >> 2) & 1) + ((r_out >> 3) & 1)
-        + ((r_out >> 4) & 1) + ((r_out >> 5) & 1)
-        + ((r_out >> 6) & 1) + ((r_out >> 7) & 1);
-        // ステップ 2: XOR/XNOR 選択
-        if (r_n1 > 4) {
-            r_use_xnor = 1;
-        } else {
-            if (r_n1 == 4) {
-                if ((r_out & 1) == 0) {
-                    r_use_xnor = 1;
-                } else {
-                    r_use_xnor = 0;
-                }
-            } else {
-                r_use_xnor = 0;
-            }
-        }
-        // ステップ 3: 遷移最小化 q_m[i] = D[i] XOR/XNOR q_m[i-1]
-        r_q0 = r_out & 1;
-        r_q1 = ((r_out >> 1) & 1) ^ r_q0 ^ r_use_xnor;
-        r_q2 = ((r_out >> 2) & 1) ^ r_q1 ^ r_use_xnor;
-        r_q3 = ((r_out >> 3) & 1) ^ r_q2 ^ r_use_xnor;
-        r_q4 = ((r_out >> 4) & 1) ^ r_q3 ^ r_use_xnor;
-        r_q5 = ((r_out >> 5) & 1) ^ r_q4 ^ r_use_xnor;
-        r_q6 = ((r_out >> 6) & 1) ^ r_q5 ^ r_use_xnor;
-        r_q7 = ((r_out >> 7) & 1) ^ r_q6 ^ r_use_xnor;
-        // q_m[8:0] 構築 (bit8: XOR=1, XNOR=0)
-        r_qm = r_q0 | (r_q1 << 1) | (r_q2 << 2) | (r_q3 << 3)
-        | (r_q4 << 4) | (r_q5 << 5) | (r_q6 << 6)
-        | (r_q7 << 7) | ((r_use_xnor ^ 1) << 8);
-        // ステップ 4: DC バランス
-        r_n1_qm = r_q0 + r_q1 + r_q2 + r_q3 + r_q4 + r_q5 + r_q6 + r_q7;
         if (r_n1_qm == 4) {
             // N0 == N1: ディスパリティ変化なし
             if ((r_qm & 256) == 0) {
@@ -112,32 +115,22 @@ export async void tmds_encode(posedge pixel_clk) {
                 if (cnt_r > 0) {
                     if (r_n1_qm > 4) {
                         // ケース B: cnt>0, N1>N0 → データ反転
-                        tmds_r = ((r_qm ^ 255) & 255)
-                        | (r_qm & 256) | (1 << 9);
-                        cnt_r = cnt_r + ((r_qm >> 8) & 1)
-                        + ((r_qm >> 8) & 1) + 8
-                        - r_n1_qm - r_n1_qm;
+                        tmds_r = ((r_qm ^ 255) & 255) | (r_qm & 256) | (1 << 9);
+                        cnt_r = cnt_r + ((r_qm >> 8) & 1) + ((r_qm >> 8) & 1) + 8 - r_n1_qm - r_n1_qm;
                     } else {
                         // ケース C: cnt>0, N1<N0 → データそのまま
                         tmds_r = r_qm & 511;
-                        cnt_r = cnt_r + ((r_qm >> 8) & 1)
-                        + ((r_qm >> 8) & 1)
-                        + r_n1_qm + r_n1_qm - 10;
+                        cnt_r = cnt_r + ((r_qm >> 8) & 1) + ((r_qm >> 8) & 1) + r_n1_qm + r_n1_qm - 10;
                     }
                 } else {
                     if (r_n1_qm < 4) {
                         // ケース B: cnt<0, N0>N1 → データ反転
-                        tmds_r = ((r_qm ^ 255) & 255)
-                        | (r_qm & 256) | (1 << 9);
-                        cnt_r = cnt_r + ((r_qm >> 8) & 1)
-                        + ((r_qm >> 8) & 1) + 8
-                        - r_n1_qm - r_n1_qm;
+                        tmds_r = ((r_qm ^ 255) & 255) | (r_qm & 256) | (1 << 9);
+                        cnt_r = cnt_r + ((r_qm >> 8) & 1) + ((r_qm >> 8) & 1) + 8 - r_n1_qm - r_n1_qm;
                     } else {
                         // ケース C: cnt<0, N1>N0 → データそのまま
                         tmds_r = r_qm & 511;
-                        cnt_r = cnt_r + ((r_qm >> 8) & 1)
-                        + ((r_qm >> 8) & 1)
-                        + r_n1_qm + r_n1_qm - 10;
+                        cnt_r = cnt_r + ((r_qm >> 8) & 1) + ((r_qm >> 8) & 1) + r_n1_qm + r_n1_qm - 10;
                     }
                 }
             }
@@ -152,35 +145,6 @@ export async void tmds_encode(posedge pixel_clk) {
     // CH1: Green (コントロール: C1=0, C0=0)
     // =======================================================
     if (de_reg == true) {
-        g_n1 = (g_out & 1) + ((g_out >> 1) & 1)
-        + ((g_out >> 2) & 1) + ((g_out >> 3) & 1)
-        + ((g_out >> 4) & 1) + ((g_out >> 5) & 1)
-        + ((g_out >> 6) & 1) + ((g_out >> 7) & 1);
-        if (g_n1 > 4) {
-            g_use_xnor = 1;
-        } else {
-            if (g_n1 == 4) {
-                if ((g_out & 1) == 0) {
-                    g_use_xnor = 1;
-                } else {
-                    g_use_xnor = 0;
-                }
-            } else {
-                g_use_xnor = 0;
-            }
-        }
-        g_q0 = g_out & 1;
-        g_q1 = ((g_out >> 1) & 1) ^ g_q0 ^ g_use_xnor;
-        g_q2 = ((g_out >> 2) & 1) ^ g_q1 ^ g_use_xnor;
-        g_q3 = ((g_out >> 3) & 1) ^ g_q2 ^ g_use_xnor;
-        g_q4 = ((g_out >> 4) & 1) ^ g_q3 ^ g_use_xnor;
-        g_q5 = ((g_out >> 5) & 1) ^ g_q4 ^ g_use_xnor;
-        g_q6 = ((g_out >> 6) & 1) ^ g_q5 ^ g_use_xnor;
-        g_q7 = ((g_out >> 7) & 1) ^ g_q6 ^ g_use_xnor;
-        g_qm = g_q0 | (g_q1 << 1) | (g_q2 << 2) | (g_q3 << 3)
-        | (g_q4 << 4) | (g_q5 << 5) | (g_q6 << 6)
-        | (g_q7 << 7) | ((g_use_xnor ^ 1) << 8);
-        g_n1_qm = g_q0 + g_q1 + g_q2 + g_q3 + g_q4 + g_q5 + g_q6 + g_q7;
         if (g_n1_qm == 4) {
             if ((g_qm & 256) == 0) {
                 tmds_g = ((g_qm ^ 255) & 255) | (1 << 9);
@@ -199,29 +163,19 @@ export async void tmds_encode(posedge pixel_clk) {
             } else {
                 if (cnt_g > 0) {
                     if (g_n1_qm > 4) {
-                        tmds_g = ((g_qm ^ 255) & 255)
-                        | (g_qm & 256) | (1 << 9);
-                        cnt_g = cnt_g + ((g_qm >> 8) & 1)
-                        + ((g_qm >> 8) & 1) + 8
-                        - g_n1_qm - g_n1_qm;
+                        tmds_g = ((g_qm ^ 255) & 255) | (g_qm & 256) | (1 << 9);
+                        cnt_g = cnt_g + ((g_qm >> 8) & 1) + ((g_qm >> 8) & 1) + 8 - g_n1_qm - g_n1_qm;
                     } else {
                         tmds_g = g_qm & 511;
-                        cnt_g = cnt_g + ((g_qm >> 8) & 1)
-                        + ((g_qm >> 8) & 1)
-                        + g_n1_qm + g_n1_qm - 10;
+                        cnt_g = cnt_g + ((g_qm >> 8) & 1) + ((g_qm >> 8) & 1) + g_n1_qm + g_n1_qm - 10;
                     }
                 } else {
                     if (g_n1_qm < 4) {
-                        tmds_g = ((g_qm ^ 255) & 255)
-                        | (g_qm & 256) | (1 << 9);
-                        cnt_g = cnt_g + ((g_qm >> 8) & 1)
-                        + ((g_qm >> 8) & 1) + 8
-                        - g_n1_qm - g_n1_qm;
+                        tmds_g = ((g_qm ^ 255) & 255) | (g_qm & 256) | (1 << 9);
+                        cnt_g = cnt_g + ((g_qm >> 8) & 1) + ((g_qm >> 8) & 1) + 8 - g_n1_qm - g_n1_qm;
                     } else {
                         tmds_g = g_qm & 511;
-                        cnt_g = cnt_g + ((g_qm >> 8) & 1)
-                        + ((g_qm >> 8) & 1)
-                        + g_n1_qm + g_n1_qm - 10;
+                        cnt_g = cnt_g + ((g_qm >> 8) & 1) + ((g_qm >> 8) & 1) + g_n1_qm + g_n1_qm - 10;
                     }
                 }
             }
@@ -235,35 +189,6 @@ export async void tmds_encode(posedge pixel_clk) {
     // CH0: Blue (コントロール: C1=VSYNC, C0=HSYNC)
     // =======================================================
     if (de_reg == true) {
-        b_n1 = (b_out & 1) + ((b_out >> 1) & 1)
-        + ((b_out >> 2) & 1) + ((b_out >> 3) & 1)
-        + ((b_out >> 4) & 1) + ((b_out >> 5) & 1)
-        + ((b_out >> 6) & 1) + ((b_out >> 7) & 1);
-        if (b_n1 > 4) {
-            b_use_xnor = 1;
-        } else {
-            if (b_n1 == 4) {
-                if ((b_out & 1) == 0) {
-                    b_use_xnor = 1;
-                } else {
-                    b_use_xnor = 0;
-                }
-            } else {
-                b_use_xnor = 0;
-            }
-        }
-        b_q0 = b_out & 1;
-        b_q1 = ((b_out >> 1) & 1) ^ b_q0 ^ b_use_xnor;
-        b_q2 = ((b_out >> 2) & 1) ^ b_q1 ^ b_use_xnor;
-        b_q3 = ((b_out >> 3) & 1) ^ b_q2 ^ b_use_xnor;
-        b_q4 = ((b_out >> 4) & 1) ^ b_q3 ^ b_use_xnor;
-        b_q5 = ((b_out >> 5) & 1) ^ b_q4 ^ b_use_xnor;
-        b_q6 = ((b_out >> 6) & 1) ^ b_q5 ^ b_use_xnor;
-        b_q7 = ((b_out >> 7) & 1) ^ b_q6 ^ b_use_xnor;
-        b_qm = b_q0 | (b_q1 << 1) | (b_q2 << 2) | (b_q3 << 3)
-        | (b_q4 << 4) | (b_q5 << 5) | (b_q6 << 6)
-        | (b_q7 << 7) | ((b_use_xnor ^ 1) << 8);
-        b_n1_qm = b_q0 + b_q1 + b_q2 + b_q3 + b_q4 + b_q5 + b_q6 + b_q7;
         if (b_n1_qm == 4) {
             if ((b_qm & 256) == 0) {
                 tmds_b = ((b_qm ^ 255) & 255) | (1 << 9);
@@ -282,29 +207,19 @@ export async void tmds_encode(posedge pixel_clk) {
             } else {
                 if (cnt_b > 0) {
                     if (b_n1_qm > 4) {
-                        tmds_b = ((b_qm ^ 255) & 255)
-                        | (b_qm & 256) | (1 << 9);
-                        cnt_b = cnt_b + ((b_qm >> 8) & 1)
-                        + ((b_qm >> 8) & 1) + 8
-                        - b_n1_qm - b_n1_qm;
+                        tmds_b = ((b_qm ^ 255) & 255) | (b_qm & 256) | (1 << 9);
+                        cnt_b = cnt_b + ((b_qm >> 8) & 1) + ((b_qm >> 8) & 1) + 8 - b_n1_qm - b_n1_qm;
                     } else {
                         tmds_b = b_qm & 511;
-                        cnt_b = cnt_b + ((b_qm >> 8) & 1)
-                        + ((b_qm >> 8) & 1)
-                        + b_n1_qm + b_n1_qm - 10;
+                        cnt_b = cnt_b + ((b_qm >> 8) & 1) + ((b_qm >> 8) & 1) + b_n1_qm + b_n1_qm - 10;
                     }
                 } else {
                     if (b_n1_qm < 4) {
-                        tmds_b = ((b_qm ^ 255) & 255)
-                        | (b_qm & 256) | (1 << 9);
-                        cnt_b = cnt_b + ((b_qm >> 8) & 1)
-                        + ((b_qm >> 8) & 1) + 8
-                        - b_n1_qm - b_n1_qm;
+                        tmds_b = ((b_qm ^ 255) & 255) | (b_qm & 256) | (1 << 9);
+                        cnt_b = cnt_b + ((b_qm >> 8) & 1) + ((b_qm >> 8) & 1) + 8 - b_n1_qm - b_n1_qm;
                     } else {
                         tmds_b = b_qm & 511;
-                        cnt_b = cnt_b + ((b_qm >> 8) & 1)
-                        + ((b_qm >> 8) & 1)
-                        + b_n1_qm + b_n1_qm - 10;
+                        cnt_b = cnt_b + ((b_qm >> 8) & 1) + ((b_qm >> 8) & 1) + b_n1_qm + b_n1_qm - 10;
                     }
                 }
             }
