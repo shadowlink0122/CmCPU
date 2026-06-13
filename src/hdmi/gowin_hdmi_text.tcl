@@ -13,7 +13,7 @@ set device_version "C"
 
 # ファイルパス（絶対パスで指定）
 set sv_file "${project_root}/build/hdmi/hdmi_text.sv"
-set cst_file "${project_root}/src/hdmi/tang_console_138k_hdmi.cst"
+set cst_file "${project_root}/src/hdmi/tang_console_138k_hdmi_text.cst"
 set output_dir "${project_root}/build/hdmi"
 set project_name "hdmi_text"
 
@@ -28,7 +28,7 @@ if { [catch {create_project -name check_dev -dir $check_dir -pn $device_pn -devi
     puts "⚠️  FPG676 パッケージが未登録のため、PG484 にフォールバックします。"
     puts "   ピン配置は PG484 用となり、実機 (FPG676/Tang Console 138K) のピンとは異なります。"
     set device_pn "GW5AST-LV138PG484AC1/I0"
-    set cst_file "${project_root}/src/hdmi/tang_console_138k_hdmi_pg484.cst"
+    set cst_file "${project_root}/src/hdmi/tang_console_138k_hdmi_text_pg484.cst"
     set is_fallback 1
 } else {
     # 一時プロジェクトが開いた状態になっているのでクローズする

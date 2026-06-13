@@ -1,0 +1,40 @@
+// ============================================================
+// Tang Console 138K ピン制約: HDMI TMDS 出力 (Text / Animation 版)
+// ============================================================
+// ターゲット: GW5AST-LV138PG484A (Bank 3: HDMI)
+// ============================================================
+
+// システムクロック (50MHz, Bank 5)
+IO_LOC  "clk_50m" V10;
+IO_PORT "clk_50m" IO_TYPE=LVCMOS33;
+
+// HDMI Data Channel 2 (Red)
+IO_LOC  "tmds_d2_p" AA22;
+IO_LOC  "tmds_d2_n" AA23;
+IO_PORT "tmds_d2_p" IO_TYPE=LVCMOS33D;
+IO_PORT "tmds_d2_n" IO_TYPE=LVCMOS33D;
+
+// HDMI Data Channel 1 (Green)
+IO_LOC  "tmds_d1_p" V24;
+IO_LOC  "tmds_d1_n" W24;
+IO_PORT "tmds_d1_p" IO_TYPE=LVCMOS33D;
+IO_PORT "tmds_d1_n" IO_TYPE=LVCMOS33D;
+
+// HDMI Data Channel 0 (Blue + HSYNC/VSYNC)
+IO_LOC  "tmds_d0_p" AB24;
+IO_LOC  "tmds_d0_n" AC24;
+IO_PORT "tmds_d0_p" IO_TYPE=LVCMOS33D;
+IO_PORT "tmds_d0_n" IO_TYPE=LVCMOS33D;
+
+// HDMI Clock Channel
+IO_LOC  "tmds_clk_p" Y22;
+IO_LOC  "tmds_clk_n" Y23;
+IO_PORT "tmds_clk_p" IO_TYPE=LVCMOS33D;
+IO_PORT "tmds_clk_n" IO_TYPE=LVCMOS33D;
+
+// ステータス LED READY (Red, U12) / DONE (Blue, G11)
+IO_LOC  "led_ready" U12;
+IO_PORT "led_ready" IO_TYPE=LVCMOS33 DRIVE=8;
+
+IO_LOC  "led_done" G11;
+IO_PORT "led_done" IO_TYPE=LVCMOS33 DRIVE=8;
