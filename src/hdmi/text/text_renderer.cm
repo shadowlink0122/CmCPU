@@ -4,7 +4,7 @@ import ../timing/timing;
 import ./gbc_display;
 import ./font_rom;
 
-// テキストバッファ (20×18 = 360 文字)
+// テキストバッファ (列数×行数 = バッファサイズ)
 export utiny[360] text_buf;
 
 // 書き込みIF
@@ -43,29 +43,30 @@ export async void render_process(posedge pixel_clk) {
     // Stage 0: 座標入力レジスタ化 & バッファ読み出しアドレス計算
     // -------------------------------------------------------
     if (text_we == true) {
-        if (text_addr < 360) {
+        if (text_addr < TEXT_BUF_SIZE as ushort) {
             text_buf[text_addr] = text_char;
         }
     }
 
     // 座標分割・入力情報のレジスタ化 (Stage 1 更新用)
-    font_col_reg = gbc_x & 7;
-    font_row_reg = gbc_y & 7;
+    font_col_reg = gbc_x & ((FONT_SIZE - 1) as utiny);
+    font_row_reg = gbc_y & ((FONT_SIZE - 1) as utiny);
     gbc_active_d1 = gbc_active;
 
     // バッファアドレス計算 (Stage 1 更新用)
-    ushort calc_addr = ((gbc_y >> 3) as ushort) * 20 + ((gbc_x >> 3) as ushort);
-    if (calc_addr < 360) {
+    const ushort T_COLS = TEXT_COLS as ushort;
+    ushort calc_addr = ((gbc_y >> LOG2_FONT_SIZE) as ushort) * T_COLS + ((gbc_x >> LOG2_FONT_SIZE) as ushort);
+    if (calc_addr < TEXT_BUF_SIZE as ushort) {
         char_code = text_buf[calc_addr];
     } else {
         char_code = ' ' as utiny;
     }
 
     // カーソル位置判定 (Stage 1 更新用)
-    utiny col_pos = gbc_x >> 3;
+    utiny col_pos = gbc_x >> LOG2_FONT_SIZE;
     if (col_pos >= cursor_col) {
         if (col_pos < cursor_col + 11) {
-            if ((gbc_y >> 3) == cursor_row) {
+            if ((gbc_y >> LOG2_FONT_SIZE) == cursor_row) {
                 is_cursor_pos = true;
                 cursor_char_idx = col_pos - cursor_col;
             } else {
@@ -94,11 +95,12 @@ export async void render_process(posedge pixel_clk) {
     // -------------------------------------------------------
     // Stage 2: ピクセル抽出 & カーソル反転 (Stage 3 更新用)
     // -------------------------------------------------------
-    utiny base_pixel = ((font_byte >> (7 - font_col_reg_d1)) & 1) as utiny;
+    utiny base_pixel = ((font_byte >> ((FONT_SIZE - 1) - font_col_reg_d1)) & 1) as utiny;
     if (cursor_visible_d1 == true) {
         if (is_cursor_pos_d1 == true) {
-            utiny cx = font_col_reg_d1;
-            utiny cy = font_row_reg_d1;
+            // 8x8用のカーソル座標描画処理に対して、フォントサイズに合わせてスケール変換
+            utiny cx = (font_col_reg_d1 * 8 / FONT_SIZE) as utiny;
+            utiny cy = (font_row_reg_d1 * 8 / FONT_SIZE) as utiny;
             utiny cp = 0;
 
             if (cursor_char_idx_d1 == 0) {  // 'H'

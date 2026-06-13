@@ -40,6 +40,7 @@ import ./serdes/oser;
 import ./serdes/obuf;
 
 // 新規テキスト・アニメーションサブモジュール
+import ./text/font_rom;
 import ./text/gbc_display;
 import ./text/text_renderer;
 import ./text/animation_ctrl;

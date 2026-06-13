@@ -2,13 +2,12 @@ module animation_ctrl;
 
 import ../timing/timing;
 import ./text_renderer;
+import ./font_rom;
 
 const uint FRAME_CLOCKS   = 420000;  // 1フレーム = 800 × 525 クロック
 const uint TYPE_INTERVAL  = 2;       // 文字表示間隔 (フレーム数)
 const uint CURSOR_INTERVAL = 30;     // カーソル点滅間隔 (フレーム数)
 const uint STARTUP_FRAMES = 60;      // 起動待機 (フレーム数)
-const uint MSG_LEN = 95;             // メッセージの長さ (ASCII 32-126)
-const uint TEXT_COLS = 20;           // テキストバッファ幅
 
 export bool anim_ready = false;
 export bool anim_done = false;

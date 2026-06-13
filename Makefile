@@ -361,7 +361,10 @@ text-build: $(TEXT_SV)
 	@echo "✅ HDMI テキストビルド完了! $(TEXT_SV)"
 	@echo "=========================================="
 
-$(TEXT_SV): $(TEXT_SRC)
+$(SRC_DIR)/hdmi/text/font_rom.cm: $(SRC_DIR)/hdmi/text/font_rom.txt $(SRC_DIR)/hdmi/text/generate_font.py
+	python3 $(SRC_DIR)/hdmi/text/generate_font.py
+
+$(TEXT_SV): $(TEXT_SRC) $(SRC_DIR)/hdmi/text/font_rom.cm
 	@echo "Cm → SystemVerilog 変換中 (HDMI Text)..."
 	@mkdir -p $(BUILD_DIR)/hdmi
 	$(CM) compile --target=sv $(TEXT_SRC) -o $(TEXT_SV)
