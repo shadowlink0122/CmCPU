@@ -25,114 +25,92 @@ utiny get_header_char(utiny idx) {
     else if (idx == 1) { return '=' as utiny; }
     else if (idx == 2) { return '=' as utiny; }
     else if (idx == 3) { return ' ' as utiny; }
-    else if (idx == 4) { return 'A' as utiny; }
-    else if (idx == 5) { return 'S' as utiny; }
-    else if (idx == 6) { return 'C' as utiny; }
-    else if (idx == 7) { return 'I' as utiny; }
-    else if (idx == 8) { return 'I' as utiny; }
-    else if (idx == 9) { return ' ' as utiny; }
-    else if (idx == 10) { return 'C' as utiny; }
-    else if (idx == 11) { return 'o' as utiny; }
-    else if (idx == 12) { return 'd' as utiny; }
-    else if (idx == 13) { return 'e' as utiny; }
-    else if (idx == 14) { return ' ' as utiny; }
-    else if (idx == 15) { return 'T' as utiny; }
-    else if (idx == 16) { return 'a' as utiny; }
-    else if (idx == 17) { return 'b' as utiny; }
-    else if (idx == 18) { return 'l' as utiny; }
-    else if (idx == 19) { return 'e' as utiny; }
-    else if (idx == 20) { return ' ' as utiny; }
-    else if (idx == 21) { return '=' as utiny; }
-    else if (idx == 22) { return '=' as utiny; }
-    else if (idx == 23) { return '=' as utiny; }
+    else if (idx == 4) { return 'C' as utiny; }
+    else if (idx == 5) { return 'h' as utiny; }
+    else if (idx == 6) { return 'a' as utiny; }
+    else if (idx == 7) { return 'r' as utiny; }
+    else if (idx == 8) { return 'a' as utiny; }
+    else if (idx == 9) { return 'c' as utiny; }
+    else if (idx == 10) { return 't' as utiny; }
+    else if (idx == 11) { return 'e' as utiny; }
+    else if (idx == 12) { return 'r' as utiny; }
+    else if (idx == 13) { return ' ' as utiny; }
+    else if (idx == 14) { return 'C' as utiny; }
+    else if (idx == 15) { return 'o' as utiny; }
+    else if (idx == 16) { return 'd' as utiny; }
+    else if (idx == 17) { return 'e' as utiny; }
+    else if (idx == 18) { return ' ' as utiny; }
+    else if (idx == 19) { return 'T' as utiny; }
+    else if (idx == 20) { return 'a' as utiny; }
+    else if (idx == 21) { return 'b' as utiny; }
+    else if (idx == 22) { return 'l' as utiny; }
+    else if (idx == 23) { return 'e' as utiny; }
+    else if (idx == 24) { return ' ' as utiny; }
+    else if (idx == 25) { return '(' as utiny; }
+    else if (idx == 26) { return 'A' as utiny; }
+    else if (idx == 27) { return 'S' as utiny; }
+    else if (idx == 28) { return 'C' as utiny; }
+    else if (idx == 29) { return 'I' as utiny; }
+    else if (idx == 30) { return 'I' as utiny; }
+    else if (idx == 31) { return ' ' as utiny; }
+    else if (idx == 32) { return '&' as utiny; }
+    else if (idx == 33) { return ' ' as utiny; }
+    else if (idx == 34) { return 'K' as utiny; }
+    else if (idx == 35) { return 'A' as utiny; }
+    else if (idx == 36) { return 'N' as utiny; }
+    else if (idx == 37) { return 'A' as utiny; }
+    else if (idx == 38) { return ')' as utiny; }
+    else if (idx == 39) { return ' ' as utiny; }
+    else if (idx == 40) { return '=' as utiny; }
+    else if (idx == 41) { return '=' as utiny; }
+    else if (idx == 42) { return '=' as utiny; }
     return ' ' as utiny;
 }
 
-// カラムヘッダー文字列文字抽出関数
-utiny get_col_header_char(utiny idx) {
-    utiny c = 0;
-    if (idx >= 50) { c = 5; }
-    else if (idx >= 40) { c = 4; }
-    else if (idx >= 30) { c = 3; }
-    else if (idx >= 20) { c = 2; }
-    else if (idx >= 10) { c = 1; }
-    else { c = 0; }
-    utiny offset = idx - c * 10;
-
-    if (offset == 0) { return ' ' as utiny; }
-    else if (offset == 1) { return ' ' as utiny; }
-    else if (offset == 2) { return 'D' as utiny; }
-    else if (offset == 3) { return 'e' as utiny; }
-    else if (offset == 4) { return 'c' as utiny; }
-    else if (offset == 5) { return ' ' as utiny; }
-    else if (offset == 6) { return 'C' as utiny; }
-    else if (offset == 7) { return 'h' as utiny; }
-    else if (offset == 8) { return ' ' as utiny; }
-    else if (offset == 9) {
-        if (idx == 59) { return ' ' as utiny; }
-        return '|' as utiny;
-    }
-    return ' ' as utiny;
-}
-
-// ASCII表データ文字抽出関数
+// 文字コード表データ文字抽出関数
 utiny get_table_char(utiny r, utiny idx) {
-    utiny c = 0;
-    if (idx >= 50) { c = 5; }
-    else if (idx >= 40) { c = 4; }
-    else if (idx >= 30) { c = 3; }
-    else if (idx >= 20) { c = 2; }
-    else if (idx >= 10) { c = 1; }
-    else { c = 0; }
-    utiny offset = idx - c * 10;
-    utiny val = 32 + c * 16 + r;
+    utiny c = idx >> 3;      // カラムインデックス (0〜7)
+    utiny offset = idx & 7;  // 各カラム内オフセット (0〜7)
+    utiny val = c * 32 + r;  // 文字コード (0〜255)
 
     utiny digit100 = 0;
     utiny digit10 = 0;
     utiny digit1 = 0;
 
-    if (val >= 100) {
+    utiny temp = val;
+    if (temp >= 200) {
+        digit100 = 2;
+        temp = temp - 200;
+    } else if (temp >= 100) {
         digit100 = 1;
-        utiny rem = val - 100;
-        if (rem >= 90) { digit10 = 9; digit1 = rem - 90; }
-        else if (rem >= 80) { digit10 = 8; digit1 = rem - 80; }
-        else if (rem >= 70) { digit10 = 7; digit1 = rem - 70; }
-        else if (rem >= 60) { digit10 = 6; digit1 = rem - 60; }
-        else if (rem >= 50) { digit10 = 5; digit1 = rem - 50; }
-        else if (rem >= 40) { digit10 = 4; digit1 = rem - 40; }
-        else if (rem >= 30) { digit10 = 3; digit1 = rem - 30; }
-        else if (rem >= 20) { digit10 = 2; digit1 = rem - 20; }
-        else if (rem >= 10) { digit10 = 1; digit1 = rem - 10; }
-        else { digit10 = 0; digit1 = rem; }
-    } else {
-        digit100 = 0;
-        if (val >= 90) { digit10 = 9; digit1 = val - 90; }
-        else if (val >= 80) { digit10 = 8; digit1 = val - 80; }
-        else if (val >= 70) { digit10 = 7; digit1 = val - 70; }
-        else if (val >= 60) { digit10 = 6; digit1 = val - 60; }
-        else if (val >= 50) { digit10 = 5; digit1 = val - 50; }
-        else if (val >= 40) { digit10 = 4; digit1 = val - 40; }
-        else if (val >= 30) { digit10 = 3; digit1 = val - 30; }
-        else if (val >= 20) { digit10 = 2; digit1 = val - 20; }
-        else if (val >= 10) { digit10 = 1; digit1 = val - 10; }
-        else { digit10 = 0; digit1 = val; }
+        temp = temp - 100;
     }
+
+    if (temp >= 90) { digit10 = 9; temp = temp - 90; }
+    else if (temp >= 80) { digit10 = 8; temp = temp - 80; }
+    else if (temp >= 70) { digit10 = 7; temp = temp - 70; }
+    else if (temp >= 60) { digit10 = 6; temp = temp - 60; }
+    else if (temp >= 50) { digit10 = 5; temp = temp - 50; }
+    else if (temp >= 40) { digit10 = 4; temp = temp - 40; }
+    else if (temp >= 30) { digit10 = 3; temp = temp - 30; }
+    else if (temp >= 20) { digit10 = 2; temp = temp - 20; }
+    else if (temp >= 10) { digit10 = 1; temp = temp - 10; }
+
+    digit1 = temp;
 
     if (offset == 0) { return (digit100 + 48); }
     else if (offset == 1) { return (digit10 + 48); }
     else if (offset == 2) { return (digit1 + 48); }
-    else if (offset == 3) { return ' ' as utiny; }
+    else if (offset == 3) { return ':' as utiny; }
     else if (offset == 4) { return '[' as utiny; }
     else if (offset == 5) {
-        if (val == 127) { return ' ' as utiny; }  // DEL文字は空白表示
-        return val as utiny;
+        if (val == 0) { return ' ' as utiny; }
+        if (val == 127) { return ' ' as utiny; }
+        return val;
     }
     else if (offset == 6) { return ']' as utiny; }
     else if (offset == 7) { return ' ' as utiny; }
-    else if (offset == 8) {
-        if (c == 5) { return ' ' as utiny; }
-        return '|' as utiny;
-    }
+
     return ' ' as utiny;
 }
 
@@ -180,37 +158,25 @@ export async void process_anim(posedge pixel_clk) {
         if (row_delay == 0) {
             if (row_idx == 0) {
                 // ヘッダー描画
-                text_addr = (8 * (TEXT_COLS as ushort) + 28 + (write_cnt as ushort)) as ushort;
+                text_addr = (8 * (TEXT_COLS as ushort) + 18 + (write_cnt as ushort)) as ushort;
                 text_char = get_header_char(write_cnt);
                 text_we = true;
                 write_cnt = write_cnt + 1;
-                if (write_cnt == 24) {
+                if (write_cnt == 43) {
                     write_cnt = 0;
-                    row_idx = 1;
+                    row_idx = 2;     // コラム見出しをスキップして直接グリッドへ
                     row_delay = 10;  // 10フレーム待機
                 }
             }
-            else if (row_idx == 1) {
-                // カラム見出し描画
-                text_addr = (12 * (TEXT_COLS as ushort) + 10 + (write_cnt as ushort)) as ushort;
-                text_char = get_col_header_char(write_cnt);
-                text_we = true;
-                write_cnt = write_cnt + 1;
-                if (write_cnt == 60) {
-                    write_cnt = 0;
-                    row_idx = 2;
-                    row_delay = 10;
-                }
-            }
             else if (row_idx >= 2) {
-                if (row_idx <= 17) {
+                if (row_idx <= 33) {
                     // グリッドデータ行の描画
                     utiny r = row_idx - 2;
-                    text_addr = (((15 + r as ushort) * (TEXT_COLS as ushort)) + 10 + (write_cnt as ushort)) as ushort;
+                    text_addr = (((16 + r as ushort) * (TEXT_COLS as ushort)) + 8 + (write_cnt as ushort)) as ushort;
                     text_char = get_table_char(r, write_cnt);
                     text_we = true;
                     write_cnt = write_cnt + 1;
-                    if (write_cnt == 60) {
+                    if (write_cnt == 64) {
                         write_cnt = 0;
                         row_idx = row_idx + 1;
                         row_delay = 10;
