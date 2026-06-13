@@ -94,22 +94,16 @@ def main():
         out.write("export uint lookup_font(utiny char_code, utiny row) {\n")
         out.write("    uint font_byte = 0;\n\n")
 
-        first = True
-        # 文字コード昇順で出力し、合成時の分岐ツリーを最適化
+        # 文字コード昇順で出力。合成時の深いネストを避けるため、else if ではなく独立した if 文の列にする。
         for char_code in sorted(chars.keys()):
             char_rows = chars[char_code]
-            if first:
-                out.write(f"    if (char_code == {char_code} as utiny) {{\n")
-                first = False
-            else:
-                out.write(f"    else if (char_code == {char_code} as utiny) {{\n")
+            out.write(f"    if (char_code == {char_code} as utiny) {{\n")
 
             # 全行空 (ドットのみ) かどうか
             all_empty = all(all(c in ('.', ' ') for c in r_str) for r_str in char_rows)
             if all_empty:
                 out.write("        font_byte = 0;\n")
             else:
-                first_row_if = True
                 for r_idx, r_str in enumerate(char_rows):
                     # 空行はデフォルトの0のままスキップ
                     if all(c in ('.', ' ') for c in r_str):
@@ -129,11 +123,7 @@ def main():
                     # Nに応じて適切な桁数の16進数表記にする
                     hex_val = f"0x{val:0{N//4}X}"
                     
-                    if first_row_if:
-                        out.write(f"        if (row == {r_idx}) {{ font_byte = {hex_val}; }}\n")
-                        first_row_if = False
-                    else:
-                        out.write(f"        else if (row == {r_idx}) {{ font_byte = {hex_val}; }}\n")
+                    out.write(f"        if (row == {r_idx}) {{ font_byte = {hex_val}; }}\n")
 
             out.write("    }\n")
 

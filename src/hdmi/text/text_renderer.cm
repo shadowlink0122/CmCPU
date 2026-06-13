@@ -38,15 +38,19 @@ bool gbc_active_d2 = false;
 utiny pixel = 0;
 bool gbc_active_d3 = false;
 
-export async void render_process(posedge pixel_clk) {
-    // -------------------------------------------------------
-    // Stage 0: 座標入力レジスタ化 & バッファ読み出しアドレス計算
-    // -------------------------------------------------------
+export async void write_process(posedge pixel_clk) {
+    // テキストバッファへの書き込み処理を独立させ、DPRAMの推論を安定化させる
     if (text_we == true) {
         if (text_addr < TEXT_BUF_SIZE as ushort) {
             text_buf[text_addr] = text_char;
         }
     }
+}
+
+export async void render_process(posedge pixel_clk) {
+    // -------------------------------------------------------
+    // Stage 0: 座標入力レジスタ化 & バッファ読み出しアドレス計算
+    // -------------------------------------------------------
 
     // 座標分割・入力情報のレジスタ化 (Stage 1 更新用)
     font_col_reg = (gbc_x & ((FONT_SIZE - 1) as ushort)) as utiny;
