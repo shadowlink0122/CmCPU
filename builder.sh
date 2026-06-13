@@ -158,6 +158,8 @@ detect_project() {
         else
             PROJECT_NAME="$dir"
         fi
+    elif [ "$PROJECT_NAME" = "hdmi_text_top" ]; then
+        PROJECT_NAME="hdmi_text"
     fi
     info "プロジェクト: ${PROJECT_NAME}"
 

@@ -22,9 +22,8 @@ module hdmi_text_top;
 #[output] bool tmds_clk_p = false;
 #[output] bool tmds_clk_n = false;
 
-// ボード上のステータスLED (Red/Blue)
-#[output] bool led_ready = false;
-#[output] bool led_done = false;
+// ボード上のステータスLED
+#[output] bool led = false;
 
 // 内部グローバル信号
 bool pixel_clk  = false;
@@ -61,6 +60,5 @@ TLVDS_CK tlvds_ck;
 
 // LED状態同期プロセス
 async void led_sync(posedge pixel_clk) {
-    led_ready = anim_ready;
-    led_done = anim_done;
+    led = anim_done;
 }
