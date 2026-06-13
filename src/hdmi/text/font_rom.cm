@@ -1729,6 +1729,94 @@ export uint lookup_font(utiny char_code, utiny row) {
         if (row == 1) { font_byte = 0xA0; }
         if (row == 2) { font_byte = 0x40; }
     }
+    if (char_code == 246 as utiny) {
+        if (row == 0) { font_byte = 0x2A; }
+        if (row == 1) { font_byte = 0x20; }
+        if (row == 2) { font_byte = 0xF4; }
+        if (row == 3) { font_byte = 0x2A; }
+        if (row == 4) { font_byte = 0x4A; }
+        if (row == 5) { font_byte = 0x48; }
+        if (row == 6) { font_byte = 0xB0; }
+    }
+    if (char_code == 247 as utiny) {
+        if (row == 0) { font_byte = 0x14; }
+        if (row == 1) { font_byte = 0x7C; }
+        if (row == 2) { font_byte = 0x08; }
+        if (row == 3) { font_byte = 0x7E; }
+        if (row == 4) { font_byte = 0x24; }
+        if (row == 5) { font_byte = 0x40; }
+        if (row == 6) { font_byte = 0x3C; }
+    }
+    if (char_code == 248 as utiny) {
+        if (row == 0) { font_byte = 0x04; }
+        if (row == 1) { font_byte = 0x08; }
+        if (row == 2) { font_byte = 0x34; }
+        if (row == 3) { font_byte = 0x40; }
+        if (row == 4) { font_byte = 0x30; }
+        if (row == 5) { font_byte = 0x08; }
+        if (row == 6) { font_byte = 0x04; }
+    }
+    if (char_code == 249 as utiny) {
+        if (row == 0) { font_byte = 0x8A; }
+        if (row == 1) { font_byte = 0x88; }
+        if (row == 2) { font_byte = 0xBE; }
+        if (row == 3) { font_byte = 0x88; }
+        if (row == 4) { font_byte = 0x88; }
+        if (row == 5) { font_byte = 0x88; }
+        if (row == 6) { font_byte = 0x10; }
+    }
+    if (char_code == 250 as utiny) {
+        if (row == 0) { font_byte = 0x0A; }
+        if (row == 1) { font_byte = 0x3C; }
+        if (row == 4) { font_byte = 0x20; }
+        if (row == 5) { font_byte = 0x40; }
+        if (row == 6) { font_byte = 0x3E; }
+    }
+    if (char_code == 251 as utiny) {
+        if (row == 0) { font_byte = 0x0A; }
+        if (row == 1) { font_byte = 0x08; }
+        if (row == 2) { font_byte = 0x7E; }
+        if (row == 3) { font_byte = 0x04; }
+        if (row == 4) { font_byte = 0x24; }
+        if (row == 5) { font_byte = 0x40; }
+        if (row == 6) { font_byte = 0x3C; }
+    }
+    if (char_code == 252 as utiny) {
+        if (row == 0) { font_byte = 0x2A; }
+        if (row == 1) { font_byte = 0x20; }
+        if (row == 2) { font_byte = 0x20; }
+        if (row == 3) { font_byte = 0x20; }
+        if (row == 4) { font_byte = 0x20; }
+        if (row == 5) { font_byte = 0x22; }
+        if (row == 6) { font_byte = 0x1C; }
+    }
+    if (char_code == 253 as utiny) {
+        if (row == 0) { font_byte = 0x0A; }
+        if (row == 1) { font_byte = 0xFE; }
+        if (row == 2) { font_byte = 0x18; }
+        if (row == 3) { font_byte = 0x28; }
+        if (row == 4) { font_byte = 0x18; }
+        if (row == 5) { font_byte = 0x08; }
+        if (row == 6) { font_byte = 0x10; }
+    }
+    if (char_code == 254 as utiny) {
+        if (row == 0) { font_byte = 0x2A; }
+        if (row == 1) { font_byte = 0x24; }
+        if (row == 2) { font_byte = 0xFE; }
+        if (row == 3) { font_byte = 0x24; }
+        if (row == 4) { font_byte = 0x2C; }
+        if (row == 5) { font_byte = 0x20; }
+        if (row == 6) { font_byte = 0x1E; }
+    }
+    if (char_code == 255 as utiny) {
+        if (row == 0) { font_byte = 0x3C; }
+        if (row == 1) { font_byte = 0x0A; }
+        if (row == 2) { font_byte = 0x10; }
+        if (row == 3) { font_byte = 0x7E; }
+        if (row == 4) { font_byte = 0x10; }
+        if (row == 5) { font_byte = 0x10; }
+        if (row == 6) { font_byte = 0x0C; }
+    }
 
     return font_byte;
 }

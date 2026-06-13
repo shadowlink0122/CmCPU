@@ -67,10 +67,194 @@ utiny get_header_char(utiny idx) {
     return ' ' as utiny;
 }
 
+// 制御文字の3文字略記を取得する関数
+utiny get_ctrl_abbrev(utiny val, utiny pos) {
+    if (val == 0) {
+        if (pos == 0) { return 'N' as utiny; }
+        if (pos == 1) { return 'U' as utiny; }
+        return 'L' as utiny;
+    }
+    if (val == 1) {
+        if (pos == 0) { return 'S' as utiny; }
+        if (pos == 1) { return 'O' as utiny; }
+        return 'H' as utiny;
+    }
+    if (val == 2) {
+        if (pos == 0) { return 'S' as utiny; }
+        if (pos == 1) { return 'T' as utiny; }
+        return 'X' as utiny;
+    }
+    if (val == 3) {
+        if (pos == 0) { return 'E' as utiny; }
+        if (pos == 1) { return 'T' as utiny; }
+        return 'X' as utiny;
+    }
+    if (val == 4) {
+        if (pos == 0) { return 'E' as utiny; }
+        if (pos == 1) { return 'O' as utiny; }
+        return 'T' as utiny;
+    }
+    if (val == 5) {
+        if (pos == 0) { return 'E' as utiny; }
+        if (pos == 1) { return 'N' as utiny; }
+        return 'Q' as utiny;
+    }
+    if (val == 6) {
+        if (pos == 0) { return 'A' as utiny; }
+        if (pos == 1) { return 'C' as utiny; }
+        return 'K' as utiny;
+    }
+    if (val == 7) {
+        if (pos == 0) { return 'B' as utiny; }
+        if (pos == 1) { return 'E' as utiny; }
+        return 'L' as utiny;
+    }
+    if (val == 8) {
+        if (pos == 0) { return 'B' as utiny; }
+        if (pos == 1) { return 'C' as utiny; }
+        return 'K' as utiny;
+    }
+    if (val == 9) {
+        if (pos == 0) { return 'T' as utiny; }
+        if (pos == 1) { return 'A' as utiny; }
+        return 'B' as utiny;
+    }
+    if (val == 10) {
+        if (pos == 0) { return 'R' as utiny; }
+        if (pos == 1) { return 'T' as utiny; }
+        return 'N' as utiny;
+    }
+    if (val == 11) {
+        if (pos == 0) { return 'V' as utiny; }
+        if (pos == 1) { return 'T' as utiny; }
+        return ' ' as utiny;
+    }
+    if (val == 12) {
+        if (pos == 0) { return 'F' as utiny; }
+        if (pos == 1) { return 'F' as utiny; }
+        return ' ' as utiny;
+    }
+    if (val == 13) {
+        if (pos == 0) { return 'C' as utiny; }
+        if (pos == 1) { return 'R' as utiny; }
+        return ' ' as utiny;
+    }
+    if (val == 14) {
+        if (pos == 0) { return 'S' as utiny; }
+        if (pos == 1) { return 'O' as utiny; }
+        return ' ' as utiny;
+    }
+    if (val == 15) {
+        if (pos == 0) { return 'S' as utiny; }
+        if (pos == 1) { return 'I' as utiny; }
+        return ' ' as utiny;
+    }
+    if (val == 16) {
+        if (pos == 0) { return 'D' as utiny; }
+        if (pos == 1) { return 'L' as utiny; }
+        return 'E' as utiny;
+    }
+    if (val == 17) {
+        if (pos == 0) { return 'D' as utiny; }
+        if (pos == 1) { return 'C' as utiny; }
+        return '1' as utiny;
+    }
+    if (val == 18) {
+        if (pos == 0) { return 'D' as utiny; }
+        if (pos == 1) { return 'C' as utiny; }
+        return '2' as utiny;
+    }
+    if (val == 19) {
+        if (pos == 0) { return 'D' as utiny; }
+        if (pos == 1) { return 'C' as utiny; }
+        return '3' as utiny;
+    }
+    if (val == 20) {
+        if (pos == 0) { return 'D' as utiny; }
+        if (pos == 1) { return 'C' as utiny; }
+        return '4' as utiny;
+    }
+    if (val == 21) {
+        if (pos == 0) { return 'N' as utiny; }
+        if (pos == 1) { return 'A' as utiny; }
+        return 'K' as utiny;
+    }
+    if (val == 22) {
+        if (pos == 0) { return 'S' as utiny; }
+        if (pos == 1) { return 'Y' as utiny; }
+        return 'N' as utiny;
+    }
+    if (val == 23) {
+        if (pos == 0) { return 'E' as utiny; }
+        if (pos == 1) { return 'T' as utiny; }
+        return 'B' as utiny;
+    }
+    if (val == 24) {
+        if (pos == 0) { return 'C' as utiny; }
+        if (pos == 1) { return 'A' as utiny; }
+        return 'N' as utiny;
+    }
+    if (val == 25) {
+        if (pos == 0) { return 'E' as utiny; }
+        if (pos == 1) { return 'M' as utiny; }
+        return ' ' as utiny;
+    }
+    if (val == 26) {
+        if (pos == 0) { return 'S' as utiny; }
+        if (pos == 1) { return 'U' as utiny; }
+        return 'B' as utiny;
+    }
+    if (val == 27) {
+        if (pos == 0) { return 'E' as utiny; }
+        if (pos == 1) { return 'S' as utiny; }
+        return 'C' as utiny;
+    }
+    if (val == 28) {
+        if (pos == 0) { return 'F' as utiny; }
+        if (pos == 1) { return 'S' as utiny; }
+        return ' ' as utiny;
+    }
+    if (val == 29) {
+        if (pos == 0) { return 'G' as utiny; }
+        if (pos == 1) { return 'S' as utiny; }
+        return ' ' as utiny;
+    }
+    if (val == 30) {
+        if (pos == 0) { return 'R' as utiny; }
+        if (pos == 1) { return 'S' as utiny; }
+        return ' ' as utiny;
+    }
+    if (val == 31) {
+        if (pos == 0) { return 'U' as utiny; }
+        if (pos == 1) { return 'S' as utiny; }
+        return ' ' as utiny;
+    }
+    if (val == 32) {
+        if (pos == 0) { return 'S' as utiny; }
+        if (pos == 1) { return 'P' as utiny; }
+        return 'C' as utiny;
+    }
+    if (val == 127) {
+        if (pos == 0) { return 'D' as utiny; }
+        if (pos == 1) { return 'E' as utiny; }
+        return 'L' as utiny;
+    }
+    return ' ' as utiny;
+}
+
 // 文字コード表データ文字抽出関数
 utiny get_table_char(utiny r, utiny idx) {
-    utiny c = idx >> 3;      // カラムインデックス (0〜7)
-    utiny offset = idx & 7;  // 各カラム内オフセット (0〜7)
+    utiny c = 0;
+    utiny offset = 0;
+    if (idx < 10) { c = 0; offset = idx; }
+    else if (idx < 20) { c = 1; offset = idx - 10; }
+    else if (idx < 30) { c = 2; offset = idx - 20; }
+    else if (idx < 40) { c = 3; offset = idx - 30; }
+    else if (idx < 50) { c = 4; offset = idx - 40; }
+    else if (idx < 60) { c = 5; offset = idx - 50; }
+    else if (idx < 70) { c = 6; offset = idx - 60; }
+    else { c = 7; offset = idx - 70; }
+
     utiny val = c * 32 + r;  // 文字コード (0〜255)
 
     utiny digit100 = 0;
@@ -99,17 +283,30 @@ utiny get_table_char(utiny r, utiny idx) {
     digit1 = temp;
 
     if (offset == 0) { return (digit100 + 48); }
-    else if (offset == 1) { return (digit10 + 48); }
-    else if (offset == 2) { return (digit1 + 48); }
-    else if (offset == 3) { return ':' as utiny; }
-    else if (offset == 4) { return '[' as utiny; }
-    else if (offset == 5) {
-        if (val == 0) { return ' ' as utiny; }
-        if (val == 127) { return ' ' as utiny; }
+    if (offset == 1) { return (digit10 + 48); }
+    if (offset == 2) { return (digit1 + 48); }
+    if (offset == 3) { return ':' as utiny; }
+    if (offset == 4) { return '[' as utiny; }
+    if (offset == 5) {
+        if (val <= 32 || val == 127) {
+            return get_ctrl_abbrev(val, 0);
+        }
+        return ' ' as utiny;
+    }
+    if (offset == 6) {
+        if (val <= 32 || val == 127) {
+            return get_ctrl_abbrev(val, 1);
+        }
         return val;
     }
-    else if (offset == 6) { return ']' as utiny; }
-    else if (offset == 7) { return ' ' as utiny; }
+    if (offset == 7) {
+        if (val <= 32 || val == 127) {
+            return get_ctrl_abbrev(val, 2);
+        }
+        return ' ' as utiny;
+    }
+    if (offset == 8) { return ']' as utiny; }
+    if (offset == 9) { return ' ' as utiny; }
 
     return ' ' as utiny;
 }
@@ -172,11 +369,11 @@ export async void process_anim(posedge pixel_clk) {
                 if (row_idx <= 33) {
                     // グリッドデータ行の描画
                     utiny r = row_idx - 2;
-                    text_addr = (((16 + r as ushort) * (TEXT_COLS as ushort)) + 8 + (write_cnt as ushort)) as ushort;
+                    text_addr = (((16 + r as ushort) * (TEXT_COLS as ushort)) + (write_cnt as ushort)) as ushort;
                     text_char = get_table_char(r, write_cnt);
                     text_we = true;
                     write_cnt = write_cnt + 1;
-                    if (write_cnt == 64) {
+                    if (write_cnt == 80) {
                         write_cnt = 0;
                         row_idx = row_idx + 1;
                         row_delay = 10;
