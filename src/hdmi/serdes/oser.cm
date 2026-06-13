@@ -10,7 +10,7 @@ export bool ser_ck = false;
 
 // --- OSER10 Red チャネル ---
 export extern struct OSER10_R {
-    #[sv::module_name] const str _ = "OSER10";
+    #[sv::module_name] const string _ = "OSER10";
     #[input]  bool PCLK  = pixel_clk;
     #[input]  bool FCLK  = serial_clk;
     #[input]  bool RESET = false;
@@ -29,7 +29,7 @@ export extern struct OSER10_R {
 
 // --- OSER10 Green チャネル ---
 export extern struct OSER10_G {
-    #[sv::module_name] const str _ = "OSER10";
+    #[sv::module_name] const string _ = "OSER10";
     #[input]  bool PCLK  = pixel_clk;
     #[input]  bool FCLK  = serial_clk;
     #[input]  bool RESET = false;
@@ -48,7 +48,7 @@ export extern struct OSER10_G {
 
 // --- OSER10 Blue チャネル ---
 export extern struct OSER10_B {
-    #[sv::module_name] const str _ = "OSER10";
+    #[sv::module_name] const string _ = "OSER10";
     #[input]  bool PCLK  = pixel_clk;
     #[input]  bool FCLK  = serial_clk;
     #[input]  bool RESET = false;
@@ -67,7 +67,7 @@ export extern struct OSER10_B {
 
 // --- OSER10 Clock チャネル (DDRピクセルクロック再生用) ---
 export extern struct OSER10_CK {
-    #[sv::module_name] const str _ = "OSER10";
+    #[sv::module_name] const string _ = "OSER10";
     #[input]  bool PCLK  = pixel_clk;
     #[input]  bool FCLK  = serial_clk;
     #[input]  bool RESET = false;

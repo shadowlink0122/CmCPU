@@ -11,9 +11,9 @@ export extern struct PLL {
     #[sv::param] int MDIV_FRAC_SEL = 2;
     #[sv::param] int ODIV0_SEL = 30;
     #[sv::param] int ODIV1_SEL = 6;
-    #[sv::param] str CLKOUT0_EN = "\"TRUE\"";
-    #[sv::param] str CLKOUT1_EN = "\"TRUE\"";
-    #[sv::param] str CLKFB_SEL = "\"INTERNAL\"";
+    #[sv::param] string CLKOUT0_EN = "\"TRUE\"";
+    #[sv::param] string CLKOUT1_EN = "\"TRUE\"";
+    #[sv::param] string CLKFB_SEL = "\"INTERNAL\"";
 
     #[input]  bool CLKIN   = clk_50m;
     #[input]  bool CLKFB   = false;
