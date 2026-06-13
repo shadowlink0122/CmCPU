@@ -21,225 +21,227 @@ utiny row_delay = 0;  // 行描画ディレイタイマー (フレーム数)
 
 // ヘッダー文字列文字抽出関数
 utiny get_header_char(utiny idx) {
-    if (idx == 0) { return '=' as utiny; }
-    else if (idx == 1) { return '=' as utiny; }
-    else if (idx == 2) { return '=' as utiny; }
-    else if (idx == 3) { return ' ' as utiny; }
-    else if (idx == 4) { return 'C' as utiny; }
-    else if (idx == 5) { return 'h' as utiny; }
-    else if (idx == 6) { return 'a' as utiny; }
-    else if (idx == 7) { return 'r' as utiny; }
-    else if (idx == 8) { return 'a' as utiny; }
-    else if (idx == 9) { return 'c' as utiny; }
-    else if (idx == 10) { return 't' as utiny; }
-    else if (idx == 11) { return 'e' as utiny; }
-    else if (idx == 12) { return 'r' as utiny; }
-    else if (idx == 13) { return ' ' as utiny; }
-    else if (idx == 14) { return 'C' as utiny; }
-    else if (idx == 15) { return 'o' as utiny; }
-    else if (idx == 16) { return 'd' as utiny; }
-    else if (idx == 17) { return 'e' as utiny; }
-    else if (idx == 18) { return ' ' as utiny; }
-    else if (idx == 19) { return 'T' as utiny; }
-    else if (idx == 20) { return 'a' as utiny; }
-    else if (idx == 21) { return 'b' as utiny; }
-    else if (idx == 22) { return 'l' as utiny; }
-    else if (idx == 23) { return 'e' as utiny; }
-    else if (idx == 24) { return ' ' as utiny; }
-    else if (idx == 25) { return '(' as utiny; }
-    else if (idx == 26) { return 'A' as utiny; }
-    else if (idx == 27) { return 'S' as utiny; }
-    else if (idx == 28) { return 'C' as utiny; }
-    else if (idx == 29) { return 'I' as utiny; }
-    else if (idx == 30) { return 'I' as utiny; }
-    else if (idx == 31) { return ' ' as utiny; }
-    else if (idx == 32) { return '&' as utiny; }
-    else if (idx == 33) { return ' ' as utiny; }
-    else if (idx == 34) { return 'K' as utiny; }
-    else if (idx == 35) { return 'A' as utiny; }
-    else if (idx == 36) { return 'N' as utiny; }
-    else if (idx == 37) { return 'A' as utiny; }
-    else if (idx == 38) { return ')' as utiny; }
-    else if (idx == 39) { return ' ' as utiny; }
-    else if (idx == 40) { return '=' as utiny; }
-    else if (idx == 41) { return '=' as utiny; }
-    else if (idx == 42) { return '=' as utiny; }
-    return ' ' as utiny;
+    utiny c = ' ' as utiny;
+    if (idx == 0) { c = '=' as utiny; }
+    if (idx == 1) { c = '=' as utiny; }
+    if (idx == 2) { c = '=' as utiny; }
+    if (idx == 3) { c = ' ' as utiny; }
+    if (idx == 4) { c = 'C' as utiny; }
+    if (idx == 5) { c = 'h' as utiny; }
+    if (idx == 6) { c = 'a' as utiny; }
+    if (idx == 7) { c = 'r' as utiny; }
+    if (idx == 8) { c = 'a' as utiny; }
+    if (idx == 9) { c = 'c' as utiny; }
+    if (idx == 10) { c = 't' as utiny; }
+    if (idx == 11) { c = 'e' as utiny; }
+    if (idx == 12) { c = 'r' as utiny; }
+    if (idx == 13) { c = ' ' as utiny; }
+    if (idx == 14) { c = 'C' as utiny; }
+    if (idx == 15) { c = 'o' as utiny; }
+    if (idx == 16) { c = 'd' as utiny; }
+    if (idx == 17) { c = 'e' as utiny; }
+    if (idx == 18) { c = ' ' as utiny; }
+    if (idx == 19) { c = 'T' as utiny; }
+    if (idx == 20) { c = 'a' as utiny; }
+    if (idx == 21) { c = 'b' as utiny; }
+    if (idx == 22) { c = 'l' as utiny; }
+    if (idx == 23) { c = 'e' as utiny; }
+    if (idx == 24) { c = ' ' as utiny; }
+    if (idx == 25) { c = '(' as utiny; }
+    if (idx == 26) { c = 'A' as utiny; }
+    if (idx == 27) { c = 'S' as utiny; }
+    if (idx == 28) { c = 'C' as utiny; }
+    if (idx == 29) { c = 'I' as utiny; }
+    if (idx == 30) { c = 'I' as utiny; }
+    if (idx == 31) { c = ' ' as utiny; }
+    if (idx == 32) { c = '&' as utiny; }
+    if (idx == 33) { c = ' ' as utiny; }
+    if (idx == 34) { c = 'K' as utiny; }
+    if (idx == 35) { c = 'A' as utiny; }
+    if (idx == 36) { c = 'N' as utiny; }
+    if (idx == 37) { c = 'A' as utiny; }
+    if (idx == 38) { c = ')' as utiny; }
+    if (idx == 39) { c = ' ' as utiny; }
+    if (idx == 40) { c = '=' as utiny; }
+    if (idx == 41) { c = '=' as utiny; }
+    if (idx == 42) { c = '=' as utiny; }
+    return c;
 }
 
 // 制御文字の3文字略記を取得する関数
 utiny get_ctrl_abbrev(utiny val, utiny pos) {
+    utiny c = ' ' as utiny;
     if (val == 0) {
-        if (pos == 0) { return 'N' as utiny; }
-        if (pos == 1) { return 'U' as utiny; }
-        return 'L' as utiny;
+        if (pos == 0) { c = 'N' as utiny; }
+        if (pos == 1) { c = 'U' as utiny; }
+        if (pos >= 2) { c = 'L' as utiny; }
     }
     if (val == 1) {
-        if (pos == 0) { return 'S' as utiny; }
-        if (pos == 1) { return 'O' as utiny; }
-        return 'H' as utiny;
+        if (pos == 0) { c = 'S' as utiny; }
+        if (pos == 1) { c = 'O' as utiny; }
+        if (pos >= 2) { c = 'H' as utiny; }
     }
     if (val == 2) {
-        if (pos == 0) { return 'S' as utiny; }
-        if (pos == 1) { return 'T' as utiny; }
-        return 'X' as utiny;
+        if (pos == 0) { c = 'S' as utiny; }
+        if (pos == 1) { c = 'T' as utiny; }
+        if (pos >= 2) { c = 'X' as utiny; }
     }
     if (val == 3) {
-        if (pos == 0) { return 'E' as utiny; }
-        if (pos == 1) { return 'T' as utiny; }
-        return 'X' as utiny;
+        if (pos == 0) { c = 'E' as utiny; }
+        if (pos == 1) { c = 'T' as utiny; }
+        if (pos >= 2) { c = 'X' as utiny; }
     }
     if (val == 4) {
-        if (pos == 0) { return 'E' as utiny; }
-        if (pos == 1) { return 'O' as utiny; }
-        return 'T' as utiny;
+        if (pos == 0) { c = 'E' as utiny; }
+        if (pos == 1) { c = 'O' as utiny; }
+        if (pos >= 2) { c = 'T' as utiny; }
     }
     if (val == 5) {
-        if (pos == 0) { return 'E' as utiny; }
-        if (pos == 1) { return 'N' as utiny; }
-        return 'Q' as utiny;
+        if (pos == 0) { c = 'E' as utiny; }
+        if (pos == 1) { c = 'N' as utiny; }
+        if (pos >= 2) { c = 'Q' as utiny; }
     }
     if (val == 6) {
-        if (pos == 0) { return 'A' as utiny; }
-        if (pos == 1) { return 'C' as utiny; }
-        return 'K' as utiny;
+        if (pos == 0) { c = 'A' as utiny; }
+        if (pos == 1) { c = 'C' as utiny; }
+        if (pos >= 2) { c = 'K' as utiny; }
     }
     if (val == 7) {
-        if (pos == 0) { return 'B' as utiny; }
-        if (pos == 1) { return 'E' as utiny; }
-        return 'L' as utiny;
+        if (pos == 0) { c = 'B' as utiny; }
+        if (pos == 1) { c = 'E' as utiny; }
+        if (pos >= 2) { c = 'L' as utiny; }
     }
     if (val == 8) {
-        if (pos == 0) { return 'B' as utiny; }
-        if (pos == 1) { return 'C' as utiny; }
-        return 'K' as utiny;
+        if (pos == 0) { c = 'B' as utiny; }
+        if (pos == 1) { c = 'C' as utiny; }
+        if (pos >= 2) { c = 'K' as utiny; }
     }
     if (val == 9) {
-        if (pos == 0) { return 'T' as utiny; }
-        if (pos == 1) { return 'A' as utiny; }
-        return 'B' as utiny;
+        if (pos == 0) { c = 'T' as utiny; }
+        if (pos == 1) { c = 'A' as utiny; }
+        if (pos >= 2) { c = 'B' as utiny; }
     }
     if (val == 10) {
-        if (pos == 0) { return 'R' as utiny; }
-        if (pos == 1) { return 'T' as utiny; }
-        return 'N' as utiny;
+        if (pos == 0) { c = 'R' as utiny; }
+        if (pos == 1) { c = 'T' as utiny; }
+        if (pos >= 2) { c = 'N' as utiny; }
     }
     if (val == 11) {
-        if (pos == 0) { return 'V' as utiny; }
-        if (pos == 1) { return 'T' as utiny; }
-        return ' ' as utiny;
+        if (pos == 0) { c = 'V' as utiny; }
+        if (pos == 1) { c = 'T' as utiny; }
+        if (pos >= 2) { c = ' ' as utiny; }
     }
     if (val == 12) {
-        if (pos == 0) { return 'F' as utiny; }
-        if (pos == 1) { return 'F' as utiny; }
-        return ' ' as utiny;
+        if (pos == 0) { c = 'F' as utiny; }
+        if (pos == 1) { c = 'F' as utiny; }
+        if (pos >= 2) { c = ' ' as utiny; }
     }
     if (val == 13) {
-        if (pos == 0) { return 'C' as utiny; }
-        if (pos == 1) { return 'R' as utiny; }
-        return ' ' as utiny;
+        if (pos == 0) { c = 'C' as utiny; }
+        if (pos == 1) { c = 'R' as utiny; }
+        if (pos >= 2) { c = ' ' as utiny; }
     }
     if (val == 14) {
-        if (pos == 0) { return 'S' as utiny; }
-        if (pos == 1) { return 'O' as utiny; }
-        return ' ' as utiny;
+        if (pos == 0) { c = 'S' as utiny; }
+        if (pos == 1) { c = 'O' as utiny; }
+        if (pos >= 2) { c = ' ' as utiny; }
     }
     if (val == 15) {
-        if (pos == 0) { return 'S' as utiny; }
-        if (pos == 1) { return 'I' as utiny; }
-        return ' ' as utiny;
+        if (pos == 0) { c = 'S' as utiny; }
+        if (pos == 1) { c = 'I' as utiny; }
+        if (pos >= 2) { c = ' ' as utiny; }
     }
     if (val == 16) {
-        if (pos == 0) { return 'D' as utiny; }
-        if (pos == 1) { return 'L' as utiny; }
-        return 'E' as utiny;
+        if (pos == 0) { c = 'D' as utiny; }
+        if (pos == 1) { c = 'L' as utiny; }
+        if (pos >= 2) { c = 'E' as utiny; }
     }
     if (val == 17) {
-        if (pos == 0) { return 'D' as utiny; }
-        if (pos == 1) { return 'C' as utiny; }
-        return '1' as utiny;
+        if (pos == 0) { c = 'D' as utiny; }
+        if (pos == 1) { c = 'C' as utiny; }
+        if (pos >= 2) { c = '1' as utiny; }
     }
     if (val == 18) {
-        if (pos == 0) { return 'D' as utiny; }
-        if (pos == 1) { return 'C' as utiny; }
-        return '2' as utiny;
+        if (pos == 0) { c = 'D' as utiny; }
+        if (pos == 1) { c = 'C' as utiny; }
+        if (pos >= 2) { c = '2' as utiny; }
     }
     if (val == 19) {
-        if (pos == 0) { return 'D' as utiny; }
-        if (pos == 1) { return 'C' as utiny; }
-        return '3' as utiny;
+        if (pos == 0) { c = 'D' as utiny; }
+        if (pos == 1) { c = 'C' as utiny; }
+        if (pos >= 2) { c = '3' as utiny; }
     }
     if (val == 20) {
-        if (pos == 0) { return 'D' as utiny; }
-        if (pos == 1) { return 'C' as utiny; }
-        return '4' as utiny;
+        if (pos == 0) { c = 'D' as utiny; }
+        if (pos == 1) { c = 'C' as utiny; }
+        if (pos >= 2) { c = '4' as utiny; }
     }
     if (val == 21) {
-        if (pos == 0) { return 'N' as utiny; }
-        if (pos == 1) { return 'A' as utiny; }
-        return 'K' as utiny;
+        if (pos == 0) { c = 'N' as utiny; }
+        if (pos == 1) { c = 'A' as utiny; }
+        if (pos >= 2) { c = 'K' as utiny; }
     }
     if (val == 22) {
-        if (pos == 0) { return 'S' as utiny; }
-        if (pos == 1) { return 'Y' as utiny; }
-        return 'N' as utiny;
+        if (pos == 0) { c = 'S' as utiny; }
+        if (pos == 1) { c = 'Y' as utiny; }
+        if (pos >= 2) { c = 'N' as utiny; }
     }
     if (val == 23) {
-        if (pos == 0) { return 'E' as utiny; }
-        if (pos == 1) { return 'T' as utiny; }
-        return 'B' as utiny;
+        if (pos == 0) { c = 'E' as utiny; }
+        if (pos == 1) { c = 'T' as utiny; }
+        if (pos >= 2) { c = 'B' as utiny; }
     }
     if (val == 24) {
-        if (pos == 0) { return 'C' as utiny; }
-        if (pos == 1) { return 'A' as utiny; }
-        return 'N' as utiny;
+        if (pos == 0) { c = 'C' as utiny; }
+        if (pos == 1) { c = 'A' as utiny; }
+        if (pos >= 2) { c = 'N' as utiny; }
     }
     if (val == 25) {
-        if (pos == 0) { return 'E' as utiny; }
-        if (pos == 1) { return 'M' as utiny; }
-        return ' ' as utiny;
+        if (pos == 0) { c = 'E' as utiny; }
+        if (pos == 1) { c = 'M' as utiny; }
+        if (pos >= 2) { c = ' ' as utiny; }
     }
     if (val == 26) {
-        if (pos == 0) { return 'S' as utiny; }
-        if (pos == 1) { return 'U' as utiny; }
-        return 'B' as utiny;
+        if (pos == 0) { c = 'S' as utiny; }
+        if (pos == 1) { c = 'U' as utiny; }
+        if (pos >= 2) { c = 'B' as utiny; }
     }
     if (val == 27) {
-        if (pos == 0) { return 'E' as utiny; }
-        if (pos == 1) { return 'S' as utiny; }
-        return 'C' as utiny;
+        if (pos == 0) { c = 'E' as utiny; }
+        if (pos == 1) { c = 'S' as utiny; }
+        if (pos >= 2) { c = 'C' as utiny; }
     }
     if (val == 28) {
-        if (pos == 0) { return 'F' as utiny; }
-        if (pos == 1) { return 'S' as utiny; }
-        return ' ' as utiny;
+        if (pos == 0) { c = 'F' as utiny; }
+        if (pos == 1) { c = 'S' as utiny; }
+        if (pos >= 2) { c = ' ' as utiny; }
     }
     if (val == 29) {
-        if (pos == 0) { return 'G' as utiny; }
-        if (pos == 1) { return 'S' as utiny; }
-        return ' ' as utiny;
+        if (pos == 0) { c = 'G' as utiny; }
+        if (pos == 1) { c = 'S' as utiny; }
+        if (pos >= 2) { c = ' ' as utiny; }
     }
     if (val == 30) {
-        if (pos == 0) { return 'R' as utiny; }
-        if (pos == 1) { return 'S' as utiny; }
-        return ' ' as utiny;
+        if (pos == 0) { c = 'R' as utiny; }
+        if (pos == 1) { c = 'S' as utiny; }
+        if (pos >= 2) { c = ' ' as utiny; }
     }
     if (val == 31) {
-        if (pos == 0) { return 'U' as utiny; }
-        if (pos == 1) { return 'S' as utiny; }
-        return ' ' as utiny;
+        if (pos == 0) { c = 'U' as utiny; }
+        if (pos == 1) { c = 'S' as utiny; }
+        if (pos >= 2) { c = ' ' as utiny; }
     }
     if (val == 32) {
-        if (pos == 0) { return 'S' as utiny; }
-        if (pos == 1) { return 'P' as utiny; }
-        return 'C' as utiny;
+        if (pos == 0) { c = 'S' as utiny; }
+        if (pos == 1) { c = 'P' as utiny; }
+        if (pos >= 2) { c = 'C' as utiny; }
     }
     if (val == 127) {
-        if (pos == 0) { return 'D' as utiny; }
-        if (pos == 1) { return 'E' as utiny; }
-        return 'L' as utiny;
+        if (pos == 0) { c = 'D' as utiny; }
+        if (pos == 1) { c = 'E' as utiny; }
+        if (pos >= 2) { c = 'L' as utiny; }
     }
-    return ' ' as utiny;
+    return c;
 }
 
 // 文字コード表データ文字抽出関数
@@ -247,13 +249,13 @@ ushort get_table_char(utiny r, utiny idx) {
     utiny c = 0;
     utiny offset = 0;
     if (idx < 10) { c = 0; offset = idx; }
-    else if (idx < 20) { c = 1; offset = idx - 10; }
-    else if (idx < 30) { c = 2; offset = idx - 20; }
-    else if (idx < 40) { c = 3; offset = idx - 30; }
-    else if (idx < 50) { c = 4; offset = idx - 40; }
-    else if (idx < 60) { c = 5; offset = idx - 50; }
-    else if (idx < 70) { c = 6; offset = idx - 60; }
-    else { c = 7; offset = idx - 70; }
+    if (idx >= 10 && idx < 20) { c = 1; offset = idx - 10; }
+    if (idx >= 20 && idx < 30) { c = 2; offset = idx - 20; }
+    if (idx >= 30 && idx < 40) { c = 3; offset = idx - 30; }
+    if (idx >= 40 && idx < 50) { c = 4; offset = idx - 40; }
+    if (idx >= 50 && idx < 60) { c = 5; offset = idx - 50; }
+    if (idx >= 60 && idx < 70) { c = 6; offset = idx - 60; }
+    if (idx >= 70) { c = 7; offset = idx - 70; }
 
     ushort val = (c as ushort) * 37 + (r as ushort);  // 文字コード (0〜295)
 
@@ -265,50 +267,56 @@ ushort get_table_char(utiny r, utiny idx) {
     if (temp >= 200) {
         digit100 = 2;
         temp = temp - 200;
-    } else if (temp >= 100) {
+    }
+    if (temp >= 100 && temp < 200) {
         digit100 = 1;
         temp = temp - 100;
     }
 
     if (temp >= 90) { digit10 = 9; temp = temp - 90; }
-    else if (temp >= 80) { digit10 = 8; temp = temp - 80; }
-    else if (temp >= 70) { digit10 = 7; temp = temp - 70; }
-    else if (temp >= 60) { digit10 = 6; temp = temp - 60; }
-    else if (temp >= 50) { digit10 = 5; temp = temp - 50; }
-    else if (temp >= 40) { digit10 = 4; temp = temp - 40; }
-    else if (temp >= 30) { digit10 = 3; temp = temp - 30; }
-    else if (temp >= 20) { digit10 = 2; temp = temp - 20; }
-    else if (temp >= 10) { digit10 = 1; temp = temp - 10; }
+    if (temp >= 80 && temp < 90) { digit10 = 8; temp = temp - 80; }
+    if (temp >= 70 && temp < 80) { digit10 = 7; temp = temp - 70; }
+    if (temp >= 60 && temp < 70) { digit10 = 6; temp = temp - 60; }
+    if (temp >= 50 && temp < 60) { digit10 = 5; temp = temp - 50; }
+    if (temp >= 40 && temp < 50) { digit10 = 4; temp = temp - 40; }
+    if (temp >= 30 && temp < 40) { digit10 = 3; temp = temp - 30; }
+    if (temp >= 20 && temp < 30) { digit10 = 2; temp = temp - 20; }
+    if (temp >= 10 && temp < 20) { digit10 = 1; temp = temp - 10; }
 
     digit1 = temp as utiny;
 
-    if (offset == 0) { return (digit100 + 48) as ushort; }
-    if (offset == 1) { return (digit10 + 48) as ushort; }
-    if (offset == 2) { return (digit1 + 48) as ushort; }
-    if (offset == 3) { return ':' as ushort; }
-    if (offset == 4) { return '[' as ushort; }
+    ushort res_char = ' ' as ushort;
+
+    if (offset == 0) { res_char = (digit100 + 48) as ushort; }
+    if (offset == 1) { res_char = (digit10 + 48) as ushort; }
+    if (offset == 2) { res_char = (digit1 + 48) as ushort; }
+    if (offset == 3) { res_char = ':' as ushort; }
+    if (offset == 4) { res_char = '[' as ushort; }
     if (offset == 5) {
         if (val <= 32 || val == 127) {
-            return get_ctrl_abbrev(val as utiny, 0) as ushort;
+            res_char = get_ctrl_abbrev(val as utiny, 0) as ushort;
+        } else {
+            res_char = ' ' as ushort;
         }
-        return ' ' as ushort;
     }
     if (offset == 6) {
         if (val <= 32 || val == 127) {
-            return get_ctrl_abbrev(val as utiny, 1) as ushort;
+            res_char = get_ctrl_abbrev(val as utiny, 1) as ushort;
+        } else {
+            res_char = val;
         }
-        return val;
     }
     if (offset == 7) {
         if (val <= 32 || val == 127) {
-            return get_ctrl_abbrev(val as utiny, 2) as ushort;
+            res_char = get_ctrl_abbrev(val as utiny, 2) as ushort;
+        } else {
+            res_char = ' ' as ushort;
         }
-        return ' ' as ushort;
     }
-    if (offset == 8) { return ']' as ushort; }
-    if (offset == 9) { return ' ' as ushort; }
+    if (offset == 8) { res_char = ']' as ushort; }
+    if (offset == 9) { res_char = ' ' as ushort; }
 
-    return ' ' as ushort;
+    return res_char;
 }
 
 export async void process_anim(posedge pixel_clk) {
