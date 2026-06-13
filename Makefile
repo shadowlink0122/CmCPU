@@ -341,3 +341,56 @@ hdmi-flash:
 .PHONY: hdmi-apply
 hdmi-apply: hdmi-build hdmi-gowin hdmi-flash
 
+# ============================================================
+# HDMI テキスト/アニメーション: 変数定義
+# ============================================================
+TEXT_SRC := $(SRC_DIR)/hdmi/hdmi_text_top.cm
+TEXT_SV := $(BUILD_DIR)/hdmi/hdmi_text.sv
+TEXT_TCL := $(SRC_DIR)/hdmi/gowin_hdmi_text.tcl
+TEXT_FS := $(BUILD_DIR)/hdmi/hdmi_text/impl/pnr/hdmi_text.fs
+
+# ============================================================
+# HDMI テキスト/アニメーション: Cm → SV
+# ============================================================
+.PHONY: text-build
+text-build: $(TEXT_SV)
+	@echo "Verilator リントチェック中..."
+	/usr/local/bin/verilator --lint-only --timing -Wno-MODMISSING $(TEXT_SV)
+	@echo ""
+	@echo "=========================================="
+	@echo "✅ HDMI テキストビルド完了! $(TEXT_SV)"
+	@echo "=========================================="
+
+$(TEXT_SV): $(TEXT_SRC)
+	@echo "Cm → SystemVerilog 変換中 (HDMI Text)..."
+	@mkdir -p $(BUILD_DIR)/hdmi
+	$(CM) compile --target=sv $(TEXT_SRC) -o $(TEXT_SV)
+	@echo "✅ SV生成完了: $(TEXT_SV)"
+
+# ============================================================
+# HDMI テキスト/アニメーション: Gowin EDA フルフロー
+# ============================================================
+.PHONY: text-gowin
+text-gowin: $(TEXT_SV)
+	@echo "Gowin EDA で合成・配置配線・ビットストリーム生成中 (HDMI Text)..."
+	@if [ -f "$(TEXT_FS)" ]; then echo "[WARN] 古いビットストリームを削除: $(TEXT_FS)"; rm -f "$(TEXT_FS)"; fi
+	DYLD_LIBRARY_PATH=$(GW_LIB) DYLD_FRAMEWORK_PATH=$(GW_LIB) $(GW_SH) $(TEXT_TCL)
+	@echo ""
+	@echo "=========================================="
+	@echo "✅ Gowin EDA HDMI テキストビルド完了! $(TEXT_FS)"
+	@echo "=========================================="
+
+# ============================================================
+# HDMI テキスト/アニメーション: FPGA書き込み
+# ============================================================
+.PHONY: text-flash
+text-flash:
+	@echo "FPGAに書き込み中 (HDMI Text)..."
+	eval "$$(/opt/homebrew/bin/brew shellenv)" && openFPGALoader --cable ft2232 -b $(BOARD) $(TEXT_FS)
+	@echo "✅ HDMI テキスト書き込み完了!"
+
+# HDMI テキスト: Cm → SV → FS → FPGA 一括実行
+.PHONY: text-apply
+text-apply: text-build text-gowin text-flash
+
+

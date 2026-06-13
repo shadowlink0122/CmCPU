@@ -9,6 +9,11 @@ export bool hsync_reg = true;
 export bool vsync_reg = true;
 export bool de_reg    = false;
 
+// 共有画素RGB出力変数 (pattern または text_renderer が書き込み、encoder が読み出し)
+export int r_out = 0;
+export int g_out = 0;
+export int b_out = 0;
+
 // ピクセルクロックに同期したビデオタイミング生成ロジック
 export async void video_timing(posedge pixel_clk) {
     // 水平カウンタ

@@ -1,0 +1,28 @@
+// ============================================================
+// Tang Console 138K (PG484) HDMI ピン制約 (Text / Animation 版)
+// ============================================================
+// ターゲット: GW5AST-LV138PG484AC1/I0
+// ============================================================
+
+// システムクロック (50MHz)
+IO_LOC  "clk_50m" V22;
+IO_PORT "clk_50m" IO_TYPE=LVCMOS33 PULL_MODE=NONE;
+
+// HDMI Data Channel 0 (Blue + HSYNC/VSYNC) — 差動ペア P,N
+IO_LOC  "tmds_d0_p" J14,H14;
+
+// HDMI Data Channel 1 (Green) — 差動ペア P,N
+IO_LOC  "tmds_d1_p" J15,H15;
+
+// HDMI Data Channel 2 (Red) — 差動ペア P,N
+IO_LOC  "tmds_d2_p" K17,J17;
+
+// HDMI Clock Channel — 差動ペア P,N
+IO_LOC  "tmds_clk_p" G15,G16;
+
+// ステータス LED READY (Red, U12) / DONE (Blue, G11)
+IO_LOC  "led_ready" U12;
+IO_PORT "led_ready" IO_TYPE=LVCMOS33 DRIVE=8;
+
+IO_LOC  "led_done" G11;
+IO_PORT "led_done" IO_TYPE=LVCMOS33 DRIVE=8;

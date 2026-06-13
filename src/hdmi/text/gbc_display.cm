@@ -1,0 +1,77 @@
+module gbc_display;
+
+import ../constants/hdmi_constants;
+import ../timing/timing;
+
+// GBC 画面設定定数
+const uint SCALE      = 3;     // 整数スケーリング倍率
+const uint H_OFFSET   = 80;    // 水平黒帯 (640 - 480) / 2
+const uint V_OFFSET   = 24;    // 垂直黒帯 (480 - 432) / 2
+const uint DISP_WIDTH = 480;   // 表示領域幅 (160 × 3)
+const uint DISP_HEIGHT = 432;  // 表示領域高さ (144 × 3)
+
+export utiny gbc_x = 0;
+export utiny gbc_y = 0;
+export bool gbc_active = false;
+
+// 内部レジスタ (カウンタ方式)
+uint sub_x = 0;  // 水平サブピクセルカウンタ (0-2)
+uint sub_y = 0;  // 垂直サブピクセルカウンタ (0-2)
+uint px = 0;     // GBC X 座標 (uint)
+uint py = 0;     // GBC Y 座標 (uint)
+
+export async void process_gbc(posedge pixel_clk) {
+    // GBC 表示領域判定
+    if (hc >= H_OFFSET) {
+        if (hc < H_OFFSET + DISP_WIDTH) {
+            if (vc >= V_OFFSET) {
+                if (vc < V_OFFSET + DISP_HEIGHT) {
+                    gbc_active = true;
+                } else {
+                    gbc_active = false;
+                }
+            } else {
+                gbc_active = false;
+            }
+        } else {
+            gbc_active = false;
+        }
+    } else {
+        gbc_active = false;
+    }
+
+    // 水平カウンタ (3 ピクセルごとに gbc_x をインクリメント)
+    if (hc == H_OFFSET) {
+        px = 0;
+        sub_x = 0;
+    } else {
+        if (gbc_active == true) {
+            if (sub_x == 2) {
+                sub_x = 0;
+                px = px + 1;
+            } else {
+                sub_x = sub_x + 1;
+            }
+        }
+    }
+
+    // 垂直カウンタ (3 ラインごとに gbc_y をインクリメント)
+    if (vc == V_OFFSET) {
+        if (hc == 0) {
+            py = 0;
+            sub_y = 0;
+        }
+    } else {
+        if (hc == 0) {
+            if (sub_y == 2) {
+                sub_y = 0;
+                py = py + 1;
+            } else {
+                sub_y = sub_y + 1;
+            }
+        }
+    }
+
+    gbc_x = px as utiny;
+    gbc_y = py as utiny;
+}

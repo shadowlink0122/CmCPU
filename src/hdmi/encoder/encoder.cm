@@ -3,7 +3,7 @@ module encoder;
 
 import ../constants/hdmi_constants;
 import ../timing/timing;
-import ../pattern/pattern;
+// (import ../pattern/pattern; removed)
 
 // 10bit TMDS 出力信号
 export int tmds_r = 0;
@@ -19,12 +19,12 @@ export int cnt_b = 0;
 // 8-bitのピクセルデータから9-bitの中間コードを算出する
 uint get_qm(uint din) {
     uint n1 = (din & 1) + ((din >> 1) & 1)
-            + ((din >> 2) & 1) + ((din >> 3) & 1)
-            + ((din >> 4) & 1) + ((din >> 5) & 1)
-            + ((din >> 6) & 1) + ((din >> 7) & 1);
-    
+    + ((din >> 2) & 1) + ((din >> 3) & 1)
+    + ((din >> 4) & 1) + ((din >> 5) & 1)
+    + ((din >> 6) & 1) + ((din >> 7) & 1);
+
     uint use_xnor = (n1 > 4) ? 1 : ((n1 == 4 && (din & 1) == 0) ? 1 : 0);
-    
+
     uint q0 = din & 1;
     uint q1 = ((din >> 1) & 1) ^ q0 ^ use_xnor;
     uint q2 = ((din >> 2) & 1) ^ q1 ^ use_xnor;
@@ -33,16 +33,16 @@ uint get_qm(uint din) {
     uint q5 = ((din >> 5) & 1) ^ q4 ^ use_xnor;
     uint q6 = ((din >> 6) & 1) ^ q5 ^ use_xnor;
     uint q7 = ((din >> 7) & 1) ^ q6 ^ use_xnor;
-    
+
     return q0 | (q1 << 1) | (q2 << 2) | (q3 << 3)
-         | (q4 << 4) | (q5 << 5) | (q6 << 6)
-         | (q7 << 7) | ((use_xnor ^ 1) << 8);
+    | (q4 << 4) | (q5 << 5) | (q6 << 6)
+    | (q7 << 7) | ((use_xnor ^ 1) << 8);
 }
 
 // 9-bit中間コードに含まれる1の個数を数える純粋関数
 uint get_n1_qm(uint qm) {
     return (qm & 1) + ((qm >> 1) & 1) + ((qm >> 2) & 1) + ((qm >> 3) & 1)
-         + ((qm >> 4) & 1) + ((qm >> 5) & 1) + ((qm >> 6) & 1) + ((qm >> 7) & 1);
+    + ((qm >> 4) & 1) + ((qm >> 5) & 1) + ((qm >> 6) & 1) + ((qm >> 7) & 1);
 }
 
 // DCバランス：10-bit TMDS 出力の決定を行う純粋関数
@@ -50,7 +50,7 @@ uint get_tmds(uint qm, uint n1_qm, int cnt, bool de, uint ctrl) {
     if (de == false) {
         return ctrl;
     }
-    
+
     if (n1_qm == 4) {
         if ((qm & 256) == 0) {
             return ((qm ^ 255) & 255) | (1 << 9);
@@ -87,7 +87,7 @@ int get_next_cnt(uint qm, uint n1_qm, int cnt, bool de) {
     if (de == false) {
         return 0;
     }
-    
+
     if (n1_qm == 4) {
         return cnt;
     } else {

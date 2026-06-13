@@ -1,0 +1,114 @@
+module animation_ctrl;
+
+import ../timing/timing;
+import ./text_renderer;
+
+const uint FRAME_CLOCKS   = 420000;  // 1フレーム = 800 × 525 クロック
+const uint TYPE_INTERVAL  = 6;       // 文字表示間隔 (フレーム数)
+const uint CURSOR_INTERVAL = 30;     // カーソル点滅間隔 (フレーム数)
+const uint STARTUP_FRAMES = 60;      // 起動待機 (フレーム数)
+const uint MSG_LEN = 13;             // "Hello, World!" の長さ
+const uint TEXT_COL_START = 3;       // 表示開始列
+const uint TEXT_ROW_START = 8;       // 表示開始行
+const uint TEXT_COLS = 20;           // テキストバッファ幅
+
+export bool anim_ready = false;
+export bool anim_done = false;
+
+// 内部レジスタ
+uint state = 0;         // ステートマシン (0=IDLE, 1=TYPING, 2=DONE)
+uint frame_cnt = 0;     // フレームカウンタ (0-419999)
+uint frame_num = 0;     // 定期フレーム更新数
+uint char_idx = 0;      // 表示済み文字数
+uint type_timer = 0;    // タイプライタタイマー
+uint cursor_timer = 0;  // カーソル点滅タイマー
+uint cursor_on = 0;     // カーソル点滅トグル
+utiny msg_char = 0;     // 現在ロードされた文字
+
+void load_msg_char() {
+    msg_char = 0;                            // デフォルト設定によるラッチ回避
+    if (char_idx == 0)  { msg_char = 72; }   // 'H'
+    if (char_idx == 1)  { msg_char = 101; }  // 'e'
+    if (char_idx == 2)  { msg_char = 108; }  // 'l'
+    if (char_idx == 3)  { msg_char = 108; }  // 'l'
+    if (char_idx == 4)  { msg_char = 111; }  // 'o'
+    if (char_idx == 5)  { msg_char = 44; }   // ','
+    if (char_idx == 6)  { msg_char = 32; }   // ' '
+    if (char_idx == 7)  { msg_char = 87; }   // 'W'
+    if (char_idx == 8)  { msg_char = 111; }  // 'o'
+    if (char_idx == 9)  { msg_char = 114; }  // 'r'
+    if (char_idx == 10) { msg_char = 108; }  // 'l'
+    if (char_idx == 11) { msg_char = 100; }  // 'd'
+    if (char_idx == 12) { msg_char = 33; }   // '!'
+}
+
+export async void process_anim(posedge pixel_clk) {
+    text_we = false;  // デフォルト: 書き込み無効
+
+    // フレームカウンタ
+    if (frame_cnt == FRAME_CLOCKS - 1) {
+        frame_cnt = 0;
+        frame_num = frame_num + 1;
+    } else {
+        frame_cnt = frame_cnt + 1;
+    }
+
+    // === IDLE: 起動待機 ===
+    if (state == 0) {
+        anim_ready = false;
+        anim_done = false;
+        if (frame_num == STARTUP_FRAMES) {
+            state = 1;
+            char_idx = 0;
+            type_timer = 0;
+        }
+    }
+
+    // === TYPING: 1文字ずつ表示 ===
+    if (state == 1) {
+        anim_ready = true;
+        anim_done = false;
+        load_msg_char();
+        if (frame_cnt == 0) {
+            type_timer = type_timer + 1;
+            if (type_timer == TYPE_INTERVAL) {
+                type_timer = 0;
+                // 文字をテキストバッファに書き込む
+                text_addr = (TEXT_ROW_START * TEXT_COLS + TEXT_COL_START + char_idx) as ushort;
+                text_char = msg_char;
+                text_we = true;
+
+                char_idx = char_idx + 1;
+
+                // カーソル位置更新
+                cursor_col = (TEXT_COL_START + char_idx) as utiny;
+                cursor_row = TEXT_ROW_START as utiny;
+                cursor_visible = true;
+
+                if (char_idx == MSG_LEN) {
+                    state = 2;
+                    cursor_timer = 0;
+                }
+            }
+        }
+    }
+
+    // === DONE: カーソル点滅 ===
+    if (state == 2) {
+        anim_ready = false;
+        anim_done = true;
+        if (frame_cnt == 0) {
+            cursor_timer = cursor_timer + 1;
+            if (cursor_timer == CURSOR_INTERVAL) {
+                cursor_timer = 0;
+                if (cursor_on == 0) {
+                    cursor_on = 1;
+                    cursor_visible = true;
+                } else {
+                    cursor_on = 0;
+                    cursor_visible = false;
+                }
+            }
+        }
+    }
+}

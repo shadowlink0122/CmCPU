@@ -1,0 +1,93 @@
+module text_renderer;
+
+import ../timing/timing;
+import ./gbc_display;
+import ./font_rom;
+
+// テキストバッファ (20×18 = 360 文字)
+export utiny[360] text_buf;
+
+// 書き込みIF
+export ushort text_addr = 0;
+export utiny  text_char = 0;
+export bool   text_we   = false;
+
+// カーソル制御
+export utiny cursor_col = 0;
+export utiny cursor_row = 0;
+export bool  cursor_visible = false;
+
+// 内部状態
+utiny char_code = 0;
+utiny font_row_reg = 0;
+utiny font_col_reg = 0;
+bool is_cursor_pos = false;
+
+export async void render_process(posedge pixel_clk) {
+    // バッファへの書き込み
+    if (text_we == true) {
+        if (text_addr < 360) {
+            text_buf[text_addr] = text_char;
+        }
+    }
+
+    // 座標分割 ( /8 は >>3, &7 はビットマスク)
+    utiny text_col = gbc_x >> 3;
+    utiny text_row = gbc_y >> 3;
+    font_col_reg = gbc_x & 7;
+    font_row_reg = gbc_y & 7;
+
+    // バッファアドレス計算
+    ushort buf_addr = (text_row as ushort) * 20 + (text_col as ushort);
+    if (buf_addr < 360) {
+        char_code = text_buf[buf_addr];
+    } else {
+        char_code = 32;  // 空白
+    }
+
+    // カーソル位置判定
+    if (text_col == cursor_col) {
+        if (text_row == cursor_row) {
+            is_cursor_pos = true;
+        } else {
+            is_cursor_pos = false;
+        }
+    } else {
+        is_cursor_pos = false;
+    }
+
+    // フォントデータの取得 (純粋関数呼び出し)
+    uint f_byte = lookup_font(char_code, font_row_reg);
+
+    // ピクセル抽出
+    utiny pixel = (f_byte >> (7 - font_col_reg)) & 1;
+
+    // カーソル表示処理（インバート）
+    if (cursor_visible == true) {
+        if (is_cursor_pos == true) {
+            if (font_row_reg >= 6) {
+                pixel = pixel ^ 1;
+            }
+        }
+    }
+
+    // RGB 出力生成 (timing.cm の共有変数に書き込み)
+    if (gbc_active == true) {
+        if (pixel == 1) {
+            // 文字色 (黒)
+            r_out = 0;
+            g_out = 0;
+            b_out = 0;
+        } else {
+            // 背景色 (白)
+            r_out = 255;
+            g_out = 255;
+            b_out = 255;
+        }
+    } else {
+        // 表示領域外 (黒)
+        r_out = 0;
+        g_out = 0;
+        b_out = 0;
+    }
+}

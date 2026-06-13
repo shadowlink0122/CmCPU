@@ -1,0 +1,67 @@
+//! platform: sv
+module hdmi_text_top;
+
+// ============================================================
+// HDMI "Hello, World!" テキスト出力回路 (トップレベルモジュール)
+// ============================================================
+// ターゲット: Tang Console 138K (GW5AST-LV138FPG676)
+// クロック: 50MHz 外部オシレータ -> PLL -> 25.2MHz + 126MHz
+// 出力: HDMI (DVI モード) 640×480@60Hz
+// ============================================================
+
+// 50MHz 外部システムクロック
+#[input] posedge clk_50m;
+
+// HDMI TMDS 差動出力ピン
+#[output] bool tmds_d2_p = false;
+#[output] bool tmds_d2_n = false;
+#[output] bool tmds_d1_p = false;
+#[output] bool tmds_d1_n = false;
+#[output] bool tmds_d0_p = false;
+#[output] bool tmds_d0_n = false;
+#[output] bool tmds_clk_p = false;
+#[output] bool tmds_clk_n = false;
+
+// ボード上のステータスLED (Red/Blue)
+#[output] bool led_ready = false;
+#[output] bool led_done = false;
+
+// 内部グローバル信号
+bool pixel_clk  = false;
+bool serial_clk = false;
+bool pll_lock    = false;
+
+// サブモジュールのインポート
+import ./constants/hdmi_constants;
+import ./pll/pll;
+import ./timing/timing;
+import ./encoder/encoder;
+import ./serdes/oser;
+import ./serdes/obuf;
+
+// 新規テキスト・アニメーションサブモジュール
+import ./text/gbc_display;
+import ./text/font_rom;
+import ./text/text_renderer;
+import ./text/animation_ctrl;
+
+// PLLインスタンス
+PLL pll_inst;
+
+// OSER10 10:1 シリアライザインスタンス
+OSER10_R oser_r;
+OSER10_G oser_g;
+OSER10_B oser_b;
+OSER10_CK oser_ck;
+
+// TLVDS_OBUF 差動バッファインスタンス
+TLVDS_D2 tlvds_d2;
+TLVDS_D1 tlvds_d1;
+TLVDS_D0 tlvds_d0;
+TLVDS_CK tlvds_ck;
+
+// LED状態同期プロセス
+async void led_sync(posedge pixel_clk) {
+    led_ready = anim_ready;
+    led_done = anim_done;
+}

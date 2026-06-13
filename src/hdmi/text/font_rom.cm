@@ -1,0 +1,112 @@
+module font_rom;
+
+// ASCII 8x8 フォント ROM ルックアップ関数 (Hello World 出力に必要な文字に限定)
+export uint lookup_font(utiny char_code, utiny row) {
+    uint font_byte = 0;
+
+    // 'H' = 72
+    if (char_code == 72) {
+        if (row == 0) { font_byte = 130; }  // 0x82
+        if (row == 1) { font_byte = 130; }
+        if (row == 2) { font_byte = 130; }
+        if (row == 3) { font_byte = 254; }  // 0xFE
+        if (row == 4) { font_byte = 130; }
+        if (row == 5) { font_byte = 130; }
+        if (row == 6) { font_byte = 130; }
+        if (row == 7) { font_byte = 0; }
+    }
+    // 'e' = 101
+    if (char_code == 101) {
+        if (row == 0) { font_byte = 0; }
+        if (row == 1) { font_byte = 0; }
+        if (row == 2) { font_byte = 124; }  // 0x7C
+        if (row == 3) { font_byte = 130; }  // 0x82
+        if (row == 4) { font_byte = 254; }  // 0xFE
+        if (row == 5) { font_byte = 128; }  // 0x80
+        if (row == 6) { font_byte = 124; }  // 0x7C
+        if (row == 7) { font_byte = 0; }
+    }
+    // 'l' = 108
+    if (char_code == 108) {
+        if (row == 0) { font_byte = 120; }  // 0x78
+        if (row == 1) { font_byte = 48; }   // 0x30
+        if (row == 2) { font_byte = 48; }
+        if (row == 3) { font_byte = 48; }
+        if (row == 4) { font_byte = 48; }
+        if (row == 5) { font_byte = 48; }
+        if (row == 6) { font_byte = 114; }  // 0x72
+        if (row == 7) { font_byte = 0; }
+    }
+    // 'o' = 111
+    if (char_code == 111) {
+        if (row == 0) { font_byte = 0; }
+        if (row == 1) { font_byte = 0; }
+        if (row == 2) { font_byte = 120; }  // 0x78
+        if (row == 3) { font_byte = 132; }  // 0x84
+        if (row == 4) { font_byte = 132; }
+        if (row == 5) { font_byte = 132; }
+        if (row == 6) { font_byte = 120; }  // 0x78
+        if (row == 7) { font_byte = 0; }
+    }
+    // ',' = 44
+    if (char_code == 44) {
+        if (row == 0) { font_byte = 0; }
+        if (row == 1) { font_byte = 0; }
+        if (row == 2) { font_byte = 0; }
+        if (row == 3) { font_byte = 0; }
+        if (row == 4) { font_byte = 0; }
+        if (row == 5) { font_byte = 96; }  // 0x60
+        if (row == 6) { font_byte = 96; }
+        if (row == 7) { font_byte = 32; }  // 0x20
+    }
+    // ' ' = 32
+    if (char_code == 32) {
+        font_byte = 0;
+    }
+    // 'W' = 87
+    if (char_code == 87) {
+        if (row == 0) { font_byte = 130; }  // 0x82
+        if (row == 1) { font_byte = 130; }
+        if (row == 2) { font_byte = 130; }
+        if (row == 3) { font_byte = 146; }  // 0x92
+        if (row == 4) { font_byte = 146; }
+        if (row == 5) { font_byte = 146; }
+        if (row == 6) { font_byte = 108; }  // 0x6C
+        if (row == 7) { font_byte = 0; }
+    }
+    // 'r' = 114
+    if (char_code == 114) {
+        if (row == 0) { font_byte = 0; }
+        if (row == 1) { font_byte = 0; }
+        if (row == 2) { font_byte = 204; }  // 0xCC
+        if (row == 3) { font_byte = 216; }  // 0xD8
+        if (row == 4) { font_byte = 240; }  // 0xF0
+        if (row == 5) { font_byte = 192; }  // 0xC0
+        if (row == 6) { font_byte = 192; }
+        if (row == 7) { font_byte = 0; }
+    }
+    // 'd' = 100
+    if (char_code == 100) {
+        if (row == 0) { font_byte = 12; }  // 0x0C
+        if (row == 1) { font_byte = 12; }
+        if (row == 2) { font_byte = 124; }  // 0x7C
+        if (row == 3) { font_byte = 204; }  // 0xCC
+        if (row == 4) { font_byte = 204; }
+        if (row == 5) { font_byte = 204; }
+        if (row == 6) { font_byte = 122; }  // 0x7A
+        if (row == 7) { font_byte = 0; }
+    }
+    // '!' = 33
+    if (char_code == 33) {
+        if (row == 0) { font_byte = 48; }  // 0x30
+        if (row == 1) { font_byte = 48; }
+        if (row == 2) { font_byte = 48; }
+        if (row == 3) { font_byte = 48; }
+        if (row == 4) { font_byte = 48; }
+        if (row == 5) { font_byte = 0; }
+        if (row == 6) { font_byte = 48; }
+        if (row == 7) { font_byte = 0; }
+    }
+
+    return font_byte;
+}
