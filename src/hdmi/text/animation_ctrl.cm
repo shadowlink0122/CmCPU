@@ -243,7 +243,7 @@ utiny get_ctrl_abbrev(utiny val, utiny pos) {
 }
 
 // 文字コード表データ文字抽出関数
-utiny get_table_char(utiny r, utiny idx) {
+ushort get_table_char(utiny r, utiny idx) {
     utiny c = 0;
     utiny offset = 0;
     if (idx < 10) { c = 0; offset = idx; }
@@ -255,13 +255,13 @@ utiny get_table_char(utiny r, utiny idx) {
     else if (idx < 70) { c = 6; offset = idx - 60; }
     else { c = 7; offset = idx - 70; }
 
-    utiny val = c * 32 + r;  // 文字コード (0〜255)
+    ushort val = (c as ushort) * 37 + (r as ushort);  // 文字コード (0〜295)
 
     utiny digit100 = 0;
     utiny digit10 = 0;
     utiny digit1 = 0;
 
-    utiny temp = val;
+    ushort temp = val;
     if (temp >= 200) {
         digit100 = 2;
         temp = temp - 200;
@@ -280,35 +280,35 @@ utiny get_table_char(utiny r, utiny idx) {
     else if (temp >= 20) { digit10 = 2; temp = temp - 20; }
     else if (temp >= 10) { digit10 = 1; temp = temp - 10; }
 
-    digit1 = temp;
+    digit1 = temp as utiny;
 
-    if (offset == 0) { return (digit100 + 48); }
-    if (offset == 1) { return (digit10 + 48); }
-    if (offset == 2) { return (digit1 + 48); }
-    if (offset == 3) { return ':' as utiny; }
-    if (offset == 4) { return '[' as utiny; }
+    if (offset == 0) { return (digit100 + 48) as ushort; }
+    if (offset == 1) { return (digit10 + 48) as ushort; }
+    if (offset == 2) { return (digit1 + 48) as ushort; }
+    if (offset == 3) { return ':' as ushort; }
+    if (offset == 4) { return '[' as ushort; }
     if (offset == 5) {
         if (val <= 32 || val == 127) {
-            return get_ctrl_abbrev(val, 0);
+            return get_ctrl_abbrev(val as utiny, 0) as ushort;
         }
-        return ' ' as utiny;
+        return ' ' as ushort;
     }
     if (offset == 6) {
         if (val <= 32 || val == 127) {
-            return get_ctrl_abbrev(val, 1);
+            return get_ctrl_abbrev(val as utiny, 1) as ushort;
         }
         return val;
     }
     if (offset == 7) {
         if (val <= 32 || val == 127) {
-            return get_ctrl_abbrev(val, 2);
+            return get_ctrl_abbrev(val as utiny, 2) as ushort;
         }
-        return ' ' as utiny;
+        return ' ' as ushort;
     }
-    if (offset == 8) { return ']' as utiny; }
-    if (offset == 9) { return ' ' as utiny; }
+    if (offset == 8) { return ']' as ushort; }
+    if (offset == 9) { return ' ' as ushort; }
 
-    return ' ' as utiny;
+    return ' ' as ushort;
 }
 
 export async void process_anim(posedge pixel_clk) {
@@ -331,7 +331,7 @@ export async void process_anim(posedge pixel_clk) {
     // === CLEARING: 画面全体を空白でクリア ===
     else if (state == 1) {
         text_addr = clear_addr as ushort;
-        text_char = ' ' as utiny;
+        text_char = ' ' as ushort;
         text_we = true;
 
         clear_addr = clear_addr + 1;
@@ -356,7 +356,7 @@ export async void process_anim(posedge pixel_clk) {
             if (row_idx == 0) {
                 // ヘッダー描画
                 text_addr = (8 * (TEXT_COLS as ushort) + 18 + (write_cnt as ushort)) as ushort;
-                text_char = get_header_char(write_cnt);
+                text_char = get_header_char(write_cnt) as ushort;
                 text_we = true;
                 write_cnt = write_cnt + 1;
                 if (write_cnt == 43) {
@@ -366,8 +366,8 @@ export async void process_anim(posedge pixel_clk) {
                 }
             }
             else if (row_idx >= 2) {
-                if (row_idx <= 33) {
-                    // グリッドデータ行の描画
+                if (row_idx <= 38) {
+                    // グリッドデータ行の描画 (37行表示)
                     utiny r = row_idx - 2;
                     text_addr = (((16 + r as ushort) * (TEXT_COLS as ushort)) + (write_cnt as ushort)) as ushort;
                     text_char = get_table_char(r, write_cnt);

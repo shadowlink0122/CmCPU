@@ -5,11 +5,11 @@ import ./gbc_display;
 import ./font_rom;
 
 // テキストバッファ (列数×行数 = バッファサイズ)
-export utiny[4800] text_buf;
+export ushort[4800] text_buf;
 
 // 書き込みIF
 export ushort text_addr = 0;
-export utiny  text_char = 0;
+export ushort text_char = 0;
 export bool   text_we   = false;
 
 // カーソル制御
@@ -18,7 +18,7 @@ export utiny cursor_row = 0;
 export bool  cursor_visible = false;
 
 // 内部状態（パイプラインレジスタ Stage 1）
-utiny char_code = 0;
+ushort char_code = 0;
 utiny font_row_reg = 0;
 utiny font_col_reg = 0;
 bool is_cursor_pos = false;
@@ -63,7 +63,7 @@ export async void render_process(posedge pixel_clk) {
     if (calc_addr < TEXT_BUF_SIZE as ushort) {
         char_code = text_buf[calc_addr];
     } else {
-        char_code = ' ' as utiny;
+        char_code = ' ' as ushort;
     }
 
     // カーソル位置判定 (Stage 1 更新用)

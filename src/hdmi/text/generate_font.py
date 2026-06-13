@@ -91,13 +91,13 @@ def main():
         out.write(f"export const uint MSG_LEN = {msg_len};\n\n")
 
         # フォントテーブル引き当て関数
-        out.write("export uint lookup_font(utiny char_code, utiny row) {\n")
+        out.write("export uint lookup_font(ushort char_code, utiny row) {\n")
         out.write("    uint font_byte = 0;\n\n")
 
         # 文字コード昇順で出力。合成時の深いネストを避けるため、else if ではなく独立した if 文の列にする。
         for char_code in sorted(chars.keys()):
             char_rows = chars[char_code]
-            out.write(f"    if (char_code == {char_code} as utiny) {{\n")
+            out.write(f"    if (char_code == {char_code} as ushort) {{\n")
 
             # 全行空 (ドットのみ) かどうか
             all_empty = all(all(c in ('.', ' ') for c in r_str) for r_str in char_rows)
