@@ -15,12 +15,12 @@ uint state = 0;       // ステートマシン (0=IDLE, 1=CLEARING, 2=DRAWING, 3
 uint frame_cnt = 0;   // 1フレーム内のクロックカウンタ (0-419999)
 uint frame_num = 0;   // フレーム数カウンタ
 uint clear_addr = 0;  // 画面クリアアドレス
-uint row_idx = 0;     // 現在描画中の行インデックス (0=Header, 1=ColHeader, 2..17=TableRows)
-uint write_cnt = 0;   // 行内書き込み文字カウンタ
-uint row_delay = 0;   // 行描画ディレイタイマー (フレーム数)
+utiny row_idx = 0;    // 現在描画中の行インデックス (0=Header, 1=ColHeader, 2..17=TableRows)
+utiny write_cnt = 0;  // 行内書き込み文字カウンタ
+utiny row_delay = 0;  // 行描画ディレイタイマー (フレーム数)
 
 // ヘッダー文字列文字抽出関数
-utiny get_header_char(uint idx) {
+utiny get_header_char(utiny idx) {
     if (idx == 0) { return '=' as utiny; }
     else if (idx == 1) { return '=' as utiny; }
     else if (idx == 2) { return '=' as utiny; }
@@ -49,8 +49,16 @@ utiny get_header_char(uint idx) {
 }
 
 // カラムヘッダー文字列文字抽出関数
-utiny get_col_header_char(uint idx) {
-    uint offset = idx % 10;
+utiny get_col_header_char(utiny idx) {
+    utiny c = 0;
+    if (idx >= 50) { c = 5; }
+    else if (idx >= 40) { c = 4; }
+    else if (idx >= 30) { c = 3; }
+    else if (idx >= 20) { c = 2; }
+    else if (idx >= 10) { c = 1; }
+    else { c = 0; }
+    utiny offset = idx - c * 10;
+
     if (offset == 0) { return ' ' as utiny; }
     else if (offset == 1) { return ' ' as utiny; }
     else if (offset == 2) { return 'D' as utiny; }
@@ -68,14 +76,51 @@ utiny get_col_header_char(uint idx) {
 }
 
 // ASCII表データ文字抽出関数
-utiny get_table_char(uint r, uint idx) {
-    uint c = idx / 10;
-    uint offset = idx % 10;
-    uint val = 32 + c * 16 + r;
+utiny get_table_char(utiny r, utiny idx) {
+    utiny c = 0;
+    if (idx >= 50) { c = 5; }
+    else if (idx >= 40) { c = 4; }
+    else if (idx >= 30) { c = 3; }
+    else if (idx >= 20) { c = 2; }
+    else if (idx >= 10) { c = 1; }
+    else { c = 0; }
+    utiny offset = idx - c * 10;
+    utiny val = 32 + c * 16 + r;
 
-    if (offset == 0) { return (((val / 100) + 48) as utiny); }
-    else if (offset == 1) { return ((((val / 10) % 10) + 48) as utiny); }
-    else if (offset == 2) { return (((val % 10) + 48) as utiny); }
+    utiny digit100 = 0;
+    utiny digit10 = 0;
+    utiny digit1 = 0;
+
+    if (val >= 100) {
+        digit100 = 1;
+        utiny rem = val - 100;
+        if (rem >= 90) { digit10 = 9; digit1 = rem - 90; }
+        else if (rem >= 80) { digit10 = 8; digit1 = rem - 80; }
+        else if (rem >= 70) { digit10 = 7; digit1 = rem - 70; }
+        else if (rem >= 60) { digit10 = 6; digit1 = rem - 60; }
+        else if (rem >= 50) { digit10 = 5; digit1 = rem - 50; }
+        else if (rem >= 40) { digit10 = 4; digit1 = rem - 40; }
+        else if (rem >= 30) { digit10 = 3; digit1 = rem - 30; }
+        else if (rem >= 20) { digit10 = 2; digit1 = rem - 20; }
+        else if (rem >= 10) { digit10 = 1; digit1 = rem - 10; }
+        else { digit10 = 0; digit1 = rem; }
+    } else {
+        digit100 = 0;
+        if (val >= 90) { digit10 = 9; digit1 = val - 90; }
+        else if (val >= 80) { digit10 = 8; digit1 = val - 80; }
+        else if (val >= 70) { digit10 = 7; digit1 = val - 70; }
+        else if (val >= 60) { digit10 = 6; digit1 = val - 60; }
+        else if (val >= 50) { digit10 = 5; digit1 = val - 50; }
+        else if (val >= 40) { digit10 = 4; digit1 = val - 40; }
+        else if (val >= 30) { digit10 = 3; digit1 = val - 30; }
+        else if (val >= 20) { digit10 = 2; digit1 = val - 20; }
+        else if (val >= 10) { digit10 = 1; digit1 = val - 10; }
+        else { digit10 = 0; digit1 = val; }
+    }
+
+    if (offset == 0) { return (digit100 + 48); }
+    else if (offset == 1) { return (digit10 + 48); }
+    else if (offset == 2) { return (digit1 + 48); }
     else if (offset == 3) { return ' ' as utiny; }
     else if (offset == 4) { return '[' as utiny; }
     else if (offset == 5) {
@@ -92,9 +137,6 @@ utiny get_table_char(uint r, uint idx) {
 }
 
 export async void process_anim(posedge pixel_clk) {
-    text_we = false;         // デフォルトは書き込み無効
-    cursor_visible = false;  // カーソルは常時非表示
-
     // フレームカウンタ管理
     if (frame_cnt == FRAME_CLOCKS - 1) {
         frame_cnt = 0;
@@ -105,19 +147,14 @@ export async void process_anim(posedge pixel_clk) {
 
     // === IDLE: 起動待機 ===
     if (state == 0) {
-        anim_ready = false;
-        anim_done = false;
+        text_we = false;
         if (frame_num == STARTUP_FRAMES) {
             state = 1;
             clear_addr = 0;
         }
     }
-
     // === CLEARING: 画面全体を空白でクリア ===
-    if (state == 1) {
-        anim_ready = false;
-        anim_done = false;
-
+    else if (state == 1) {
         text_addr = clear_addr as ushort;
         text_char = ' ' as utiny;
         text_we = true;
@@ -130,12 +167,8 @@ export async void process_anim(posedge pixel_clk) {
             row_delay = 0;
         }
     }
-
     // === DRAWING: 1行ずつテーブルを出力 ===
-    if (state == 2) {
-        anim_ready = true;
-        anim_done = false;
-
+    else if (state == 2) {
         // 1フレームごとにディレイ更新
         if (frame_cnt == 0) {
             if (row_delay > 0) {
@@ -172,8 +205,8 @@ export async void process_anim(posedge pixel_clk) {
             else if (row_idx >= 2) {
                 if (row_idx <= 17) {
                     // グリッドデータ行の描画
-                    uint r = row_idx - 2;
-                    text_addr = ((15 + r) * (TEXT_COLS as ushort) + 10 + (write_cnt as ushort)) as ushort;
+                    utiny r = row_idx - 2;
+                    text_addr = (((15 + r as ushort) * (TEXT_COLS as ushort)) + 10 + (write_cnt as ushort)) as ushort;
                     text_char = get_table_char(r, write_cnt);
                     text_we = true;
                     write_cnt = write_cnt + 1;
@@ -184,16 +217,37 @@ export async void process_anim(posedge pixel_clk) {
                     }
                 }
                 else {
-                    // 全行の描画完了
+                    text_we = false;
                     state = 3;
                 }
             }
+            else {
+                text_we = false;
+            }
+        }
+        else {
+            text_we = false;
         }
     }
-
     // === DONE: 描画終了状態 ===
-    if (state == 3) {
+    else {
+        text_we = false;
+    }
+}
+
+// LED制御およびアニメーション状態出力用の独立プロセス
+// 同一プロセス内での複数代入にともなうコンパイラのスコープ生成バグを回避する
+export async void led_control_process(posedge pixel_clk) {
+    if (state == 2) {
+        anim_ready = true;
+        anim_done = false;
+    }
+    else if (state == 3) {
         anim_ready = false;
         anim_done = true;
+    }
+    else {
+        anim_ready = false;
+        anim_done = false;
     }
 }
