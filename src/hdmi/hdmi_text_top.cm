@@ -41,7 +41,6 @@ import ./serdes/obuf;
 
 // 新規テキスト・アニメーションサブモジュール
 import ./text/gbc_display;
-import ./text/font_rom;
 import ./text/text_renderer;
 import ./text/animation_ctrl;
 

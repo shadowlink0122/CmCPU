@@ -126,10 +126,24 @@ detect_project() {
             echo "  ${i}) $(basename "$f" .cm)"
             i=$((i + 1))
         done
-        echo -n "選択 [1-${#cm_files[@]}]: "
+        echo -n "選択 [1-${#cm_files[@]} または プロジェクト名]: "
         read -r choice
+        local chosen_file=""
         if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le ${#cm_files[@]} ]; then
-            CM_SRC="${cm_files[$((choice - 1))]}"
+            chosen_file="${cm_files[$((choice - 1))]}"
+        else
+            for f in "${cm_files[@]}"; do
+                local base
+                base=$(basename "$f" .cm)
+                if [ "$base" = "$choice" ]; then
+                    chosen_file="$f"
+                    break
+                fi
+            done
+        fi
+
+        if [ -n "$chosen_file" ]; then
+            CM_SRC="$chosen_file"
         else
             error "無効な選択: ${choice}"
             exit 1
