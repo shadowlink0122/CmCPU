@@ -22,28 +22,21 @@ module hdmi_text_top;
 #[output] bool tmds_clk_p = false;
 #[output] bool tmds_clk_n = false;
 
-// ボード上のステータスLED (Red/Blue)
-#[output] bool led_ready = false;
-#[output] bool led_done = false;
-
 // 内部グローバル信号
 bool pixel_clk  = false;
 bool serial_clk = false;
 bool pll_lock    = false;
 
-// サブモジュールのインポート
-import ./constants/hdmi_constants;
+// サブモジュールのインポート (不要な冗長インポートを削減)
 import ./pll/pll;
-import ./timing/timing;
 import ./encoder/encoder;
 import ./serdes/oser;
 import ./serdes/obuf;
-
-// 新規テキスト・アニメーションサブモジュール
-import ./text/font_rom;
-import ./text/gbc_display;
-import ./text/text_renderer;
 import ./text/animation_ctrl;
+
+// ボード上のステータスLED (Red/Blue)
+#[output] assign bool led_ready = anim_ready;
+#[output] assign bool led_done = anim_done;
 
 // PLLインスタンス
 PLL pll_inst;
@@ -59,9 +52,3 @@ TLVDS_D2 tlvds_d2;
 TLVDS_D1 tlvds_d1;
 TLVDS_D0 tlvds_d0;
 TLVDS_CK tlvds_ck;
-
-// LED状態同期プロセス
-async void led_sync(posedge pixel_clk) {
-    led_ready = anim_ready;
-    led_done = anim_done;
-}

@@ -21,64 +21,17 @@ utiny row_idx = 0;    // 現在描画中の行インデックス (0=Header, 1=Co
 utiny write_cnt = 0;  // 行内書き込み文字カウンタ
 utiny row_delay = 0;  // 行描画ディレイタイマー (フレーム数)
 
-// ヘッダー文字列文字抽出関数
-utiny get_header_char(utiny idx) {
-    return (TITLE[idx] as utiny);
-}
-
-// 指定位置の文字を抽出する共通関数
-utiny extract_char(uint packed_val, utiny pos) {
-    utiny c = ' ' as utiny;
-    switch (pos) {
-        case (0) { c = ((packed_val >> 16) & 0xFF) as utiny; }
-        case (1) { c = ((packed_val >> 8) & 0xFF) as utiny; }
-        case (2) { c = (packed_val & 0xFF) as utiny; }
-        else     { c = ' ' as utiny; }
+// 文字列からインデックスで文字を抽出する統一関数
+utiny get_string_char(bool is_title, utiny idx, utiny offset) {
+    if (is_title) {
+        return (TITLE[idx] as utiny);
+    } else {
+        utiny code = idx;
+        if (idx == 127) {
+            code = 33;
+        }
+        return (CTRL_ABBREVS[(code as uint) * 3 + (offset as uint)] as utiny);
     }
-    return c;
-}
-
-// 制御文字の3文字略記を取得する関数
-uint get_ctrl_abbrev(utiny val) {
-    uint abbrev = BLK;
-    switch (val) {
-        case (0)   { abbrev = NUL; }
-        case (1)   { abbrev = SOH; }
-        case (2)   { abbrev = STX; }
-        case (3)   { abbrev = ETX; }
-        case (4)   { abbrev = EOT; }
-        case (5)   { abbrev = ENQ; }
-        case (6)   { abbrev = ACK; }
-        case (7)   { abbrev = BEL; }
-        case (8)   { abbrev = BCK; }
-        case (9)   { abbrev = TAB; }
-        case (10)  { abbrev = RTN; }
-        case (11)  { abbrev = VT; }
-        case (12)  { abbrev = FF; }
-        case (13)  { abbrev = CR; }
-        case (14)  { abbrev = SO; }
-        case (15)  { abbrev = SI; }
-        case (16)  { abbrev = DLE; }
-        case (17)  { abbrev = DC1; }
-        case (18)  { abbrev = DC2; }
-        case (19)  { abbrev = DC3; }
-        case (20)  { abbrev = DC4; }
-        case (21)  { abbrev = NAK; }
-        case (22)  { abbrev = SYN; }
-        case (23)  { abbrev = ETB; }
-        case (24)  { abbrev = CAN; }
-        case (25)  { abbrev = EM; }
-        case (26)  { abbrev = SUB; }
-        case (27)  { abbrev = ESC; }
-        case (28)  { abbrev = FS; }
-        case (29)  { abbrev = GS; }
-        case (30)  { abbrev = RS; }
-        case (31)  { abbrev = US; }
-        case (32)  { abbrev = SPC; }
-        case (127) { abbrev = DEL; }
-        else       { abbrev = BLK; }
-    }
-    return abbrev;
 }
 
 // 文字コード表データ文字抽出関数
@@ -148,8 +101,7 @@ ushort get_table_char(utiny r, utiny idx) {
         case (4) { res_char = '[' as ushort; }
         case (5 ... 7) {
             if (is_ctrl) {
-                uint abbrev = get_ctrl_abbrev(val as utiny);
-                res_char = extract_char(abbrev, (offset - 5) as utiny) as ushort;
+                res_char = get_string_char(false, val as utiny, (offset - 5) as utiny) as ushort;
             } else if (offset == 6) {
                 res_char = val;
             } else {
@@ -208,7 +160,7 @@ export async void process_anim(posedge pixel_clk) {
             if (row_idx == 0) {
                 // ヘッダー描画
                 text_addr = (8 * (TEXT_COLS as ushort) + 18 + (write_cnt as ushort)) as ushort;
-                text_char = get_header_char(write_cnt) as ushort;
+                text_char = get_string_char(true, write_cnt, 0) as ushort;
                 text_we = true;
                 write_cnt = write_cnt + 1;
                 if (write_cnt == 43) {

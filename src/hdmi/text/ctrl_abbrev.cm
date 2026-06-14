@@ -1,49 +1,8 @@
 module ctrl_abbrev;
 
 // ============================================================================
-// 制御文字の3文字略記定数定義ファイル
+// 制御文字の3文字略記定義ファイル
 // ============================================================================
 
-// 文字列を32ビットのuint値にパック変換する関数 (Cmシミュレーション/コンパイル用フォールバック実装)
-export uint stringToUint(string s) {
-    uint val = 0;
-    val = ((s[0] as uint) << 16) | ((s[1] as uint) << 8) | (s[2] as uint);
-    return val;
-}
-
-// 各制御文字の3文字略記定義
-export const uint NUL = stringToUint("NUL");
-export const uint SOH = stringToUint("SOH");
-export const uint STX = stringToUint("STX");
-export const uint ETX = stringToUint("ETX");
-export const uint EOT = stringToUint("EOT");
-export const uint ENQ = stringToUint("ENQ");
-export const uint ACK = stringToUint("ACK");
-export const uint BEL = stringToUint("BEL");
-export const uint BCK = stringToUint("BCK");
-export const uint TAB = stringToUint("TAB");
-export const uint RTN = stringToUint("RTN");
-export const uint VT  = stringToUint("VT ");
-export const uint FF  = stringToUint("FF ");
-export const uint CR  = stringToUint("CR ");
-export const uint SO  = stringToUint("SO ");
-export const uint SI  = stringToUint("SI ");
-export const uint DLE = stringToUint("DLE");
-export const uint DC1 = stringToUint("DC1");
-export const uint DC2 = stringToUint("DC2");
-export const uint DC3 = stringToUint("DC3");
-export const uint DC4 = stringToUint("DC4");
-export const uint NAK = stringToUint("NAK");
-export const uint SYN = stringToUint("SYN");
-export const uint ETB = stringToUint("ETB");
-export const uint CAN = stringToUint("CAN");
-export const uint EM  = stringToUint("EM ");
-export const uint SUB = stringToUint("SUB");
-export const uint ESC = stringToUint("ESC");
-export const uint FS  = stringToUint("FS ");
-export const uint GS  = stringToUint("GS ");
-export const uint RS  = stringToUint("RS ");
-export const uint US  = stringToUint("US ");
-export const uint SPC = stringToUint("SPC");
-export const uint DEL = stringToUint("DEL");
-export const uint BLK = stringToUint("   ");
+// 34個の制御文字略記 (各3文字、DELはインデックス33に対応)
+export const string CTRL_ABBREVS = "NULSOHSTXETXEOTENQACKBELBCKTABRTNVT FF CR SO SI DLEDC1DC2DC3DC4NAKSYNETBCANEM SUBESCFS GSRS US SPCDEL";
