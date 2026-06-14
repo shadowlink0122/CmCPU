@@ -3,6 +3,7 @@ module animation_ctrl;
 import ../timing/timing;
 import ./text_renderer;
 import ./font_rom;
+import ./ctrl_abbrev;
 
 const uint FRAME_CLOCKS   = 420000;  // 1フレーム = 800 × 525 クロック
 const uint STARTUP_FRAMES = 60;      // 起動待機 (フレーム数)
@@ -19,72 +20,39 @@ utiny row_idx = 0;    // 現在描画中の行インデックス (0=Header, 1=Co
 utiny write_cnt = 0;  // 行内書き込み文字カウンタ
 utiny row_delay = 0;  // 行描画ディレイタイマー (フレーム数)
 
+// タイトル文字列の4文字パック定数定義
+const uint TITLE_0  = (('=' as uint) << 24) | (('=' as uint) << 16) | (('=' as uint) << 8) | (' ' as uint);  // "=== "
+const uint TITLE_1  = (('C' as uint) << 24) | (('h' as uint) << 16) | (('a' as uint) << 8) | ('r' as uint);  // "Char"
+const uint TITLE_2  = (('a' as uint) << 24) | (('c' as uint) << 16) | (('t' as uint) << 8) | ('e' as uint);  // "acte"
+const uint TITLE_3  = (('r' as uint) << 24) | ((' ' as uint) << 16) | (('C' as uint) << 8) | ('o' as uint);  // "r Co"
+const uint TITLE_4  = (('d' as uint) << 24) | (('e' as uint) << 16) | ((' ' as uint) << 8) | ('T' as uint);  // "de T"
+const uint TITLE_5  = (('a' as uint) << 24) | (('b' as uint) << 16) | (('l' as uint) << 8) | ('e' as uint);  // "able"
+const uint TITLE_6  = ((' ' as uint) << 24) | (('(' as uint) << 16) | (('A' as uint) << 8) | ('S' as uint);  // " (AS"
+const uint TITLE_7  = (('C' as uint) << 24) | (('I' as uint) << 16) | (('I' as uint) << 8) | (' ' as uint);  // "CII "
+const uint TITLE_8  = (('&' as uint) << 24) | ((' ' as uint) << 16) | (('K' as uint) << 8) | ('A' as uint);  // "& KA"
+const uint TITLE_9  = (('N' as uint) << 24) | (('A' as uint) << 16) | ((')' as uint) << 8) | (' ' as uint);  // "NA) "
+const uint TITLE_10 = (('=' as uint) << 24) | (('=' as uint) << 16) | (('=' as uint) << 8) | (' ' as uint);  // "=== "
+
 // ヘッダー文字列文字抽出関数
 utiny get_header_char(utiny idx) {
-    utiny c = ' ' as utiny;
-    switch (idx) {
-        case (0 | 1 | 2 | 40 | 41 | 42) { c = '=' as utiny; }
-        case (4 | 14 | 28) { c = 'C' as utiny; }
-        case (5) { c = 'h' as utiny; }
-        case (6 | 8 | 20) { c = 'a' as utiny; }
-        case (7 | 12) { c = 'r' as utiny; }
-        case (9) { c = 'c' as utiny; }
-        case (10) { c = 't' as utiny; }
-        case (11 | 17 | 23) { c = 'e' as utiny; }
-        case (15) { c = 'o' as utiny; }
-        case (16) { c = 'd' as utiny; }
-        case (19) { c = 'T' as utiny; }
-        case (21) { c = 'b' as utiny; }
-        case (22) { c = 'l' as utiny; }
-        case (25) { c = '(' as utiny; }
-        case (26 | 35 | 37) { c = 'A' as utiny; }
-        case (27) { c = 'S' as utiny; }
-        case (29 | 30) { c = 'I' as utiny; }
-        case (32) { c = '&' as utiny; }
-        case (34) { c = 'K' as utiny; }
-        case (36) { c = 'N' as utiny; }
-        case (38) { c = ')' as utiny; }
-        else { c = ' ' as utiny; }
+    uint word = 0;
+    switch (idx / 4) {
+        case (0)  { word = TITLE_0; }
+        case (1)  { word = TITLE_1; }
+        case (2)  { word = TITLE_2; }
+        case (3)  { word = TITLE_3; }
+        case (4)  { word = TITLE_4; }
+        case (5)  { word = TITLE_5; }
+        case (6)  { word = TITLE_6; }
+        case (7)  { word = TITLE_7; }
+        case (8)  { word = TITLE_8; }
+        case (9)  { word = TITLE_9; }
+        case (10) { word = TITLE_10; }
+        else      { word = 0; }
     }
-    return c;
+    utiny shift = (3 - (idx % 4)) * 8;
+    return ((word >> shift) & 0xFF) as utiny;
 }
-
-// 制御文字の3文字略記定数定義
-const uint NUL = (('N' as uint) << 16) | (('U' as uint) << 8) | ('L' as uint);
-const uint SOH = (('S' as uint) << 16) | (('O' as uint) << 8) | ('H' as uint);
-const uint STX = (('S' as uint) << 16) | (('T' as uint) << 8) | ('X' as uint);
-const uint ETX = (('E' as uint) << 16) | (('T' as uint) << 8) | ('X' as uint);
-const uint EOT = (('E' as uint) << 16) | (('O' as uint) << 8) | ('T' as uint);
-const uint ENQ = (('E' as uint) << 16) | (('N' as uint) << 8) | ('Q' as uint);
-const uint ACK = (('A' as uint) << 16) | (('C' as uint) << 8) | ('K' as uint);
-const uint BEL = (('B' as uint) << 16) | (('E' as uint) << 8) | ('L' as uint);
-const uint BCK = (('B' as uint) << 16) | (('C' as uint) << 8) | ('K' as uint);
-const uint TAB = (('T' as uint) << 16) | (('A' as uint) << 8) | ('B' as uint);
-const uint RTN = (('R' as uint) << 16) | (('T' as uint) << 8) | ('N' as uint);
-const uint VT  = (('V' as uint) << 16) | (('T' as uint) << 8) | (' ' as uint);
-const uint FF  = (('F' as uint) << 16) | (('F' as uint) << 8) | (' ' as uint);
-const uint CR  = (('C' as uint) << 16) | (('R' as uint) << 8) | (' ' as uint);
-const uint SO  = (('S' as uint) << 16) | (('O' as uint) << 8) | (' ' as uint);
-const uint SI  = (('S' as uint) << 16) | (('I' as uint) << 8) | (' ' as uint);
-const uint DLE = (('D' as uint) << 16) | (('L' as uint) << 8) | ('E' as uint);
-const uint DC1 = (('D' as uint) << 16) | (('C' as uint) << 8) | ('1' as uint);
-const uint DC2 = (('D' as uint) << 16) | (('C' as uint) << 8) | ('2' as uint);
-const uint DC3 = (('D' as uint) << 16) | (('C' as uint) << 8) | ('3' as uint);
-const uint DC4 = (('D' as uint) << 16) | (('C' as uint) << 8) | ('4' as uint);
-const uint NAK = (('N' as uint) << 16) | (('A' as uint) << 8) | ('K' as uint);
-const uint SYN = (('S' as uint) << 16) | (('Y' as uint) << 8) | ('N' as uint);
-const uint ETB = (('E' as uint) << 16) | (('T' as uint) << 8) | ('B' as uint);
-const uint CAN = (('C' as uint) << 16) | (('A' as uint) << 8) | ('N' as uint);
-const uint EM  = (('E' as uint) << 16) | (('M' as uint) << 8) | (' ' as uint);
-const uint SUB = (('S' as uint) << 16) | (('U' as uint) << 8) | ('B' as uint);
-const uint ESC = (('E' as uint) << 16) | (('S' as uint) << 8) | ('C' as uint);
-const uint FS  = (('F' as uint) << 16) | (('S' as uint) << 8) | (' ' as uint);
-const uint GS  = (('G' as uint) << 16) | (('S' as uint) << 8) | (' ' as uint);
-const uint RS  = (('R' as uint) << 16) | (('S' as uint) << 8) | (' ' as uint);
-const uint US  = (('U' as uint) << 16) | (('S' as uint) << 8) | (' ' as uint);
-const uint SPC = (('S' as uint) << 16) | (('P' as uint) << 8) | ('C' as uint);
-const uint DEL = (('D' as uint) << 16) | (('E' as uint) << 8) | ('L' as uint);
-const uint BLK = ((' ' as uint) << 16) | ((' ' as uint) << 8) | (' ' as uint);
 
 // 指定位置の文字を抽出する共通関数
 utiny extract_char(uint packed_val, utiny pos) {

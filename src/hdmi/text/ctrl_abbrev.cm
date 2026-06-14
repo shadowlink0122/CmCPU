@@ -1,0 +1,38 @@
+module ctrl_abbrev;
+
+// 制御文字の3文字略記定数定義
+export const uint NUL = (('N' as uint) << 16) | (('U' as uint) << 8) | ('L' as uint);
+export const uint SOH = (('S' as uint) << 16) | (('O' as uint) << 8) | ('H' as uint);
+export const uint STX = (('S' as uint) << 16) | (('T' as uint) << 8) | ('X' as uint);
+export const uint ETX = (('E' as uint) << 16) | (('T' as uint) << 8) | ('X' as uint);
+export const uint EOT = (('E' as uint) << 16) | (('O' as uint) << 8) | ('T' as uint);
+export const uint ENQ = (('E' as uint) << 16) | (('N' as uint) << 8) | ('Q' as uint);
+export const uint ACK = (('A' as uint) << 16) | (('C' as uint) << 8) | ('K' as uint);
+export const uint BEL = (('B' as uint) << 16) | (('E' as uint) << 8) | ('L' as uint);
+export const uint BCK = (('B' as uint) << 16) | (('C' as uint) << 8) | ('K' as uint);
+export const uint TAB = (('T' as uint) << 16) | (('A' as uint) << 8) | ('B' as uint);
+export const uint RTN = (('R' as uint) << 16) | (('T' as uint) << 8) | ('N' as uint);
+export const uint VT  = (('V' as uint) << 16) | (('T' as uint) << 8) | (' ' as uint);
+export const uint FF  = (('F' as uint) << 16) | (('F' as uint) << 8) | (' ' as uint);
+export const uint CR  = (('C' as uint) << 16) | (('R' as uint) << 8) | (' ' as uint);
+export const uint SO  = (('S' as uint) << 16) | (('O' as uint) << 8) | (' ' as uint);
+export const uint SI  = (('S' as uint) << 16) | (('I' as uint) << 8) | (' ' as uint);
+export const uint DLE = (('D' as uint) << 16) | (('L' as uint) << 8) | ('E' as uint);
+export const uint DC1 = (('D' as uint) << 16) | (('C' as uint) << 8) | ('1' as uint);
+export const uint DC2 = (('D' as uint) << 16) | (('C' as uint) << 8) | ('2' as uint);
+export const uint DC3 = (('D' as uint) << 16) | (('C' as uint) << 8) | ('3' as uint);
+export const uint DC4 = (('D' as uint) << 16) | (('C' as uint) << 8) | ('4' as uint);
+export const uint NAK = (('N' as uint) << 16) | (('A' as uint) << 8) | ('K' as uint);
+export const uint SYN = (('S' as uint) << 16) | (('Y' as uint) << 8) | ('N' as uint);
+export const uint ETB = (('E' as uint) << 16) | (('T' as uint) << 8) | ('B' as uint);
+export const uint CAN = (('C' as uint) << 16) | (('A' as uint) << 8) | ('N' as uint);
+export const uint EM  = (('E' as uint) << 16) | (('M' as uint) << 8) | (' ' as uint);
+export const uint SUB = (('S' as uint) << 16) | (('U' as uint) << 8) | ('B' as uint);
+export const uint ESC = (('E' as uint) << 16) | (('S' as uint) << 8) | ('C' as uint);
+export const uint FS  = (('F' as uint) << 16) | (('S' as uint) << 8) | (' ' as uint);
+export const uint GS  = (('G' as uint) << 16) | (('S' as uint) << 8) | (' ' as uint);
+export const uint RS  = (('R' as uint) << 16) | (('S' as uint) << 8) | (' ' as uint);
+export const uint US  = (('U' as uint) << 16) | (('S' as uint) << 8) | (' ' as uint);
+export const uint SPC = (('S' as uint) << 16) | (('P' as uint) << 8) | ('C' as uint);
+export const uint DEL = (('D' as uint) << 16) | (('E' as uint) << 8) | ('L' as uint);
+export const uint BLK = ((' ' as uint) << 16) | ((' ' as uint) << 8) | (' ' as uint);
