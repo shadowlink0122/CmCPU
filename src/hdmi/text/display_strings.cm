@@ -1,18 +1,8 @@
 module display_strings;
 
 // ============================================================================
-// 画面に表示する固定文字列のパック定数定義ファイル
+// 画面に表示する固定文字列の定義ファイル
 // ============================================================================
 
-// 全体タイトルイメージ: "=== Character Code Table (ASCII & KANA) ==="
-export const uint TITLE_0  = (('=' as uint) << 24) | (('=' as uint) << 16) | (('=' as uint) << 8) | (' ' as uint);  // "=== "
-export const uint TITLE_1  = (('C' as uint) << 24) | (('h' as uint) << 16) | (('a' as uint) << 8) | ('r' as uint);  // "Char"
-export const uint TITLE_2  = (('a' as uint) << 24) | (('c' as uint) << 16) | (('t' as uint) << 8) | ('e' as uint);  // "acte"
-export const uint TITLE_3  = (('r' as uint) << 24) | ((' ' as uint) << 16) | (('C' as uint) << 8) | ('o' as uint);  // "r Co"
-export const uint TITLE_4  = (('d' as uint) << 24) | (('e' as uint) << 16) | ((' ' as uint) << 8) | ('T' as uint);  // "de T"
-export const uint TITLE_5  = (('a' as uint) << 24) | (('b' as uint) << 16) | (('l' as uint) << 8) | ('e' as uint);  // "able"
-export const uint TITLE_6  = ((' ' as uint) << 24) | (('(' as uint) << 16) | (('A' as uint) << 8) | ('S' as uint);  // " (AS"
-export const uint TITLE_7  = (('C' as uint) << 24) | (('I' as uint) << 16) | (('I' as uint) << 8) | (' ' as uint);  // "CII "
-export const uint TITLE_8  = (('&' as uint) << 24) | ((' ' as uint) << 16) | (('K' as uint) << 8) | ('A' as uint);  // "& KA"
-export const uint TITLE_9  = (('N' as uint) << 24) | (('A' as uint) << 16) | ((')' as uint) << 8) | (' ' as uint);  // "NA) "
-export const uint TITLE_10 = (('=' as uint) << 24) | (('=' as uint) << 16) | (('=' as uint) << 8) | (' ' as uint);  // "=== "
+// 表示用メインタイトル文字列
+export const string TITLE = "=== Character Code Table (ASCII & KANA) ===";

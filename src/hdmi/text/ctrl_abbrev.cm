@@ -1,38 +1,49 @@
 module ctrl_abbrev;
 
-// 制御文字の3文字略記定数定義
-export const uint NUL = (('N' as uint) << 16) | (('U' as uint) << 8) | ('L' as uint);
-export const uint SOH = (('S' as uint) << 16) | (('O' as uint) << 8) | ('H' as uint);
-export const uint STX = (('S' as uint) << 16) | (('T' as uint) << 8) | ('X' as uint);
-export const uint ETX = (('E' as uint) << 16) | (('T' as uint) << 8) | ('X' as uint);
-export const uint EOT = (('E' as uint) << 16) | (('O' as uint) << 8) | ('T' as uint);
-export const uint ENQ = (('E' as uint) << 16) | (('N' as uint) << 8) | ('Q' as uint);
-export const uint ACK = (('A' as uint) << 16) | (('C' as uint) << 8) | ('K' as uint);
-export const uint BEL = (('B' as uint) << 16) | (('E' as uint) << 8) | ('L' as uint);
-export const uint BCK = (('B' as uint) << 16) | (('C' as uint) << 8) | ('K' as uint);
-export const uint TAB = (('T' as uint) << 16) | (('A' as uint) << 8) | ('B' as uint);
-export const uint RTN = (('R' as uint) << 16) | (('T' as uint) << 8) | ('N' as uint);
-export const uint VT  = (('V' as uint) << 16) | (('T' as uint) << 8) | (' ' as uint);
-export const uint FF  = (('F' as uint) << 16) | (('F' as uint) << 8) | (' ' as uint);
-export const uint CR  = (('C' as uint) << 16) | (('R' as uint) << 8) | (' ' as uint);
-export const uint SO  = (('S' as uint) << 16) | (('O' as uint) << 8) | (' ' as uint);
-export const uint SI  = (('S' as uint) << 16) | (('I' as uint) << 8) | (' ' as uint);
-export const uint DLE = (('D' as uint) << 16) | (('L' as uint) << 8) | ('E' as uint);
-export const uint DC1 = (('D' as uint) << 16) | (('C' as uint) << 8) | ('1' as uint);
-export const uint DC2 = (('D' as uint) << 16) | (('C' as uint) << 8) | ('2' as uint);
-export const uint DC3 = (('D' as uint) << 16) | (('C' as uint) << 8) | ('3' as uint);
-export const uint DC4 = (('D' as uint) << 16) | (('C' as uint) << 8) | ('4' as uint);
-export const uint NAK = (('N' as uint) << 16) | (('A' as uint) << 8) | ('K' as uint);
-export const uint SYN = (('S' as uint) << 16) | (('Y' as uint) << 8) | ('N' as uint);
-export const uint ETB = (('E' as uint) << 16) | (('T' as uint) << 8) | ('B' as uint);
-export const uint CAN = (('C' as uint) << 16) | (('A' as uint) << 8) | ('N' as uint);
-export const uint EM  = (('E' as uint) << 16) | (('M' as uint) << 8) | (' ' as uint);
-export const uint SUB = (('S' as uint) << 16) | (('U' as uint) << 8) | ('B' as uint);
-export const uint ESC = (('E' as uint) << 16) | (('S' as uint) << 8) | ('C' as uint);
-export const uint FS  = (('F' as uint) << 16) | (('S' as uint) << 8) | (' ' as uint);
-export const uint GS  = (('G' as uint) << 16) | (('S' as uint) << 8) | (' ' as uint);
-export const uint RS  = (('R' as uint) << 16) | (('S' as uint) << 8) | (' ' as uint);
-export const uint US  = (('U' as uint) << 16) | (('S' as uint) << 8) | (' ' as uint);
-export const uint SPC = (('S' as uint) << 16) | (('P' as uint) << 8) | ('C' as uint);
-export const uint DEL = (('D' as uint) << 16) | (('E' as uint) << 8) | ('L' as uint);
-export const uint BLK = ((' ' as uint) << 16) | ((' ' as uint) << 8) | (' ' as uint);
+// ============================================================================
+// 制御文字の3文字略記定数定義ファイル
+// ============================================================================
+
+// 文字列を32ビットのuint値にパック変換する関数 (Cmシミュレーション/コンパイル用フォールバック実装)
+export uint stringToUint(string s) {
+    uint val = 0;
+    val = ((s[0] as uint) << 16) | ((s[1] as uint) << 8) | (s[2] as uint);
+    return val;
+}
+
+// 各制御文字の3文字略記定義
+export const uint NUL = stringToUint("NUL");
+export const uint SOH = stringToUint("SOH");
+export const uint STX = stringToUint("STX");
+export const uint ETX = stringToUint("ETX");
+export const uint EOT = stringToUint("EOT");
+export const uint ENQ = stringToUint("ENQ");
+export const uint ACK = stringToUint("ACK");
+export const uint BEL = stringToUint("BEL");
+export const uint BCK = stringToUint("BCK");
+export const uint TAB = stringToUint("TAB");
+export const uint RTN = stringToUint("RTN");
+export const uint VT  = stringToUint("VT ");
+export const uint FF  = stringToUint("FF ");
+export const uint CR  = stringToUint("CR ");
+export const uint SO  = stringToUint("SO ");
+export const uint SI  = stringToUint("SI ");
+export const uint DLE = stringToUint("DLE");
+export const uint DC1 = stringToUint("DC1");
+export const uint DC2 = stringToUint("DC2");
+export const uint DC3 = stringToUint("DC3");
+export const uint DC4 = stringToUint("DC4");
+export const uint NAK = stringToUint("NAK");
+export const uint SYN = stringToUint("SYN");
+export const uint ETB = stringToUint("ETB");
+export const uint CAN = stringToUint("CAN");
+export const uint EM  = stringToUint("EM ");
+export const uint SUB = stringToUint("SUB");
+export const uint ESC = stringToUint("ESC");
+export const uint FS  = stringToUint("FS ");
+export const uint GS  = stringToUint("GS ");
+export const uint RS  = stringToUint("RS ");
+export const uint US  = stringToUint("US ");
+export const uint SPC = stringToUint("SPC");
+export const uint DEL = stringToUint("DEL");
+export const uint BLK = stringToUint("   ");

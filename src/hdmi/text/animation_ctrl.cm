@@ -23,23 +23,7 @@ utiny row_delay = 0;  // 行描画ディレイタイマー (フレーム数)
 
 // ヘッダー文字列文字抽出関数
 utiny get_header_char(utiny idx) {
-    uint word = 0;
-    switch (idx / 4) {
-        case (0)  { word = TITLE_0; }
-        case (1)  { word = TITLE_1; }
-        case (2)  { word = TITLE_2; }
-        case (3)  { word = TITLE_3; }
-        case (4)  { word = TITLE_4; }
-        case (5)  { word = TITLE_5; }
-        case (6)  { word = TITLE_6; }
-        case (7)  { word = TITLE_7; }
-        case (8)  { word = TITLE_8; }
-        case (9)  { word = TITLE_9; }
-        case (10) { word = TITLE_10; }
-        else      { word = 0; }
-    }
-    utiny shift = (3 - (idx % 4)) * 8;
-    return ((word >> shift) & 0xFF) as utiny;
+    return (TITLE[idx] as utiny);
 }
 
 // 指定位置の文字を抽出する共通関数
