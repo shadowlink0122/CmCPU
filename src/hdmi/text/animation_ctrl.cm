@@ -30,7 +30,7 @@ utiny get_string_char(bool is_title, utiny idx, utiny offset) {
         if (idx == 127) {
             code = 33;
         }
-        return (CTRL_ABBREVS[(code as uint) * 3 + (offset as uint)] as utiny);
+        return (CTRL_ABBREVS[code][offset] as utiny);
     }
 }
 

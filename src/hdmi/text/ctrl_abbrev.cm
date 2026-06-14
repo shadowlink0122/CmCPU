@@ -5,4 +5,10 @@ module ctrl_abbrev;
 // ============================================================================
 
 // 34個の制御文字略記 (各3文字、DELはインデックス33に対応)
-export const string CTRL_ABBREVS = "NULSOHSTXETXEOTENQACKBELBCKTABRTNVT FF CR SO SI DLEDC1DC2DC3DC4NAKSYNETBCANEM SUBESCFS GSRS US SPCDEL";
+export const string[34] CTRL_ABBREVS = [
+    "NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK", "BEL",
+    "BCK", "TAB", "RTN", "VT ", "FF ", "CR ", "SO ", "SI ",
+    "DLE", "DC1", "DC2", "DC3", "DC4", "NAK", "SYN", "ETB",
+    "CAN", "EM ", "SUB", "ESC", "FS ", "GS ", "RS ", "US ",
+    "SPC", "DEL"
+];
