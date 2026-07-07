@@ -68,6 +68,9 @@ make test
 Cmで書かれたテストベンチ関数（`step(n)` でクロックを進め `assert` で検証）が
 iverilog + vvp で実行されます。assert不成立時は `$fatal` で失敗します。
 
+テストは自動発見されます: テストラッパー `src/**/*_test.cm`
+（対象モジュールと同じ階層に配置）と、`#[sv::testbench]` を内蔵する回路ファイル。
+
 | テスト | 対象 | 検証内容 |
 |---|---|---|
 | blink | src/blink | LEDトグル周期 |
@@ -75,10 +78,23 @@ iverilog + vvp で実行されます。assert不成立時は `$fatal` で失敗�
 | button_counter | src/button | 同期→デバウンス→押下エッジ→2bitカウント |
 | uart_hello | src/uart | 起動待機→スタートビット→14バイト送信完了 |
 | uart_button | src/uart | 押下検出→"Pressed: N"送信開始→完了 |
-| hdmi_timing | src/hdmi | VGA水平タイミング（アクティブ/FP/SYNC/BP、DE） |
+| timing_test | src/hdmi/timing | VGA水平タイミング（アクティブ/FP/SYNC/BP、DE） |
+| pattern_test | src/hdmi/pattern | カラーバー8色の境界（白/黄/シアン/黒） |
+| encoder_test | src/hdmi/encoder | TMDSコントロールトークン（CTRL_00/11/10）とデータ符号 |
+| text_renderer_test | src/hdmi/text | フォントROM経由の文字描画（'H'横棒の黒画素・白背景） |
+| hdmi_main | src/hdmi/main.cm | カラーバートップ統合（timing→pattern→encoder） |
+| hdmi_text_top | src/hdmi | テキストトップ統合（timing→描画→encoder） |
 
-合成用ビルド（`make build` 等）は `SIM` 未定義のため影響を受けません
-（内蔵OSC・実タイミング定数のまま）。
+PLL / OSER10 / TLVDS_OBUF はGowinベンダプリミティブのため
+シミュレーション対象外です（`#ifdef SIM` で除外し、実機フローと
+verilatorリントで検証）。合成用ビルド（`make build` 等）は
+`SIM` 未定義のため影響を受けません（内蔵OSC・実タイミング定数のまま）。
+
+## CI
+
+GitHub Actions（`.github/workflows/ci.yml`）で push / PR ごとに
+Cmコンパイラのビルド → 全回路のSV生成+verilatorリント → `make test`
+（iverilogシミュレーション）を実行します。
 
 ## ディレクトリ構成
 

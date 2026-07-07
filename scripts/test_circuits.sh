@@ -1,9 +1,11 @@
 #!/bin/bash
 # ============================================================
-# 全回路のシミュレーションテスト
+# 全回路のシミュレーションテスト（自動発見）
 # ============================================================
-# 各回路を -D SIM でSV化し、#[sv::testbench] 関数から生成された
-# テストベンチを iverilog + vvp で実行して検証する
+# 以下を自動的に発見して -D SIM でSV化し、#[sv::testbench] から
+# 生成されたテストベンチを iverilog + vvp で実行する:
+#   - テストラッパー: src/**/*_test.cm（対象モジュールと同じ階層に配置）
+#   - テストベンチ内蔵の回路: #[sv::testbench] を含む src/**/*.cm
 # ============================================================
 set -u
 cd "$(dirname "$0")/.."
@@ -12,21 +14,17 @@ CM=Cm/cm
 BUILD=build/test
 mkdir -p "$BUILD"
 
-CIRCUITS=(
-    "blink:src/blink/blink.cm"
-    "pwm_breath:src/pwm/pwm_breath.cm"
-    "button_counter:src/button/button_counter.cm"
-    "uart_hello:src/uart/uart_hello.cm"
-    "uart_button:src/uart/uart_button.cm"
-    "hdmi_timing:src/hdmi/timing_test.cm"
-)
+# テキスト系はフォントROM（$readmemh）を実行ディレクトリに要する
+cp src/hdmi/text/font_rom.hex "$BUILD/" 2>/dev/null || true
+
+# テスト対象の自動発見（*_test.cm + #[sv::testbench] 内蔵ファイル）
+TARGETS=$( { find src -name "*_test.cm"; grep -rl '#\[sv::testbench\]' src --include="*.cm"; } | sort -u )
 
 PASSED=0
 FAILED=0
 
-for entry in "${CIRCUITS[@]}"; do
-    name="${entry%%:*}"
-    src="${entry#*:}"
+for src in $TARGETS; do
+    name=$(echo "$src" | sed 's|^src/||; s|/|_|g; s|\.cm$||')
 
     if ! "$CM" compile --target=sv -D SIM "$src" -o "$BUILD/$name.sv" -q \
             > "$BUILD/$name.compile.log" 2>&1; then

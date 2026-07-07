@@ -13,7 +13,7 @@ module timing_test;
 // timing.cm は pixel_clk を参照するため clk から供給する
 assign bool pixel_clk = clk;
 
-import ./timing/timing;
+import ./timing;
 
 // 検証用出力（1クロック遅れの写し）
 #[output] bool hsync_o = true;
