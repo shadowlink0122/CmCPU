@@ -42,16 +42,31 @@ make lint
 make flash
 ```
 
+## サンプル一覧
+
+| サンプル | ビルド | 内容 |
+|---|---|---|
+| blink | `make build` | Lチカ（内蔵OSC + CFG LED、手書き.cst/.tclの従来フロー） |
+| pwm | `make pwm-build` | **PWM呼吸LED** — `#[sv::pin]` + `--emit-constraints` で .cst/.tcl を自動生成（v0.16.0） |
+| button | `make button-build` | **ボタンカウンタ** — `#[sv::sync]` によるCDC 2FF同期 + デバウンス + エッジ検出（v0.16.0） |
+| uart | `make uart-build` | UART送信（"Hello" 送出） |
+| hdmi | `make hdmi-build` / `make text-build` | HDMI出力（カラーバー / テキスト表示。フォントROMはBRAM + $readmemh） |
+
+pwm / button は制約ファイルを手書きしません。生成された
+`build/<name>/<name>_build.tcl` を `gw_sh` に渡すだけで合成まで実行できます。
+
 ## ディレクトリ構成
 
 ```
 CmCPU/
 ├── Cm/                  # Cmコンパイラ（サブモジュール）
 ├── src/
-│   └── blink/           # Lチカ回路
-│       ├── blink.cm     # Cmソースコード
-│       └── tang_console_138k.cst  # ピン制約ファイル
-├── build/               # ビルド出力（.sv, .bit等）
+│   ├── blink/           # Lチカ回路（手書き.cst/.tclフロー）
+│   ├── pwm/             # PWM呼吸LED（制約自動生成フロー）
+│   ├── button/          # ボタンカウンタ（CDC同期）
+│   ├── uart/            # UART送信
+│   └── hdmi/            # HDMI出力（カラーバー/テキスト）
+├── build/               # ビルド出力（.sv, .cst, .tcl, .fs等）
 ├── docs/                # ドキュメント
 └── Makefile
 ```

@@ -369,6 +369,7 @@ $(TEXT_SV): $(TEXT_SRC) $(SRC_DIR)/hdmi/text/font_rom.cm
 	@mkdir -p $(BUILD_DIR)/hdmi
 	$(CM) compile --target=sv $(TEXT_SRC) -o $(TEXT_SV)
 	@echo "✅ SV生成完了: $(TEXT_SV)"
+	cp $(SRC_DIR)/hdmi/text/font_rom.hex $(BUILD_DIR)/hdmi/
 
 # ============================================================
 # HDMI テキスト/アニメーション: Gowin EDA フルフロー
@@ -395,5 +396,28 @@ text-flash:
 # HDMI テキスト: Cm → SV → FS → FPGA 一括実行
 .PHONY: text-apply
 text-apply: text-build text-gowin text-flash
+
+# ============================================================
+# v0.16.0サンプル: PWM呼吸LED / ボタンカウンタ
+# 制約ファイル(.cst/.tcl)は #[sv::pin] + --emit-constraints で自動生成
+# ============================================================
+.PHONY: pwm-build
+pwm-build:
+	@echo "Cm → SystemVerilog 変換中 (PWM呼吸LED)..."
+	@mkdir -p $(BUILD_DIR)/pwm
+	$(CM) compile --target=sv $(SRC_DIR)/pwm/pwm_breath.cm -o $(BUILD_DIR)/pwm/pwm_breath.sv --emit-constraints
+	@echo "Verilator リントチェック中..."
+	/usr/local/bin/verilator --lint-only --timing -Wno-MODMISSING $(BUILD_DIR)/pwm/pwm_breath.sv
+	@echo "✅ PWMビルド完了! $(BUILD_DIR)/pwm/pwm_breath.sv (+ .cst / _build.tcl)"
+
+.PHONY: button-build
+button-build:
+	@echo "Cm → SystemVerilog 変換中 (ボタンカウンタ)..."
+	@mkdir -p $(BUILD_DIR)/button
+	$(CM) compile --target=sv $(SRC_DIR)/button/button_counter.cm -o $(BUILD_DIR)/button/button_counter.sv --emit-constraints
+	@echo "Verilator リントチェック中..."
+	/usr/local/bin/verilator --lint-only --timing -Wno-MODMISSING $(BUILD_DIR)/button/button_counter.sv
+	@echo "✅ ボタンカウンタビルド完了! $(BUILD_DIR)/button/button_counter.sv (+ .cst / _build.tcl)"
+
 
 

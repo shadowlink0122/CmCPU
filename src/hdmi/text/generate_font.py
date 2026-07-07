@@ -77,12 +77,37 @@ def main():
     # ASCII 32〜127 (合計96文字) を表示するため、メッセージ長は 96 固定
     msg_len = 96
 
-    # font_rom.cm の出力
+    # フォントデータをフラット配列化（index = (char_code - BASE) * N + row）
+    BASE = 32
+    max_char = max(chars.keys())
+    entries = (max_char - BASE + 1) * N
+    data = [0] * entries
+    for char_code, char_rows in chars.items():
+        for r_idx, r_str in enumerate(char_rows):
+            val = 0
+            for c in r_str:
+                if c in (".", " "):
+                    val = val << 1
+                elif c in ("X", "#"):
+                    val = (val << 1) | 1
+                else:
+                    print(f"エラー: 文字 {char_code} のドット絵に不正な文字 '{c}' があります。")
+                    sys.exit(1)
+            data[(char_code - BASE) * N + r_idx] = val
+
+    # font_rom.hex の出力（$readmemh用、1行1バイト）
+    hex_path = os.path.join(script_dir, "font_rom.hex")
+    with open(hex_path, "w", encoding="utf-8") as out:
+        for v in data:
+            out.write(f"{v:02x}\n")
+
+    # font_rom.cm の出力（BRAM + $readmemh。旧: 83KBの巨大if列 → 合成効率と
+    # 可読性のため #[sv::memfile] 方式へ移行）
     with open(output_path, "w", encoding="utf-8") as out:
         out.write("// このファイルは generate_font.py により自動生成されました。手動で編集しないでください。\n")
+        out.write("// フォントデータ本体は font_rom.hex（$readmemhで読み込み）。\n")
         out.write("module font_rom;\n\n")
-        
-        # 設計パラメータのエクスポート
+
         out.write(f"export const uint FONT_SIZE = {N};\n")
         out.write(f"export const uint LOG2_FONT_SIZE = {log2_N};\n")
         out.write(f"export const uint TEXT_COLS = {text_cols};\n")
@@ -90,47 +115,25 @@ def main():
         out.write(f"export const uint TEXT_BUF_SIZE = {text_buf_size};\n")
         out.write(f"export const uint MSG_LEN = {msg_len};\n\n")
 
-        # フォントテーブル引き当て関数
+        out.write(f"const uint FONT_BASE = {BASE};\n")
+        out.write(f"const uint FONT_ENTRIES = {entries};\n\n")
+
+        out.write("// フォントROM（BRAM推論 + font_rom.hex から初期化）\n")
+        out.write("#[sv::bram]\n")
+        out.write('#[sv::memfile("font_rom.hex")]\n')
+        out.write(f"utiny[{entries}] font_data;\n\n")
+
         out.write("export uint lookup_font(ushort char_code, utiny row) {\n")
-        out.write("    uint font_byte = 0;\n\n")
-
-        # 文字コード昇順で出力。合成時の深いネストを避けるため、else if ではなく独立した if 文の列にする。
-        for char_code in sorted(chars.keys()):
-            char_rows = chars[char_code]
-            out.write(f"    if (char_code == {char_code} as ushort) {{\n")
-
-            # 全行空 (ドットのみ) かどうか
-            all_empty = all(all(c in ('.', ' ') for c in r_str) for r_str in char_rows)
-            if all_empty:
-                out.write("        font_byte = 0;\n")
-            else:
-                for r_idx, r_str in enumerate(char_rows):
-                    # 空行はデフォルトの0のままスキップ
-                    if all(c in ('.', ' ') for c in r_str):
-                        continue
-                    
-                    # 二進数文字列を数値リテラルに変換
-                    val = 0
-                    for c in r_str:
-                        if c in ('.', ' '):
-                            val = val << 1
-                        elif c in ('X', '#'):
-                            val = (val << 1) | 1
-                        else:
-                            print(f"エラー: 文字 {char_code} のドット絵に不正な文字 '{c}' があります。")
-                            sys.exit(1)
-                    
-                    # Nに応じて適切な桁数の16進数表記にする
-                    hex_val = f"0x{val:0{N//4}X}"
-                    
-                    out.write(f"        if (row == {r_idx}) {{ font_byte = {hex_val}; }}\n")
-
-            out.write("    }\n")
-
-        out.write("\n    return font_byte;\n")
+        out.write(f"    if (char_code < {BASE} as ushort || char_code > {max_char} as ushort) {{\n")
+        out.write("        return 0;\n")
+        out.write("    }\n")
+        out.write(f"    uint idx = ((char_code as uint) - FONT_BASE) * {N} + (row as uint);\n")
+        out.write("    return font_data[idx] as uint;\n")
         out.write("}\n")
 
-    print(f"✓ font_rom.cm が正常に自動生成されました。(フォントサイズ: {N}x{N}, 文字数: {len(chars)})")
+    print(f"生成完了: {output_path} ({N}x{N}, {len(chars)}文字, {entries}エントリ)")
+    print(f"生成完了: {hex_path}")
+
 
 if __name__ == "__main__":
     main()
