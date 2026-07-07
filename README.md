@@ -55,6 +55,31 @@ make flash
 pwm / button は制約ファイルを手書きしません。生成された
 `build/<name>/<name>_build.tcl` を `gw_sh` に渡すだけで合成まで実行できます。
 
+## テスト
+
+全回路にシミュレーションテストが付属しています（v0.16.0の
+`#[sv::testbench]` 検証フレームワークを使用）:
+
+```bash
+make test
+```
+
+各回路は `#ifdef SIM` でクロック外部注入・タイミング定数短縮に切り替わり、
+Cmで書かれたテストベンチ関数（`step(n)` でクロックを進め `assert` で検証）が
+iverilog + vvp で実行されます。assert不成立時は `$fatal` で失敗します。
+
+| テスト | 対象 | 検証内容 |
+|---|---|---|
+| blink | src/blink | LEDトグル周期 |
+| pwm_breath | src/pwm | PWM相補出力・呼吸動作 |
+| button_counter | src/button | 同期→デバウンス→押下エッジ→2bitカウント |
+| uart_hello | src/uart | 起動待機→スタートビット→14バイト送信完了 |
+| uart_button | src/uart | 押下検出→"Pressed: N"送信開始→完了 |
+| hdmi_timing | src/hdmi | VGA水平タイミング（アクティブ/FP/SYNC/BP、DE） |
+
+合成用ビルド（`make build` 等）は `SIM` 未定義のため影響を受けません
+（内蔵OSC・実タイミング定数のまま）。
+
 ## ディレクトリ構成
 
 ```

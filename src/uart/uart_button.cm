@@ -16,15 +16,28 @@
 
 // 定数定義
 const uint CLK_FREQ = 52500000;          // クロック周波数 (Hz)
+#ifdef SIM
+const uint CLKS_PER_BIT = 2;
+#end
+#ifndef SIM
 const uint CLKS_PER_BIT = 456;           // 52500000 / 115200 ≈ 455.7
-const uint DEBOUNCE_LIMIT = 1050000;     // 20ms = 52500000 * 0.02
+#end
 const uint MSG_LEN = 12;                  // "Pressed: N\r\n"
+
+#ifdef SIM
+// シミュレーション: クロック外部注入・タイミング短縮
+#[input] posedge clk;
+const uint DEBOUNCE_LIMIT = 2;
+#end
+#ifndef SIM
+const uint DEBOUNCE_LIMIT = 1050000;     // 20ms = 52500000 * 0.02
 
 // Gowin 内蔵オシレータ
 extern struct OSC {
     #[sv::param] int FREQ_DIV = 4;
     #[output] bool OSCOUT = clk;
 }
+#end
 
 // 入出力ポート
 #[input] bool btn0 = true;         // EX_KEY0 (アクティブ LOW)
@@ -33,8 +46,10 @@ extern struct OSC {
 #[output] bool led_done = false;   // ボタン検出 LED (Blue)
 
 // 内部信号
+#ifndef SIM
 bool clk = false;
 OSC osc_inst;
+#end
 
 // デバウンス
 uint db_cnt = 0;
@@ -180,3 +195,27 @@ void process(posedge clk) {
         }
     }
 }
+
+#ifdef SIM
+import std::debug::assert;
+
+// テストベンチ: ボタン押下→デバウンス→"Pressed: N"送信開始を検証
+#[sv::testbench]
+void tb() {
+    btn0 = true;   // 非押下（プルアップ）
+    step(6);
+    assert(uart_tx, "idle high before press");
+    assert(!led_done, "no press detected yet");
+
+    btn0 = false;  // 押下
+    step(8);       // デバウンス2 + エッジ検出
+    assert(led_done, "press detected");
+    // 送信開始（LOAD→START）を待つ
+    step(6);
+    assert(led_ready, "transmission in progress");
+    // 1バイト = 10bit * 2clk = 20clk、12バイト+LOADで約260clk待って完了
+    step(300);
+    assert(uart_tx, "idle high after message");
+    assert(!led_ready, "transmission finished");
+}
+#end

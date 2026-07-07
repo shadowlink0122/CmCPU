@@ -14,10 +14,16 @@
 //   gw_sh build/button/button_counter_build.tcl
 // ============================================================
 
+#ifdef SIM
+// シミュレーション: クロック外部注入
+#[input] posedge clk;
+#end
+#ifndef SIM
 extern struct OSC {
     #[sv::param] int FREQ_DIV = 4;
     #[output] bool OSCOUT = clk;
 }
+#end
 
 // ボタン（プルアップ、押下でLow）
 #[input]
@@ -32,15 +38,22 @@ bool led_ready = false;
 #[sv::pin("G11", io_type: "LVCMOS33", drive: 8)]
 bool led_done = false;
 
+#ifndef SIM
 bool clk = false;
 OSC osc_inst;
+#end
 
 // 非同期ボタンを2FF同期（メタステーブル対策）
 #[sv::sync(clk: "clk", src: "btn0", stages: 2)]
 bool btn_sync;
 
 // デバウンス: 同期後の信号が一定期間安定したら確定
+#ifdef SIM
+const uint DEBOUNCE_COUNT = 2;  // シミュレーション: 短縮
+#end
+#ifndef SIM
 const uint DEBOUNCE_COUNT = 525000;  // 10ms @ 52.5MHz
+#end
 uint stable_count = 0;
 bool btn_state = true;   // プルアップのため初期High
 bool btn_prev = true;
@@ -69,3 +82,28 @@ void count(posedge clk) {
     led_ready = (presses & 1) != 0;
     led_done = (presses & 2) != 0;
 }
+
+#ifdef SIM
+import std::debug::assert;
+
+// テストベンチ: 同期→デバウンス→押下エッジ→2bitカウント表示を検証
+#[sv::testbench]
+void tb() {
+    btn0 = true;   // プルアップ（非押下）
+    step(6);
+    assert(!led_ready, "no presses yet: bit0 off");
+    assert(!led_done, "no presses yet: bit1 off");
+
+    btn0 = false;  // 押下（Low）
+    step(8);       // 同期2 + デバウンス2 + エッジ検出
+    assert(led_ready, "press 1: bit0 on");
+    assert(!led_done, "press 1: bit1 off");
+
+    btn0 = true;   // 離す
+    step(8);
+    btn0 = false;  // 2回目押下
+    step(8);
+    assert(!led_ready, "press 2: bit0 off");
+    assert(led_done, "press 2: bit1 on");
+}
+#end

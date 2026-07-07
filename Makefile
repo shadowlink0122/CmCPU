@@ -50,6 +50,9 @@ GOWIN_PACK := $(HOME)/Library/Python/3.14/bin/gowin_pack
 help:
 	@echo "CmCPU プロジェクト - Make コマンド"
 	@echo ""
+	@echo "テスト:"
+	@echo "  make test         - 全回路のシミュレーションテスト実行"
+	@echo ""
 	@echo "Lチカ (blink):"
 	@echo "  make build        - Cm → SV 変換 + リントチェック"
 	@echo "  make gowin        - Gowin EDA フルフロー (SV → FS)"
@@ -200,6 +203,10 @@ setup:
 # クリーン
 # ============================================================
 .PHONY: clean
+# 全回路のシミュレーションテスト（-D SIM + #[sv::testbench]）
+test:
+	@./scripts/test_circuits.sh
+
 clean:
 	@echo "ビルド出力をクリーン中..."
 	@rm -rf $(BUILD_DIR)
