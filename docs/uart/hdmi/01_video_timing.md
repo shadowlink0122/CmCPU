@@ -160,7 +160,7 @@ void process(posedge pixel_clk) {
 ### Verilator リント
 
 ```bash
-verilator --lint-only --timing -Wno-fatal -Wno-MODMISSING build/video_timing.sv
+verilator --lint-only --timing -Wno-fatal -Wno-MULTITOP build/video_timing.sv lint/gowin_primitives.sv
 ```
 
 ## 注意事項

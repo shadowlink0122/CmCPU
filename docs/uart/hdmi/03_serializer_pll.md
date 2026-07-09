@@ -175,5 +175,5 @@ IO_PORT "led_done"  IO_TYPE=LVCMOS33 DRIVE=8;
 > [!NOTE]
 > **シミュレーション制約**: OSER10 / TLVDS_OBUF / rPLL はベンダー固有の
 > プリミティブのため、Verilator ではシミュレーションできない。
-> これらのモジュールは `-Wno-MODMISSING` フラグでリントスキップし、
-> 実機検証で動作確認する。
+> これらのモジュールは `lint/gowin_primitives.sv` のブラックボックス・スタブで
+> リント時のみポート定義を解決し、実機検証で動作確認する。

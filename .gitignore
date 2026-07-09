@@ -30,3 +30,6 @@ impl/
 
 # 生成後 SystemVerilog ファイル
 *.sv
+
+# 手書きのリント用スタブは追跡対象
+!lint/*.sv

@@ -10,6 +10,14 @@ CM := ./Cm/cm
 BUILD_DIR := build
 SRC_DIR := src
 
+# Verilator リント設定
+# Gowinプリミティブ (OSC/PLL/OSER10/TLVDS_OBUF) は未定義モジュールになるため、
+# lint/gowin_primitives.sv のブラックボックス・スタブを併せて渡して解決する
+# (-Wno-MODMISSING は古いVerilatorに存在しないため使用しない)
+VERILATOR ?= verilator
+LINT_STUBS := lint/gowin_primitives.sv
+VERILATOR_LINT := $(VERILATOR) --lint-only --timing -Wno-fatal -Wno-MULTITOP
+
 # Lチカ回路の設定
 BLINK_SRC := $(SRC_DIR)/blink/blink.cm
 BLINK_CST := $(SRC_DIR)/blink/tang_console_138k.cst
@@ -82,7 +90,7 @@ help:
 .PHONY: build
 build: $(BLINK_SV)
 	@echo "Verilator リントチェック中..."
-	verilator --lint-only --timing -Wno-fatal -Wno-MODMISSING $(BLINK_SV)
+	$(VERILATOR_LINT) $(BLINK_SV) $(LINT_STUBS)
 	@echo ""
 	@echo "=========================================="
 	@echo "✅ ビルド完了! $(BLINK_SV)"
@@ -218,7 +226,7 @@ clean:
 .PHONY: uart-build
 uart-build: $(UART_SV)
 	@echo "Verilator リントチェック中..."
-	verilator --lint-only --timing -Wno-fatal -Wno-MODMISSING $(UART_SV)
+	$(VERILATOR_LINT) $(UART_SV) $(LINT_STUBS)
 	@echo ""
 	@echo "=========================================="
 	@echo "✅ UART ビルド完了! $(UART_SV)"
@@ -269,7 +277,7 @@ BTN_FS := $(BUILD_DIR)/uart_button/impl/pnr/uart_button.fs
 .PHONY: btn-build
 btn-build: $(BTN_SV)
 	@echo "Verilator リントチェック中..."
-	verilator --lint-only --timing -Wno-fatal -Wno-MODMISSING $(BTN_SV)
+	$(VERILATOR_LINT) $(BTN_SV) $(LINT_STUBS)
 	@echo ""
 	@echo "=========================================="
 	@echo "✅ Button UART ビルド完了! $(BTN_SV)"
@@ -310,7 +318,7 @@ HDMI_FS := $(BUILD_DIR)/hdmi/hdmi_colorbar/impl/pnr/hdmi_colorbar.fs
 .PHONY: hdmi-build
 hdmi-build: $(HDMI_SV)
 	@echo "Verilator リントチェック中..."
-	/usr/local/bin/verilator --lint-only --timing -Wno-MODMISSING $(HDMI_SV)
+	$(VERILATOR_LINT) $(HDMI_SV) $(LINT_STUBS)
 	@echo ""
 	@echo "=========================================="
 	@echo "✅ HDMI ビルド完了! $(HDMI_SV)"
@@ -362,7 +370,7 @@ TEXT_FS := $(BUILD_DIR)/hdmi/hdmi_text/impl/pnr/hdmi_text.fs
 .PHONY: text-build
 text-build: $(TEXT_SV)
 	@echo "Verilator リントチェック中..."
-	/usr/local/bin/verilator --lint-only --timing -Wno-MODMISSING $(TEXT_SV)
+	$(VERILATOR_LINT) $(TEXT_SV) $(LINT_STUBS)
 	@echo ""
 	@echo "=========================================="
 	@echo "✅ HDMI テキストビルド完了! $(TEXT_SV)"
@@ -414,7 +422,7 @@ pwm-build:
 	@mkdir -p $(BUILD_DIR)/pwm
 	$(CM) compile --target=sv $(SRC_DIR)/pwm/pwm_breath.cm -o $(BUILD_DIR)/pwm/pwm_breath.sv --emit-constraints
 	@echo "Verilator リントチェック中..."
-	/usr/local/bin/verilator --lint-only --timing -Wno-MODMISSING $(BUILD_DIR)/pwm/pwm_breath.sv
+	$(VERILATOR_LINT) $(BUILD_DIR)/pwm/pwm_breath.sv $(LINT_STUBS)
 	@echo "✅ PWMビルド完了! $(BUILD_DIR)/pwm/pwm_breath.sv (+ .cst / _build.tcl)"
 
 .PHONY: button-build
@@ -423,7 +431,7 @@ button-build:
 	@mkdir -p $(BUILD_DIR)/button
 	$(CM) compile --target=sv $(SRC_DIR)/button/button_counter.cm -o $(BUILD_DIR)/button/button_counter.sv --emit-constraints
 	@echo "Verilator リントチェック中..."
-	/usr/local/bin/verilator --lint-only --timing -Wno-MODMISSING $(BUILD_DIR)/button/button_counter.sv
+	$(VERILATOR_LINT) $(BUILD_DIR)/button/button_counter.sv $(LINT_STUBS)
 	@echo "✅ ボタンカウンタビルド完了! $(BUILD_DIR)/button/button_counter.sv (+ .cst / _build.tcl)"
 
 
