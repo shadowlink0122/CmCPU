@@ -14,11 +14,11 @@
 //   gw_sh build/button/button_counter_build.tcl
 // ============================================================
 
-#ifdef SIM
+#ifdef TEST
 // シミュレーション: クロック外部注入
 #[input] posedge clk;
 #end
-#ifndef SIM
+#ifndef TEST
 extern struct OSC {
     #[sv::param] int FREQ_DIV = 4;
     #[output] bool OSCOUT = clk;
@@ -38,7 +38,7 @@ bool led_ready = false;
 #[sv::pin("G11", io_type: "LVCMOS33", drive: 8)]
 bool led_done = false;
 
-#ifndef SIM
+#ifndef TEST
 bool clk = false;
 OSC osc_inst;
 #end
@@ -48,10 +48,10 @@ OSC osc_inst;
 bool btn_sync;
 
 // デバウンス: 同期後の信号が一定期間安定したら確定
-#ifdef SIM
+#ifdef TEST
 const uint DEBOUNCE_COUNT = 2;  // シミュレーション: 短縮
 #end
-#ifndef SIM
+#ifndef TEST
 const uint DEBOUNCE_COUNT = 525000;  // 10ms @ 52.5MHz
 #end
 uint stable_count = 0;
@@ -83,11 +83,10 @@ void count(posedge clk) {
     led_done = (presses & 2) != 0;
 }
 
-#ifdef SIM
 import std::debug::assert;
 
 // テストベンチ: 同期→デバウンス→押下エッジ→2bitカウント表示を検証
-#[sv::testbench]
+#[test]
 void tb() {
     btn0 = true;   // プルアップ（非押下）
     step(6);
@@ -106,4 +105,3 @@ void tb() {
     assert(!led_ready, "press 2: bit0 off");
     assert(led_done, "press 2: bit1 on");
 }
-#end

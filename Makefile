@@ -211,7 +211,7 @@ setup:
 # クリーン
 # ============================================================
 .PHONY: clean
-# 全回路のシミュレーションテスト（-D SIM + #[sv::testbench]）
+# 全回路のシミュレーションテスト（cm test + #[test]）
 test:
 	@./scripts/test_circuits.sh
 

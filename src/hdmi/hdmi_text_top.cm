@@ -23,13 +23,13 @@ module hdmi_text_top;
 #[output] bool tmds_clk_n = false;
 
 // 内部グローバル信号
-#ifdef SIM
+#ifdef TEST
 // シミュレーション: PLLの代わりにピクセルクロックを外部注入
 #[input] posedge pixel_clk;
 bool serial_clk = false;
 bool pll_lock = true;
 #end
-#ifndef SIM
+#ifndef TEST
 bool pixel_clk  = false;
 bool serial_clk = false;
 bool pll_lock    = false;
@@ -46,7 +46,7 @@ import ./text/animation_ctrl;
 #[output] assign bool led_ready = anim_ready;
 #[output] assign bool led_done = anim_done;
 
-#ifndef SIM
+#ifndef TEST
 // PLLインスタンス
 PLL pll_inst;
 
@@ -63,7 +63,6 @@ TLVDS_D0 tlvds_d0;
 TLVDS_CK tlvds_ck;
 #end
 
-#ifdef SIM
 import std::debug::assert;
 
 // シミュレーション検証用: TMDS符号を観測ポートへ写す
@@ -76,7 +75,7 @@ async void sim_mirror(posedge pixel_clk) {
 }
 
 // 統合テスト: timing→テキスト描画→encoder パイプライン全体を検証
-#[sv::testbench]
+#[test]
 void tb() {
     // アクティブ領域（白背景描画中）: データ符号
     step(10);
@@ -91,4 +90,3 @@ void tb() {
     step(52);
     assert(tmds_b_o == 340, "hsync: B ctrl {vs=1,hs=0}");
 }
-#end

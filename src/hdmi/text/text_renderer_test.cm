@@ -29,13 +29,12 @@ async void drive(posedge pixel_clk) {
     r_o = r_out as uint;
 }
 
-#ifdef SIM
 import std::debug::assert;
 
 // テストベンチ: 空バッファ=白背景、'H'書き込み後に
 // グリフ横棒（row3, cols1-5）の黒ピクセルを検証。
 // パイプライン遅延Δ∈[3..7]を吸収する交差点 hc=8 で採取
-#[sv::testbench]
+#[test]
 void tb() {
     wen = false;
     // 'H'(72) をセル(0,0)へ書き込み
@@ -53,4 +52,3 @@ void tb() {
     step(32);
     assert(r_o == 255, "outside glyph: white background");
 }
-#end

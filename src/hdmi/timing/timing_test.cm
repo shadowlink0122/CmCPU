@@ -26,11 +26,10 @@ async void mirror(posedge pixel_clk) {
     de_o = de_reg;
 }
 
-#ifdef SIM
 import std::debug::assert;
 
 // テストベンチ: 水平タイミング（アクティブ→FP→SYNC→BP）を検証
-#[sv::testbench]
+#[test]
 void tb() {
     step(4);
     assert(de_o, "active region: de on");
@@ -47,4 +46,3 @@ void tb() {
     assert(hsync_o, "back porch: hsync high again");
     assert(vsync_o, "still first line: vsync high");
 }
-#end

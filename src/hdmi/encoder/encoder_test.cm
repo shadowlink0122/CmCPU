@@ -32,12 +32,11 @@ async void feed(posedge pixel_clk) {
     tmds_b_o = tmds_b as uint;
 }
 
-#ifdef SIM
 import std::debug::assert;
 
 // テストベンチ: コントロールトークン（両sync非アクティブ/hsyncパルス中）と
 // アクティブ期間のデータ符号がトークンと異なることを検証
-#[sv::testbench]
+#[test]
 void tb() {
     r_in = 128;
     g_in = 128;
@@ -58,4 +57,3 @@ void tb() {
     step(52);
     assert(tmds_b_o == 340, "hsync pulse: B ctrl {vs=1,hs=0} CTRL_10");
 }
-#end

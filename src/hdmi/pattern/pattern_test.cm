@@ -21,11 +21,10 @@ async void mirror(posedge pixel_clk) {
     b_o = b_out as uint;
 }
 
-#ifdef SIM
 import std::debug::assert;
 
 // テストベンチ: 8色カラーバーの境界を検証（バー幅80px、遅延±3安全位置で採取）
-#[sv::testbench]
+#[test]
 void tb() {
     step(40);   // バー0中央
     assert(r_o == 255, "bar0 white: r");
@@ -45,4 +44,3 @@ void tb() {
     assert(g_o == 0, "bar7 black: g");
     assert(b_o == 0, "bar7 black: b");
 }
-#end
