@@ -26,16 +26,16 @@ import std::debug::assert;
 // テストベンチ: 8色カラーバーの境界を検証（バー幅80px、遅延±3安全位置で採取）
 #[test]
 void tb() {
-    step(40);   // バー0中央
+    step(40);  // バー0中央
     assert(r_o == 255, "bar0 white: r");
     assert(g_o == 255, "bar0 white: g");
     assert(b_o == 255, "bar0 white: b");
 
-    step(80);   // バー1中央（hc≈120）: 黄
+    step(80);  // バー1中央（hc≈120）: 黄
     assert(r_o == 255, "bar1 yellow: r");
     assert(b_o == 0, "bar1 yellow: b=0");
 
-    step(80);   // バー2中央（hc≈200）: シアン
+    step(80);  // バー2中央（hc≈200）: シアン
     assert(r_o == 0, "bar2 cyan: r=0");
     assert(g_o == 255, "bar2 cyan: g");
 

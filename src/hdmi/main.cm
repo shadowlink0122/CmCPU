@@ -36,15 +36,15 @@ module hdmi_colorbar;
 // グローバルスコープとして参照・バインドされます。
 
 #ifdef TEST
-// シミュレーション: PLLの代わりにピクセルクロックを外部注入
-#[input] posedge pixel_clk;
-bool serial_clk = false;
-bool pll_lock = true;
+    // シミュレーション: PLLの代わりにピクセルクロックを外部注入
+    #[input] posedge pixel_clk;
+    bool serial_clk = false;
+    bool pll_lock = true;
 #end
 #ifndef TEST
-bool pixel_clk  = false;
-bool serial_clk = false;
-bool pll_lock    = false;
+    bool pixel_clk  = false;
+    bool serial_clk = false;
+    bool pll_lock    = false;
 #end
 
 // ============================================================
@@ -64,20 +64,20 @@ import ./serdes/obuf;
 // ============================================================
 
 #ifndef TEST
-// PLLインスタンス
-PLL pll_inst;
+    // PLLインスタンス
+    PLL pll_inst;
 
-// OSER10 10:1 シリアライザインスタンス
-OSER10_R oser_r;
-OSER10_G oser_g;
-OSER10_B oser_b;
-OSER10_CK oser_ck;
+    // OSER10 10:1 シリアライザインスタンス
+    OSER10_R oser_r;
+    OSER10_G oser_g;
+    OSER10_B oser_b;
+    OSER10_CK oser_ck;
 
-// TLVDS_OBUF 差動バッファインスタンス
-TLVDS_D2 tlvds_d2;
-TLVDS_D1 tlvds_d1;
-TLVDS_D0 tlvds_d0;
-TLVDS_CK tlvds_ck;
+    // TLVDS_OBUF 差動バッファインスタンス
+    TLVDS_D2 tlvds_d2;
+    TLVDS_D1 tlvds_d1;
+    TLVDS_D0 tlvds_d0;
+    TLVDS_CK tlvds_ck;
 #end
 
 // ============================================================
