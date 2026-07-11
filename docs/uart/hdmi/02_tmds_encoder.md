@@ -2,9 +2,7 @@
 
 ## 概要
 
-DVI/HDMI 出力に必要な TMDS (Transition Minimized Differential Signaling) エンコーダ。
-8bit RGB データを 10bit TMDS シンボルに変換する。RGB 3チャネル分のエンコーダを
-インスタンス化して使用する。
+DVI/HDMI 出力に必要な TMDS (Transition Minimized Differential Signaling) エンコーダ。8bit RGB データを 10bit TMDS シンボルに変換する。RGB 3チャネル分のエンコーダをインスタンス化して使用する。
 
 ## TMDS エンコーディングアルゴリズム
 
@@ -29,8 +27,7 @@ DVI/HDMI 出力に必要な TMDS (Transition Minimized Differential Signaling) �
 
 ### ステージ 2: DC バランシング (ビット 9)
 
-ランニングディスパリティ (累積 '1' と '0' の差) を追跡し、
-DC バランスを維持するためにデータを反転するかどうかを決定する。
+ランニングディスパリティ (累積 '1' と '0' の差) を追跡し、DC バランスを維持するためにデータを反転するかどうかを決定する。
 
 ```
 入力: q_m[8:0], cnt (ランニングディスパリティ)

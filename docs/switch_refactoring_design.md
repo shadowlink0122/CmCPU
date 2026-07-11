@@ -22,8 +22,7 @@ for (const auto& [val, target] : sd.targets) {
     ss << indent() << "end\n";
 }
 ```
-OR/Rangeパターンの場合、異なるケース値（`val`）が同一の遷移先ブロック（`target`）を持ちます。
-このループの初回で `target` が処理されると、`visited` に追加され、2回目のループでは `case_visited.count(target)` が真となるため、`emitBlockRecursive` が即時リターンしてしまい空のブロックが生成されてしまいます。
+OR/Rangeパターンの場合、異なるケース値（`val`）が同一の遷移先ブロック（`target`）を持ちます。このループの初回で `target` が処理されると、`visited` に追加され、2回目のループでは `case_visited.count(target)` が真となるため、`emitBlockRecursive` が即時リターンしてしまい空のブロックが生成されてしまいます。
 
 ### 修正後のロジック
 同一の遷移先 `BlockId` を持つケース値（`val`）をグループ化し、SystemVerilogのカンマ区切りケースラベル（例: `0, 1, 2: begin ... end`）としてトランスパイルします。

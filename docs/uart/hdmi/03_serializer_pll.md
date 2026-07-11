@@ -2,8 +2,7 @@
 
 ## 概要
 
-TMDS エンコーダが出力する 10bit パラレルデータを、高速シリアルデータに変換する
-モジュール。Gowin GW5AST FPGA の内蔵プリミティブ (OSER10, TLVDS_OBUF) を使用する。
+TMDS エンコーダが出力する 10bit パラレルデータを、高速シリアルデータに変換するモジュール。Gowin GW5AST FPGA の内蔵プリミティブ (OSER10, TLVDS_OBUF) を使用する。
 
 ## クロック構成
 
@@ -56,8 +55,7 @@ extern struct rPLL {
 
 ### Gowin OSER10 プリミティブ
 
-OSER10 は Gowin FPGA の内蔵 10:1 シリアライザ。DDR 出力により、
-5× クロックで 10bit データを 1bit シリアルストリームに変換する。
+OSER10 は Gowin FPGA の内蔵 10:1 シリアライザ。DDR 出力により、5× クロックで 10bit データを 1bit シリアルストリームに変換する。
 
 ```
           ┌────────────┐
@@ -95,8 +93,7 @@ extern struct OSER10 {
 
 ### TLVDS_OBUF 差動出力バッファ
 
-TMDS は LVDS ベースの差動信号。Gowin の TLVDS_OBUF プリミティブで
-シングルエンド → 差動変換を行う。
+TMDS は LVDS ベースの差動信号。Gowin の TLVDS_OBUF プリミティブでシングルエンド → 差動変換を行う。
 
 ```cm
 // Gowin TLVDS_OBUF プリミティブ
