@@ -17,8 +17,7 @@
 #ifdef TEST
     // シミュレーション: クロック外部注入
     #[input] posedge clk;
-#end
-#ifndef TEST
+#else
     extern struct OSC {
         #[sv::param] int FREQ_DIV = 4;
         #[output] bool OSCOUT = clk;
@@ -50,8 +49,7 @@ bool btn_sync;
 // デバウンス: 同期後の信号が一定期間安定したら確定
 #ifdef TEST
     const uint DEBOUNCE_COUNT = 2;  // シミュレーション: 短縮
-#end
-#ifndef TEST
+#else
     const uint DEBOUNCE_COUNT = 525000;  // 10ms @ 52.5MHz
 #end
 uint stable_count = 0;

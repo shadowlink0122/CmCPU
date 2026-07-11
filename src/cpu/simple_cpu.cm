@@ -24,8 +24,7 @@
 #ifdef TEST
     // シミュレーション: クロックを外部注入
     #[input] posedge clk;
-#end
-#ifndef TEST
+#else
     // Gowin 内蔵オシレータの外部モジュール定義
     extern struct OSC {
         #[sv::param] int FREQ_DIV = 4;

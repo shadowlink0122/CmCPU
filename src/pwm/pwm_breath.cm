@@ -17,8 +17,7 @@
 #ifdef TEST
     // シミュレーション: クロック外部注入
     #[input] posedge clk;
-#end
-#ifndef TEST
+#else
     // 内蔵オシレータ (210MHz / FREQ_DIV=4 = 52.5MHz)
     extern struct OSC {
         #[sv::param] int FREQ_DIV = 4;

@@ -17,8 +17,7 @@ const uint MSG_LEN = 14;         // "Hello, FPGA!\r\n"
     #[input] posedge clk;
     const uint CLKS_PER_BIT = 2;
     const uint STARTUP_DELAY = 2;
-#end
-#ifndef TEST
+#else
     const uint CLKS_PER_BIT = 456;       // 52500000 / 115200 ≈ 455.7
     const uint STARTUP_DELAY = 5250000;  // 起動後0.1秒待機
 

@@ -40,8 +40,7 @@ module hdmi_colorbar;
     #[input] posedge pixel_clk;
     bool serial_clk = false;
     bool pll_lock = true;
-#end
-#ifndef TEST
+#else
     bool pixel_clk  = false;
     bool serial_clk = false;
     bool pll_lock    = false;
