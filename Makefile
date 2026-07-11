@@ -434,5 +434,27 @@ button-build:
 	$(VERILATOR_LINT) $(BUILD_DIR)/button/button_counter.sv $(LINT_STUBS)
 	@echo "✅ ボタンカウンタビルド完了! $(BUILD_DIR)/button/button_counter.sv (+ .cst / _build.tcl)"
 
+# ============================================================
+# CPU/GPUサンプル: SimpleCPU（16bit命令アキュムレータ型）
+#                  SimpleGPU（矩形フィルラスタライザ）
+# ============================================================
+.PHONY: cpu-build
+cpu-build:
+	@echo "Cm → SystemVerilog 変換中 (SimpleCPU)..."
+	@mkdir -p $(BUILD_DIR)/cpu
+	$(CM) compile --target=sv $(SRC_DIR)/cpu/simple_cpu.cm -o $(BUILD_DIR)/cpu/simple_cpu.sv
+	@echo "Verilator リントチェック中..."
+	$(VERILATOR_LINT) $(BUILD_DIR)/cpu/simple_cpu.sv $(LINT_STUBS)
+	@echo "✅ SimpleCPUビルド完了! $(BUILD_DIR)/cpu/simple_cpu.sv"
+
+.PHONY: gpu-build
+gpu-build:
+	@echo "Cm → SystemVerilog 変換中 (SimpleGPU)..."
+	@mkdir -p $(BUILD_DIR)/gpu
+	$(CM) compile --target=sv $(SRC_DIR)/gpu/simple_gpu.cm -o $(BUILD_DIR)/gpu/simple_gpu.sv
+	@echo "Verilator リントチェック中..."
+	$(VERILATOR_LINT) $(BUILD_DIR)/gpu/simple_gpu.sv $(LINT_STUBS)
+	@echo "✅ SimpleGPUビルド完了! $(BUILD_DIR)/gpu/simple_gpu.sv"
+
 
 

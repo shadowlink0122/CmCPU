@@ -1,0 +1,166 @@
+//! platform: sv
+
+// ============================================================
+// SimpleGPU: 矩形フィルGPU（ラスタライザ）のサンプル
+// ============================================================
+// ターゲット: Sipeed Tang Console 138K (GW5AST-LV138PG484A)
+// クロック: Gowin内蔵OSC (210MHz / FREQ_DIV = 52.5MHz)
+//
+// 機能:
+//   - 16x8ピクセル・8色（3bit）のフレームバッファ
+//   - コマンド: start で「全クリア → 指定矩形を指定色でフィル」を実行
+//   - 1ピクセル/サイクルで描画し、完了で done を立てる
+//   - 読み出しポート（rd_addr → rd_data、同期読み出し）で内容を確認できる
+//
+// FSM: IDLE → CLEAR(128px) → FILL(w×h px) → DONE → (startを離すと) IDLE
+// ============================================================
+
+#ifdef TEST
+    // シミュレーション: クロックを外部注入
+    #[input] posedge clk;
+#end
+#ifndef TEST
+    // Gowin 内蔵オシレータの外部モジュール定義
+    extern struct OSC {
+        #[sv::param] int FREQ_DIV = 4;
+        #[output] bool OSCOUT = clk;
+    }
+#end
+
+// コマンド入力ポート
+#[input] bool start = false;      // 描画開始（DONE解除にも使用）
+#[input] utiny rect_x = 0;        // 矩形左上X (0..15)
+#[input] utiny rect_y = 0;        // 矩形左上Y (0..7)
+#[input] utiny rect_w = 0;        // 矩形幅 (1..16)
+#[input] utiny rect_h = 0;        // 矩形高さ (1..8)
+#[input] utiny rect_color = 0;    // 塗り色 (0..7)
+
+// フレームバッファ読み出しポート（同期読み出し・1サイクル遅延）
+#[input] utiny rd_addr = 0;       // 読み出しアドレス (y*16 + x)
+#[output] utiny rd_data = 0;      // 読み出しデータ
+
+// ステータス出力
+#[output] bool busy = false;
+#[output] bool done = false;
+
+// FSM状態
+const uint ST_IDLE = 0;
+const uint ST_CLEAR = 1;
+const uint ST_FILL = 2;
+const uint ST_DONE = 3;
+
+// フレームバッファ（16x8 = 128ピクセル、合成時はRAM推論される）
+utiny[128] fb;
+
+// 内部レジスタ
+uint state = 0;      // FSM状態
+uint clr_addr = 0;   // クリア用アドレス
+uint x = 0;          // 描画中X座標
+uint y = 0;          // 描画中Y座標
+uint x0_reg = 0;     // ラッチした矩形パラメータ
+uint y0_reg = 0;
+uint x1_reg = 0;     // 右端（x0 + w - 1）
+uint y1_reg = 0;     // 下端（y0 + h - 1）
+uint color_reg = 0;
+
+#ifndef TEST
+    bool clk = false;
+    OSC osc_inst;
+#end
+
+// 描画FSM（1ピクセル/サイクル）
+void gpu(posedge clk) {
+    match (state) {
+        0 => {  // IDLE: startでパラメータをラッチして開始
+            // done は次のコマンド開始までスティッキーに保持する
+            if (start) {
+                done = false;
+                x0_reg = rect_x;
+                y0_reg = rect_y;
+                x1_reg = rect_x + rect_w - 1;
+                y1_reg = rect_y + rect_h - 1;
+                color_reg = rect_color;
+                clr_addr = 0;
+                busy = true;
+                state = ST_CLEAR;
+            }
+        }
+        1 => {  // CLEAR: フレームバッファ全消去
+            fb[clr_addr & 127] = 0;
+            if (clr_addr == 127) {
+                x = x0_reg;
+                y = y0_reg;
+                state = ST_FILL;
+            } else {
+                clr_addr = clr_addr + 1;
+            }
+        }
+        2 => {  // FILL: 矩形を左上から右下へ走査
+            fb[((y << 4) + x) & 127] = (color_reg & 7) as utiny;
+            if (x == x1_reg) {
+                if (y == y1_reg) {
+                    state = ST_DONE;
+                } else {
+                    x = x0_reg;
+                    y = y + 1;
+                }
+            } else {
+                x = x + 1;
+            }
+        }
+        3 => {  // DONE: 完了通知。startが下がったらIDLEへ
+            busy = false;
+            done = true;
+            if (!start) {
+                state = ST_IDLE;
+            }
+        }
+        _ => { state = ST_IDLE; }
+    }
+}
+
+// フレームバッファ読み出し（同期読み出し・1サイクル遅延）
+void read_port(posedge clk) {
+    rd_data = fb[rd_addr & 127];
+}
+
+import std::debug::assert;
+
+// テストベンチ: クリア→矩形フィル→読み出し検証
+// (x,y,w,h) = (2,1,4,3) を色5でフィルする
+#[test]
+void tb() {
+    rect_x = 2;
+    rect_y = 1;
+    rect_w = 4;
+    rect_h = 3;
+    rect_color = 5;
+    start = true;
+    step(2);
+    assert(busy, "GPU busy after start");
+    start = false;
+    // CLEAR(128) + FILL(4*3=12) + 遷移分の余裕
+    step(150);
+    assert(done, "fill complete");
+    assert(!busy, "not busy after done");
+
+    // 矩形内: (2,1) = addr 18
+    rd_addr = 18;
+    step(2);
+    assert(rd_data == 5, "inside rect painted with color 5");
+
+    // 矩形内の右下: (5,3) = addr 53
+    rd_addr = 53;
+    step(2);
+    assert(rd_data == 5, "bottom-right corner painted");
+
+    // 矩形外: (0,0) = addr 0
+    rd_addr = 0;
+    step(2);
+    assert(rd_data == 0, "outside rect cleared");
+
+    // 矩形外の右隣: (6,1) = addr 22
+    rd_addr = 22;
+    step(2);
+    assert(rd_data == 0, "right neighbor not painted");
+}

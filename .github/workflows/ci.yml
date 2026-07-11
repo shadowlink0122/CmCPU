@@ -58,6 +58,8 @@ jobs:
           make btn-build
           make hdmi-build
           make text-build
+          make cpu-build
+          make gpu-build
 
       - name: Run circuit simulation tests
         run: make test

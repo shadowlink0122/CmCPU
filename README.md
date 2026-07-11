@@ -51,6 +51,8 @@ make flash
 | button | `make button-build` | **ボタンカウンタ** — `#[sv::sync]` によるCDC 2FF同期 + デバウンス + エッジ検出（v0.16.0） |
 | uart | `make uart-build` | UART送信（"Hello" 送出） |
 | hdmi | `make hdmi-build` / `make text-build` | HDMI出力（カラーバー / テキスト表示。フォントROMはBRAM + $readmemh） |
+| cpu | `make cpu-build` | **SimpleCPU** — 16bit命令アキュムレータ型CPU（ROM上の総和プログラムを実行、matchデコード） |
+| gpu | `make gpu-build` | **SimpleGPU** — 矩形フィルラスタライザ（クリア→フィルFSM + デュアルポートRAM読み出し） |
 
 pwm / button は制約ファイルを手書きしません。生成された
 `build/<name>/<name>_build.tcl` を `gw_sh` に渡すだけで合成まで実行できます。
@@ -86,6 +88,8 @@ iverilog + vvp で実行します。テストモードでは定義 `TEST` が自
 | text_renderer_test | src/hdmi/text | フォントROM経由の文字描画（'H'横棒の黒画素・白背景） |
 | hdmi_main | src/hdmi/main.cm | カラーバートップ統合（timing→pattern→encoder） |
 | hdmi_text_top | src/hdmi | テキストトップ統合（timing→描画→encoder） |
+| simple_cpu | src/cpu | 総和プログラム実行（result=55）→HALT→停止後の安定性 |
+| simple_gpu | src/gpu | クリア→矩形フィル→フレームバッファ読み出し（矩形内外） |
 
 PLL / OSER10 / TLVDS_OBUF はGowinベンダプリミティブのため
 シミュレーション対象外です（`#ifdef TEST` で除外し、実機フローと
