@@ -105,6 +105,8 @@ void tb() {
     assert(!halt_led, "still running mid-program");
     step(30);
     assert(halt_led, "program halted");
+    // 内部レジスタも階層参照（dut.halted）で直接検証できる
+    assert(halted, "halted register readable via hierarchy");
     assert(result_out == 55, "sum 1..10 == 55");
     // 停止後は状態が変化しない
     step(10);
