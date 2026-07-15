@@ -6,8 +6,14 @@ import ./font_rom;
 import ./ctrl_abbrev;
 import ./display_strings;
 
-const uint FRAME_CLOCKS   = 420000;  // 1フレーム = 800 × 525 クロック
-const uint STARTUP_FRAMES = 60;      // 起動待機 (フレーム数)
+#ifdef TEST
+    // シミュレーション用短縮値 (起動待機とフレーム長を縮めてテストを高速化)
+    const uint FRAME_CLOCKS   = 100;
+    const uint STARTUP_FRAMES = 2;
+#else
+    const uint FRAME_CLOCKS   = 420000;  // 1フレーム = 800 × 525 クロック
+    const uint STARTUP_FRAMES = 60;      // 起動待機 (フレーム数)
+#end
 
 export bool anim_ready = false;
 export bool anim_done = false;
@@ -138,12 +144,14 @@ export async void process_anim(posedge pixel_clk) {
         text_char = ' ' as ushort;
         text_we = true;
 
-        clear_addr = clear_addr + 1;
-        if (clear_addr == TEXT_BUF_SIZE) {
+        // ノンブロッキング代入では加算後の値を同サイクル内で読めないため、加算前の値で最終アドレスを判定する
+        if (clear_addr == TEXT_BUF_SIZE - 1) {
             state = 2;
             row_idx = 0;
             write_cnt = 0;
             row_delay = 0;
+        } else {
+            clear_addr = clear_addr + 1;
         }
     }
     // === DRAWING: 1行ずつテーブルを出力 ===
@@ -162,11 +170,14 @@ export async void process_anim(posedge pixel_clk) {
                 text_addr = (8 * (TEXT_COLS as ushort) + 18 + (write_cnt as ushort)) as ushort;
                 text_char = get_string_char(true, write_cnt, 0) as ushort;
                 text_we = true;
-                write_cnt = write_cnt + 1;
-                if (write_cnt == 43) {
+                // TITLEは43文字 (インデックス0..42)。加算後の値は同サイクル内で読めない (ノンブロッキング代入) ため、
+                // 加算前の値で最終文字を判定する。加算後判定だと1サイクル余分に走り TITLE[43] (範囲外) が描画される
+                if (write_cnt == 42) {
                     write_cnt = 0;
                     row_idx = 2;     // コラム見出しをスキップして直接グリッドへ
                     row_delay = 10;  // 10フレーム待機
+                } else {
+                    write_cnt = write_cnt + 1;
                 }
             }
             else if (row_idx >= 2) {
@@ -176,11 +187,13 @@ export async void process_anim(posedge pixel_clk) {
                     text_addr = (((16 + r as ushort) * (TEXT_COLS as ushort)) + (write_cnt as ushort)) as ushort;
                     text_char = get_table_char(r, write_cnt);
                     text_we = true;
-                    write_cnt = write_cnt + 1;
-                    if (write_cnt == 80) {
+                    // 1行は80文字 (インデックス0..79)。タイトル行と同様に加算前の値で行末を判定する
+                    if (write_cnt == 79) {
                         write_cnt = 0;
                         row_idx = row_idx + 1;
                         row_delay = 10;
+                    } else {
+                        write_cnt = write_cnt + 1;
                     }
                 } else {
                     text_we = false;
