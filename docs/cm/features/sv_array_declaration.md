@@ -2,22 +2,19 @@
 
 ## 概要
 
-Cm SV バックエンドにおける固定長配列の SystemVerilog レジスタファイル /
-メモリ配列としての生成対応。
+Cm SV バックエンドにおける固定長配列の SystemVerilog レジスタファイル /メモリ配列としての生成対応。
 
 ## 現状
 
 ### 確認済みの状況
 
 - `#[sv::bram]` 属性は MIR の `attributes` フィールドに伝達される
-- SV バックエンドがこの属性を読み取り、`(* ram_style = "block" *)` を
-  生成する仕組みは設計されている
+- SV バックエンドがこの属性を読み取り、`(* ram_style = "block" *)` を生成する仕組みは設計されている
 - **配列型の SV コード生成が実装済みか未確認**
 
 ### 既存の回避策
 
-`uart_hello.cm` / `uart_button.cm` では、配列の代わりに
-`if/else` チェーンでルックアップテーブルを実現:
+`uart_hello.cm` / `uart_button.cm` では、配列の代わりに`if/else` チェーンでルックアップテーブルを実現:
 
 ```cm
 // 配列の代わりに if/else チェーン
@@ -123,8 +120,7 @@ void lookup(posedge clk) {
 
 ### パターン B: Gowin IP ROM
 
-Gowin EDA の IP Core Generator で ROM/RAM を生成し、
-`extern struct` としてインスタンス化:
+Gowin EDA の IP Core Generator で ROM/RAM を生成し、`extern struct` としてインスタンス化:
 
 ```cm
 extern struct FontROM {
@@ -137,9 +133,7 @@ FontROM font_rom_inst;
 
 ## 優先度
 
-**MEDIUM** — if/else パターンと Gowin IP で回避可能だが、
-コードの保守性と可読性に大きく影響する。
-テキストバッファ (360 エントリ) の if/else チェーンは実用的でない。
+**MEDIUM** — if/else パターンと Gowin IP で回避可能だが、コードの保守性と可読性に大きく影響する。テキストバッファ (360 エントリ) の if/else チェーンは実用的でない。
 
 ## 関連
 

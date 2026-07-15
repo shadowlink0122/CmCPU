@@ -28,8 +28,7 @@ HDMIテキスト表示プログラム (`hdmi_text_top`) を実行した際、実
 `font_rom.cm` の生成ロジックを変更し、`lookup_font` 内の `char_code` に対する条件分岐において、`else if` を廃止し、独立した `if` 文を平坦に並べる形式に変更しました。これにより深いネストが解消され、正しく並列なマルチプレクサとして回路化されます。
 
 ### 3.3 LED制御用の独立プロセスの新設
-`anim_ready` と `anim_done` の割り当てを `process_anim` から完全に削除し、独立したプロセス `led_control_process` に分離しました。
-これにより `process_anim` 内での変数割り当ての衝突やネストバグを完全に回避し、状態遷移を安定化させました。
+`anim_ready` と `anim_done` の割り当てを `process_anim` から完全に削除し、独立したプロセス `led_control_process` に分離しました。これにより `process_anim` 内での変数割り当ての衝突やネストバグを完全に回避し、状態遷移を安定化させました。
 
 ```cm
 // animation_ctrl.cm

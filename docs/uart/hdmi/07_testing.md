@@ -2,8 +2,7 @@
 
 ## 概要
 
-HDMI テキスト出力プロジェクトの包括的なテスト計画。
-Verilator リント、テストベンチシミュレーション、実機検証の 3 層構成。
+HDMI テキスト出力プロジェクトの包括的なテスト計画。Verilator リント、テストベンチシミュレーション、実機検証の 3 層構成。
 
 ## テスト階層
 
@@ -49,12 +48,12 @@ cm compile --target=sv src/hdmi/hdmi_text_top.cm -o build/hdmi_text_top.sv
 ### コマンド
 
 ```bash
-# 各モジュールを個別にリント
-verilator --lint-only --timing -Wno-fatal -Wno-MODMISSING build/video_timing.sv
-verilator --lint-only --timing -Wno-fatal -Wno-MODMISSING build/tmds_encoder.sv
-verilator --lint-only --timing -Wno-fatal -Wno-MODMISSING build/gbc_display.sv
-verilator --lint-only --timing -Wno-fatal -Wno-MODMISSING build/text_renderer.sv
-verilator --lint-only --timing -Wno-fatal -Wno-MODMISSING build/animation_ctrl.sv
+# 各モジュールを個別にリント (Gowinプリミティブはスタブで解決)
+verilator --lint-only --timing -Wno-fatal -Wno-MULTITOP build/video_timing.sv lint/gowin_primitives.sv
+verilator --lint-only --timing -Wno-fatal -Wno-MULTITOP build/tmds_encoder.sv lint/gowin_primitives.sv
+verilator --lint-only --timing -Wno-fatal -Wno-MULTITOP build/gbc_display.sv lint/gowin_primitives.sv
+verilator --lint-only --timing -Wno-fatal -Wno-MULTITOP build/text_renderer.sv lint/gowin_primitives.sv
+verilator --lint-only --timing -Wno-fatal -Wno-MULTITOP build/animation_ctrl.sv lint/gowin_primitives.sv
 ```
 
 ### フラグ説明
@@ -64,7 +63,8 @@ verilator --lint-only --timing -Wno-fatal -Wno-MODMISSING build/animation_ctrl.s
 | `--lint-only` | シミュレーションモデル生成なし (構文のみ) |
 | `--timing` | タイミングアノテーション有効 |
 | `-Wno-fatal` | 警告をエラーにしない (LATCH, WIDTHTRUNC 許容) |
-| `-Wno-MODMISSING` | 未定義モジュール警告を抑制 (Gowin プリミティブ用) |
+| `-Wno-MULTITOP` | スタブ併用時の複数トップモジュール警告を抑制 |
+| `lint/gowin_primitives.sv` | Gowin プリミティブのブラックボックス・スタブ (未定義モジュール解決) |
 
 ### 許容する警告
 
@@ -73,7 +73,6 @@ verilator --lint-only --timing -Wno-fatal -Wno-MODMISSING build/animation_ctrl.s
 | `LATCH` | 暗黙のラッチ推論 | Cm 中間コードの制約、合成時に問題なし |
 | `WIDTHTRUNC` | uint → utiny 等の暗黙切り詰め | 明示的キャスト推奨 |
 | `WIDTHEXPAND` | 小さい型 → 大きい型への暗黙拡張 | 通常問題なし |
-| `MODMISSING` | Gowin プリミティブ未定義 | 実機でのみ使用 |
 
 ## Layer 2: テストベンチ
 
@@ -154,8 +153,7 @@ endmodule
 
 ### VCD 波形検証
 
-テストベンチで VCD (Value Change Dump) ファイルを出力し、
-波形ビューアで視覚的に検証する。
+テストベンチで VCD (Value Change Dump) ファイルを出力し、波形ビューアで視覚的に検証する。
 
 ```bash
 # Verilator でシミュレーション
@@ -196,7 +194,7 @@ HDMI_SVS  := $(patsubst $(SRC_DIR)/hdmi/%.cm,$(BUILD_DIR)/%.sv,$(HDMI_SRCS))
 hdmi-build: $(HDMI_SVS)
 	@echo "Verilator リントチェック中 (HDMI)..."
 	@for sv in $(HDMI_SVS); do \
-		verilator --lint-only --timing -Wno-fatal -Wno-MODMISSING $$sv; \
+		verilator --lint-only --timing -Wno-fatal -Wno-MULTITOP $$sv lint/gowin_primitives.sv; \
 	done
 	@echo "✅ HDMI ビルド完了!"
 

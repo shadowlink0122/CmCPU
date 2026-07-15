@@ -9,8 +9,7 @@ SystemVerilogのコード生成フェーズ（`codegen.cpp`）では、関数内
 ```sv
 always_ff @(posedge clk_50m or posedge pixel_clk) begin
 ```
-これにより、Gowin EDA合成時に以下のエラーが発生してビルドに失敗します。
-`ERROR (EX3833) : If-condition does not match any sensitivity list edge`
+これにより、Gowin EDA合成時に以下のエラーが発生してビルドに失敗します。`ERROR (EX3833) : If-condition does not match any sensitivity list edge`
 
 ## 解決策
 `Cm/src/codegen/sv/codegen.cpp` 内で `func.locals` を走査してクロックエッジ（`posedge` / `negedge`）を判定している箇所において、`local.is_global` が `true` の場合は走査をスキップ（`continue`）するように修正します。

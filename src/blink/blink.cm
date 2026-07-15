@@ -8,25 +8,35 @@
 // LED: CFG LED READY (U12), DONE (G11)
 
 // 定数定義
-const uint CLK_FREQ = 52500000;            // 内蔵OSCクロック周波数 (Hz)
-const uint HALF_SEC_COUNT = CLK_FREQ / 2 - 1;  // 0.5秒分のカウント値
+const uint CLK_FREQ = 52500000;  // 内蔵OSCクロック周波数 (Hz)
 
-// Gowin 内蔵オシレータの外部モジュール定義
-extern struct OSC {
-    #[sv::param] int FREQ_DIV = 4;
-    #[output] bool OSCOUT = clk;
-}
+#ifdef TEST
+    // シミュレーション: クロックを外部注入し、トグル周期を短縮
+    #[input] posedge clk;
+    const uint HALF_SEC_COUNT = 1;
+#else
+    const uint HALF_SEC_COUNT = CLK_FREQ / 2 - 1;  // 0.5秒分のカウント値
+
+    // Gowin 内蔵オシレータの外部モジュール定義
+    extern struct OSC {
+        #[sv::param] int FREQ_DIV = 4;
+        #[output] bool OSCOUT = clk;
+    }
+#end
 
 // 出力ポート: CFG LED
 #[output] bool led_ready = false;
 #[output] bool led_done  = false;
 
 // 内部信号
-bool clk = false;
 uint counter = 0;
 
-// Gowin 内蔵オシレータのインスタンス化
-OSC osc_inst;
+#ifndef TEST
+    bool clk = false;
+
+    // Gowin 内蔵オシレータのインスタンス化
+    OSC osc_inst;
+#end
 
 // メインクロック処理（posedge clk で駆動）
 void blink(posedge clk) {
@@ -37,4 +47,18 @@ void blink(posedge clk) {
     } else {
         counter = counter + 1;
     }
+}
+
+import std::debug::assert;
+
+// テストベンチ: HALF_SEC_COUNT=1 のため2クロックごとにLEDがトグルする
+#[test]
+void tb() {
+    step(2);
+    assert(led_ready, "led toggles on after 2 clocks");
+    assert(led_done, "led_done follows led_ready");
+    step(2);
+    assert(!led_ready, "led toggles off after 2 more clocks");
+    step(4);
+    assert(!led_ready, "full period returns to off");
 }

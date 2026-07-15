@@ -1,0 +1,105 @@
+//! platform: sv
+//! sv: device: GW5AST-LV138PG484AC1/I0 C
+//! sv: option: use_ready_as_gpio
+//! sv: option: use_done_as_gpio
+
+// ============================================================
+// ボタンカウンタサンプル（Tang Console 138K）
+// ============================================================
+// v0.16.0の #[sv::sync]（CDC 2FF同期）と #[sv::pin] のデモ:
+// 非同期のボタン入力を同期化し、立ち下がりエッジ（押下）で
+// 2bitカウンタを進めて2つのLEDに表示する。
+//
+//   make button-build
+//   gw_sh build/button/button_counter_build.tcl
+// ============================================================
+
+#ifdef TEST
+    // シミュレーション: クロック外部注入
+    #[input] posedge clk;
+#else
+    extern struct OSC {
+        #[sv::param] int FREQ_DIV = 4;
+        #[output] bool OSCOUT = clk;
+    }
+#end
+
+// ボタン（プルアップ、押下でLow）
+#[input]
+#[sv::pin("AA13", io_type: "LVCMOS33", pull: "UP")]
+bool btn0;
+
+#[output]
+#[sv::pin("U12", io_type: "LVCMOS33", drive: 8)]
+bool led_ready = false;
+
+#[output]
+#[sv::pin("G11", io_type: "LVCMOS33", drive: 8)]
+bool led_done = false;
+
+#ifndef TEST
+    bool clk = false;
+    OSC osc_inst;
+#end
+
+// 非同期ボタンを2FF同期（メタステーブル対策）
+#[sv::sync(clk: "clk", src: "btn0", stages: 2)]
+bool btn_sync;
+
+// デバウンス: 同期後の信号が一定期間安定したら確定
+#ifdef TEST
+    const uint DEBOUNCE_COUNT = 2;  // シミュレーション: 短縮
+#else
+    const uint DEBOUNCE_COUNT = 525000;  // 10ms @ 52.5MHz
+#end
+uint stable_count = 0;
+bool btn_state = true;  // プルアップのため初期High
+bool btn_prev = true;
+
+utiny presses = 0;
+
+void count(posedge clk) {
+    // デバウンス
+    if (btn_sync == btn_state) {
+        stable_count = 0;
+    } else {
+        stable_count = stable_count + 1;
+        if (stable_count >= DEBOUNCE_COUNT) {
+            btn_state = btn_sync;
+            stable_count = 0;
+        }
+    }
+
+    // 押下（High→Low）エッジでカウント
+    btn_prev = btn_state;
+    if (btn_prev && !btn_state) {
+        presses = presses + 1;
+    }
+
+    // 2bit表示
+    led_ready = (presses & 1) != 0;
+    led_done = (presses & 2) != 0;
+}
+
+import std::debug::assert;
+
+// テストベンチ: 同期→デバウンス→押下エッジ→2bitカウント表示を検証
+#[test]
+void tb() {
+    btn0 = true;  // プルアップ（非押下）
+    step(6);
+    assert(!led_ready, "no presses yet: bit0 off");
+    assert(!led_done, "no presses yet: bit1 off");
+
+    btn0 = false;  // 押下（Low）
+    step(8);       // 同期2 + デバウンス2 + エッジ検出
+    assert(led_ready, "press 1: bit0 on");
+    assert(!led_done, "press 1: bit1 off");
+
+    btn0 = true;  // 離す
+    step(8);
+    btn0 = false;  // 2回目押下
+    step(8);
+    assert(!led_ready, "press 2: bit0 off");
+    assert(led_done, "press 2: bit1 on");
+}

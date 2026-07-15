@@ -15,16 +15,27 @@
 // ============================================================
 
 // 定数定義
-const uint CLK_FREQ = 52500000;          // クロック周波数 (Hz)
-const uint CLKS_PER_BIT = 456;           // 52500000 / 115200 ≈ 455.7
-const uint DEBOUNCE_LIMIT = 1050000;     // 20ms = 52500000 * 0.02
-const uint MSG_LEN = 12;                  // "Pressed: N\r\n"
+const uint CLK_FREQ = 52500000;  // クロック周波数 (Hz)
+#ifdef TEST
+    const uint CLKS_PER_BIT = 2;
+#else
+    const uint CLKS_PER_BIT = 456;  // 52500000 / 115200 ≈ 455.7
+#end
+const uint MSG_LEN = 12;  // "Pressed: N\r\n"
 
-// Gowin 内蔵オシレータ
-extern struct OSC {
-    #[sv::param] int FREQ_DIV = 4;
-    #[output] bool OSCOUT = clk;
-}
+#ifdef TEST
+    // シミュレーション: クロック外部注入・タイミング短縮
+    #[input] posedge clk;
+    const uint DEBOUNCE_LIMIT = 2;
+#else
+    const uint DEBOUNCE_LIMIT = 1050000;  // 20ms = 52500000 * 0.02
+
+    // Gowin 内蔵オシレータ
+    extern struct OSC {
+        #[sv::param] int FREQ_DIV = 4;
+        #[output] bool OSCOUT = clk;
+    }
+#end
 
 // 入出力ポート
 #[input] bool btn0 = true;         // EX_KEY0 (アクティブ LOW)
@@ -33,13 +44,15 @@ extern struct OSC {
 #[output] bool led_done = false;   // ボタン検出 LED (Blue)
 
 // 内部信号
-bool clk = false;
-OSC osc_inst;
+#ifndef TEST
+    bool clk = false;
+    OSC osc_inst;
+#end
 
 // デバウンス
 uint db_cnt = 0;
-uint btn_stable = 1;     // 安定化後のボタン状態 (1=離した, 0=押した)
-uint btn_prev = 1;       // 前回の安定状態
+uint btn_stable = 1;  // 安定化後のボタン状態 (1=離した, 0=押した)
+uint btn_prev = 1;    // 前回の安定状態
 
 // UART TX ステートマシン
 // phase: 0=待機, 1=LOAD, 2=START, 3=DATA, 4=STOP
@@ -51,8 +64,8 @@ uint tx_bit = 0;
 
 // メッセージ送信
 uint msg_idx = 0;
-uint press_count = 0;    // 0-9 ループ
-uint digit = 48;         // ASCII '0'
+uint press_count = 0;  // 0-9 ループ
+uint digit = 48;       // ASCII '0'
 
 // メインプロセス: デバウンス + エッジ検出 + UART TX
 void process(posedge clk) {
@@ -102,18 +115,18 @@ void process(posedge clk) {
     // ==== LOAD: メッセージ ROM ====
     if (phase == 1) {
         // "Pressed: N\r\n" (12文字)
-        if (msg_idx == 0) { tx_data = 80; }      // 'P'
-        if (msg_idx == 1) { tx_data = 114; }     // 'r'
-        if (msg_idx == 2) { tx_data = 101; }     // 'e'
-        if (msg_idx == 3) { tx_data = 115; }     // 's'
-        if (msg_idx == 4) { tx_data = 115; }     // 's'
-        if (msg_idx == 5) { tx_data = 101; }     // 'e'
-        if (msg_idx == 6) { tx_data = 100; }     // 'd'
-        if (msg_idx == 7) { tx_data = 58; }      // ':'
-        if (msg_idx == 8) { tx_data = 32; }      // ' '
-        if (msg_idx == 9) { tx_data = digit; }   // '0'-'9'
-        if (msg_idx == 10) { tx_data = 13; }     // '\r'
-        if (msg_idx == 11) { tx_data = 10; }     // '\n'
+        if (msg_idx == 0) { tx_data = 80; }     // 'P'
+        if (msg_idx == 1) { tx_data = 114; }    // 'r'
+        if (msg_idx == 2) { tx_data = 101; }    // 'e'
+        if (msg_idx == 3) { tx_data = 115; }    // 's'
+        if (msg_idx == 4) { tx_data = 115; }    // 's'
+        if (msg_idx == 5) { tx_data = 101; }    // 'e'
+        if (msg_idx == 6) { tx_data = 100; }    // 'd'
+        if (msg_idx == 7) { tx_data = 58; }     // ':'
+        if (msg_idx == 8) { tx_data = 32; }     // ' '
+        if (msg_idx == 9) { tx_data = digit; }  // '0'-'9'
+        if (msg_idx == 10) { tx_data = 13; }    // '\r'
+        if (msg_idx == 11) { tx_data = 10; }    // '\n'
         phase = 2;
         clk_cnt = 0;
     }
@@ -179,4 +192,26 @@ void process(posedge clk) {
             clk_cnt = clk_cnt + 1;
         }
     }
+}
+
+import std::debug::assert;
+
+// テストベンチ: ボタン押下→デバウンス→"Pressed: N"送信開始を検証
+#[test]
+void tb() {
+    btn0 = true;  // 非押下（プルアップ）
+    step(6);
+    assert(uart_tx, "idle high before press");
+    assert(!led_done, "no press detected yet");
+
+    btn0 = false;  // 押下
+    step(8);       // デバウンス2 + エッジ検出
+    assert(led_done, "press detected");
+    // 送信開始（LOAD→START）を待つ
+    step(6);
+    assert(led_ready, "transmission in progress");
+    // 1バイト = 10bit * 2clk = 20clk、12バイト+LOADで約260clk待って完了
+    step(300);
+    assert(uart_tx, "idle high after message");
+    assert(!led_ready, "transmission finished");
 }

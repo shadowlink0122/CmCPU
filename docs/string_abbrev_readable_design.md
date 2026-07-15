@@ -10,12 +10,9 @@
 ## コンパイラ修正方針 (`codegen.cpp` の修正)
 
 ### 1. `findMergeBlock` における `Call` ターミネータの追跡漏れ修正
-`SVCodeGen::findMergeBlock` は、分岐（`SwitchInt`）の後に合流するブロック（`merge_block`）を探索する関数です。
-先行する分岐の中で関数呼び出し（`MirTerminator::Call`）が行われると、制御フロー上に `Call` ターミネータが出現します。
-現行のコードでは、`then_reachable`（`then` ブランチから到達可能なブロック集合）を収集するループにおいて、`Call` ターミネータの遷移先 `success` が追跡対象から漏れていました。そのため、`then_reachable` が正しく構築されず、合流ブロックが `SIZE_MAX` (見つからない) として判定され、後続の `switch` ブロックが最初の `case` の中に誤ってインライン出力されていました。
+`SVCodeGen::findMergeBlock` は、分岐（`SwitchInt`）の後に合流するブロック（`merge_block`）を探索する関数です。先行する分岐の中で関数呼び出し（`MirTerminator::Call`）が行われると、制御フロー上に `Call` ターミネータが出現します。現行のコードでは、`then_reachable`（`then` ブランチから到達可能なブロック集合）を収集するループにおいて、`Call` ターミネータの遷移先 `success` が追跡対象から漏れていました。そのため、`then_reachable` が正しく構築されず、合流ブロックが `SIZE_MAX` (見つからない) として判定され、後続の `switch` ブロックが最初の `case` の中に誤ってインライン出力されていました。
 
-**修正案**:
-`findMergeBlock` の最初の `then_reachable` 収集ループに、`Call` ターミネータの追跡処理を追加します。
+**修正案**: `findMergeBlock` の最初の `then_reachable` 収集ループに、`Call` ターミネータの追跡処理を追加します。
 
 ```cpp
 // codegen.cpp
@@ -37,11 +34,9 @@
 ```
 
 ### 2. `const` 変数の非リテラル定数式の `localparam` 初期化対応
-`const` 変数でキャストやビットシフトを用いた定数式（例: `(('N' as uint) << 16)`）を定義した際、フロントエンドの定数畳み込みでは `gv->init_value` (リテラル定数) に展開されず、`gv->init_expr` (HIRの評価式) として保持されます。
-SVコード生成部では `gv->init_value` のみがチェックされていたため、値の伴わない `localparam logic [31:0] NAME;` のような空の宣言が出力されてしまい、論理合成でエラーになっていました。
+`const` 変数でキャストやビットシフトを用いた定数式（例: `(('N' as uint) << 16)`）を定義した際、フロントエンドの定数畳み込みでは `gv->init_value` (リテラル定数) に展開されず、`gv->init_expr` (HIRの評価式) として保持されます。SVコード生成部では `gv->init_value` のみがチェックされていたため、値の伴わない `localparam logic [31:0] NAME;` のような空の宣言が出力されてしまい、論理合成でエラーになっていました。
 
-**修正案**:
-`codegen.cpp` の const 変数出力部分で、`gv->init_value` がない場合に `gv->init_expr` を評価して出力するように修正します。
+**修正案**: `codegen.cpp` の const 変数出力部分で、`gv->init_value` がない場合に `gv->init_expr` を評価して出力するように修正します。
 
 ```cpp
             std::string localparam_decl = "localparam " + mapType(gv->type) + " " + param_name;
@@ -68,8 +63,7 @@ const uint STX = (('S' as uint) << 16) | (('T' as uint) << 8) | ('X' as uint);
 ```
 
 ### 2. `pos` 管理の集約化
-従来は `get_ctrl_abbrev(val, pos)` の中で `val` と `pos` の2次元の `switch` 分岐が複雑にネストされていました。
-リファクタリング後は、以下のように役割を明確に分離します。
+従来は `get_ctrl_abbrev(val, pos)` の中で `val` と `pos` の2次元の `switch` 分岐が複雑にネストされていました。リファクタリング後は、以下のように役割を明確に分離します。
 - `get_ctrl_abbrev(val)`: `val` に応じた3文字パック値（`uint`）を返す。
 - `extract_char(packed_val, pos)`: パック値から指定した `pos` (0〜2) の1文字（`utiny`）を抽出する。
 

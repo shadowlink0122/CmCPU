@@ -2,9 +2,7 @@
 
 ## 概要
 
-640×480@60Hz (VGA 標準) のビデオタイミング信号を生成するモジュール。
-HDMI/DVI 出力の基盤となるコンポーネントで、水平・垂直同期信号 (HSYNC, VSYNC) と
-データイネーブル信号 (DE) を適切なタイミングで出力する。
+640×480@60Hz (VGA 標準) のビデオタイミング信号を生成するモジュール。HDMI/DVI 出力の基盤となるコンポーネントで、水平・垂直同期信号 (HSYNC, VSYNC) とデータイネーブル信号 (DE) を適切なタイミングで出力する。
 
 ## VGA 640×480@60Hz タイミング仕様
 
@@ -160,7 +158,7 @@ void process(posedge pixel_clk) {
 ### Verilator リント
 
 ```bash
-verilator --lint-only --timing -Wno-fatal -Wno-MODMISSING build/video_timing.sv
+verilator --lint-only --timing -Wno-fatal -Wno-MULTITOP build/video_timing.sv lint/gowin_primitives.sv
 ```
 
 ## 注意事項

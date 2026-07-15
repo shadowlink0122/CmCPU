@@ -10,6 +10,14 @@ CM := ./Cm/cm
 BUILD_DIR := build
 SRC_DIR := src
 
+# Verilator リント設定
+# Gowinプリミティブ (OSC/PLL/OSER10/TLVDS_OBUF) は未定義モジュールになるため、
+# lint/gowin_primitives.sv のブラックボックス・スタブを併せて渡して解決する
+# (-Wno-MODMISSING は古いVerilatorに存在しないため使用しない)
+VERILATOR ?= verilator
+LINT_STUBS := lint/gowin_primitives.sv
+VERILATOR_LINT := $(VERILATOR) --lint-only --timing -Wno-fatal -Wno-MULTITOP
+
 # Lチカ回路の設定
 BLINK_SRC := $(SRC_DIR)/blink/blink.cm
 BLINK_CST := $(SRC_DIR)/blink/tang_console_138k.cst
@@ -50,6 +58,9 @@ GOWIN_PACK := $(HOME)/Library/Python/3.14/bin/gowin_pack
 help:
 	@echo "CmCPU プロジェクト - Make コマンド"
 	@echo ""
+	@echo "テスト:"
+	@echo "  make test         - 全回路のシミュレーションテスト実行"
+	@echo ""
 	@echo "Lチカ (blink):"
 	@echo "  make build        - Cm → SV 変換 + リントチェック"
 	@echo "  make gowin        - Gowin EDA フルフロー (SV → FS)"
@@ -79,7 +90,7 @@ help:
 .PHONY: build
 build: $(BLINK_SV)
 	@echo "Verilator リントチェック中..."
-	verilator --lint-only --timing -Wno-fatal -Wno-MODMISSING $(BLINK_SV)
+	$(VERILATOR_LINT) $(BLINK_SV) $(LINT_STUBS)
 	@echo ""
 	@echo "=========================================="
 	@echo "✅ ビルド完了! $(BLINK_SV)"
@@ -200,6 +211,10 @@ setup:
 # クリーン
 # ============================================================
 .PHONY: clean
+# 全回路のシミュレーションテスト（cm test + #[test]）
+test:
+	@./scripts/test_circuits.sh
+
 clean:
 	@echo "ビルド出力をクリーン中..."
 	@rm -rf $(BUILD_DIR)
@@ -211,7 +226,7 @@ clean:
 .PHONY: uart-build
 uart-build: $(UART_SV)
 	@echo "Verilator リントチェック中..."
-	verilator --lint-only --timing -Wno-fatal -Wno-MODMISSING $(UART_SV)
+	$(VERILATOR_LINT) $(UART_SV) $(LINT_STUBS)
 	@echo ""
 	@echo "=========================================="
 	@echo "✅ UART ビルド完了! $(UART_SV)"
@@ -262,7 +277,7 @@ BTN_FS := $(BUILD_DIR)/uart_button/impl/pnr/uart_button.fs
 .PHONY: btn-build
 btn-build: $(BTN_SV)
 	@echo "Verilator リントチェック中..."
-	verilator --lint-only --timing -Wno-fatal -Wno-MODMISSING $(BTN_SV)
+	$(VERILATOR_LINT) $(BTN_SV) $(LINT_STUBS)
 	@echo ""
 	@echo "=========================================="
 	@echo "✅ Button UART ビルド完了! $(BTN_SV)"
@@ -303,7 +318,7 @@ HDMI_FS := $(BUILD_DIR)/hdmi/hdmi_colorbar/impl/pnr/hdmi_colorbar.fs
 .PHONY: hdmi-build
 hdmi-build: $(HDMI_SV)
 	@echo "Verilator リントチェック中..."
-	/usr/local/bin/verilator --lint-only --timing -Wno-MODMISSING $(HDMI_SV)
+	$(VERILATOR_LINT) $(HDMI_SV) $(LINT_STUBS)
 	@echo ""
 	@echo "=========================================="
 	@echo "✅ HDMI ビルド完了! $(HDMI_SV)"
@@ -355,7 +370,7 @@ TEXT_FS := $(BUILD_DIR)/hdmi/hdmi_text/impl/pnr/hdmi_text.fs
 .PHONY: text-build
 text-build: $(TEXT_SV)
 	@echo "Verilator リントチェック中..."
-	/usr/local/bin/verilator --lint-only --timing -Wno-MODMISSING $(TEXT_SV)
+	$(VERILATOR_LINT) $(TEXT_SV) $(LINT_STUBS)
 	@echo ""
 	@echo "=========================================="
 	@echo "✅ HDMI テキストビルド完了! $(TEXT_SV)"
@@ -369,6 +384,7 @@ $(TEXT_SV): $(TEXT_SRC) $(SRC_DIR)/hdmi/text/font_rom.cm
 	@mkdir -p $(BUILD_DIR)/hdmi
 	$(CM) compile --target=sv $(TEXT_SRC) -o $(TEXT_SV)
 	@echo "✅ SV生成完了: $(TEXT_SV)"
+	cp $(SRC_DIR)/hdmi/text/font_rom.hex $(BUILD_DIR)/hdmi/
 
 # ============================================================
 # HDMI テキスト/アニメーション: Gowin EDA フルフロー
@@ -395,5 +411,50 @@ text-flash:
 # HDMI テキスト: Cm → SV → FS → FPGA 一括実行
 .PHONY: text-apply
 text-apply: text-build text-gowin text-flash
+
+# ============================================================
+# v0.16.0サンプル: PWM呼吸LED / ボタンカウンタ
+# 制約ファイル(.cst/.tcl)は #[sv::pin] + --emit-constraints で自動生成
+# ============================================================
+.PHONY: pwm-build
+pwm-build:
+	@echo "Cm → SystemVerilog 変換中 (PWM呼吸LED)..."
+	@mkdir -p $(BUILD_DIR)/pwm
+	$(CM) compile --target=sv $(SRC_DIR)/pwm/pwm_breath.cm -o $(BUILD_DIR)/pwm/pwm_breath.sv --emit-constraints
+	@echo "Verilator リントチェック中..."
+	$(VERILATOR_LINT) $(BUILD_DIR)/pwm/pwm_breath.sv $(LINT_STUBS)
+	@echo "✅ PWMビルド完了! $(BUILD_DIR)/pwm/pwm_breath.sv (+ .cst / _build.tcl)"
+
+.PHONY: button-build
+button-build:
+	@echo "Cm → SystemVerilog 変換中 (ボタンカウンタ)..."
+	@mkdir -p $(BUILD_DIR)/button
+	$(CM) compile --target=sv $(SRC_DIR)/button/button_counter.cm -o $(BUILD_DIR)/button/button_counter.sv --emit-constraints
+	@echo "Verilator リントチェック中..."
+	$(VERILATOR_LINT) $(BUILD_DIR)/button/button_counter.sv $(LINT_STUBS)
+	@echo "✅ ボタンカウンタビルド完了! $(BUILD_DIR)/button/button_counter.sv (+ .cst / _build.tcl)"
+
+# ============================================================
+# CPU/GPUサンプル: SimpleCPU（16bit命令アキュムレータ型）
+#                  SimpleGPU（矩形フィルラスタライザ）
+# ============================================================
+.PHONY: cpu-build
+cpu-build:
+	@echo "Cm → SystemVerilog 変換中 (SimpleCPU)..."
+	@mkdir -p $(BUILD_DIR)/cpu
+	$(CM) compile --target=sv $(SRC_DIR)/cpu/simple_cpu.cm -o $(BUILD_DIR)/cpu/simple_cpu.sv
+	@echo "Verilator リントチェック中..."
+	$(VERILATOR_LINT) $(BUILD_DIR)/cpu/simple_cpu.sv $(LINT_STUBS)
+	@echo "✅ SimpleCPUビルド完了! $(BUILD_DIR)/cpu/simple_cpu.sv"
+
+.PHONY: gpu-build
+gpu-build:
+	@echo "Cm → SystemVerilog 変換中 (SimpleGPU)..."
+	@mkdir -p $(BUILD_DIR)/gpu
+	$(CM) compile --target=sv $(SRC_DIR)/gpu/simple_gpu.cm -o $(BUILD_DIR)/gpu/simple_gpu.sv
+	@echo "Verilator リントチェック中..."
+	$(VERILATOR_LINT) $(BUILD_DIR)/gpu/simple_gpu.sv $(LINT_STUBS)
+	@echo "✅ SimpleGPUビルド完了! $(BUILD_DIR)/gpu/simple_gpu.sv"
+
 
 

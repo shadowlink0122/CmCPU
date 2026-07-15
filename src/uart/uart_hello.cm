@@ -9,16 +9,24 @@
 // ============================================================
 
 // 定数定義
-const uint CLK_FREQ = 52500000;          // 内蔵OSCクロック (Hz)
-const uint CLKS_PER_BIT = 456;           // 52500000 / 115200 ≈ 455.7
-const uint MSG_LEN = 14;                  // "Hello, FPGA!\r\n"
-const uint STARTUP_DELAY = 5250000;       // 起動後0.1秒待機
+const uint CLK_FREQ = 52500000;  // 内蔵OSCクロック (Hz)
+const uint MSG_LEN = 14;         // "Hello, FPGA!\r\n"
 
-// Gowin 内蔵オシレータ
-extern struct OSC {
-    #[sv::param] int FREQ_DIV = 4;
-    #[output] bool OSCOUT = clk;
-}
+#ifdef TEST
+    // シミュレーション: クロック外部注入・タイミング短縮
+    #[input] posedge clk;
+    const uint CLKS_PER_BIT = 2;
+    const uint STARTUP_DELAY = 2;
+#else
+    const uint CLKS_PER_BIT = 456;       // 52500000 / 115200 ≈ 455.7
+    const uint STARTUP_DELAY = 5250000;  // 起動後0.1秒待機
+
+    // Gowin 内蔵オシレータ
+    extern struct OSC {
+        #[sv::param] int FREQ_DIV = 4;
+        #[output] bool OSCOUT = clk;
+    }
+#end
 
 // 出力ポート
 #[output] bool uart_tx = true;     // UART TX (アイドル = HIGH)
@@ -26,8 +34,10 @@ extern struct OSC {
 #[output] bool led_done = false;   // 送信完了 LED
 
 // 内部信号
-bool clk = false;
-OSC osc_inst;
+#ifndef TEST
+    bool clk = false;
+    OSC osc_inst;
+#end
 
 // ステートマシン変数
 uint phase = 0;
@@ -125,4 +135,22 @@ void process(posedge clk) {
         // 完了: アイドル
         uart_tx = true;
     }
+}
+
+import std::debug::assert;
+
+// テストベンチ: 起動待機→スタートビット→全14バイト送信完了を検証
+#[test]
+void tb() {
+    assert(uart_tx, "idle high at reset");
+    // 起動待機はNBA意味論で3clk（delay_cnt比較は旧値を読む）
+    // + LOAD1clk 後にSTARTビット（Low）が2clk続く
+    step(5);
+    assert(!uart_tx, "start bit is low");
+    assert(led_ready, "sending: led_ready on");
+    // 1バイト = (start+8data+stop) * 2clk = 20clk、14バイト+ロード分を待つ
+    step(320);
+    assert(uart_tx, "idle high after message");
+    assert(led_done, "led_done on after full message");
+    assert(!led_ready, "led_ready off after completion");
 }

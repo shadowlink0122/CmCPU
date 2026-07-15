@@ -23,9 +23,16 @@ module hdmi_text_top;
 #[output] bool tmds_clk_n = false;
 
 // 内部グローバル信号
-bool pixel_clk  = false;
-bool serial_clk = false;
-bool pll_lock    = false;
+#ifdef TEST
+    // シミュレーション: PLLの代わりにピクセルクロックを外部注入
+    #[input] posedge pixel_clk;
+    bool serial_clk = false;
+    bool pll_lock = true;
+#else
+    bool pixel_clk  = false;
+    bool serial_clk = false;
+    bool pll_lock    = false;
+#end
 
 // サブモジュールのインポート (不要な冗長インポートを削減)
 import ./pll/pll;
@@ -38,17 +45,47 @@ import ./text/animation_ctrl;
 #[output] assign bool led_ready = anim_ready;
 #[output] assign bool led_done = anim_done;
 
-// PLLインスタンス
-PLL pll_inst;
+#ifndef TEST
+    // PLLインスタンス
+    PLL pll_inst;
 
-// OSER10 10:1 シリアライザインスタンス
-OSER10_R oser_r;
-OSER10_G oser_g;
-OSER10_B oser_b;
-OSER10_CK oser_ck;
+    // OSER10 10:1 シリアライザインスタンス
+    OSER10_R oser_r;
+    OSER10_G oser_g;
+    OSER10_B oser_b;
+    OSER10_CK oser_ck;
 
-// TLVDS_OBUF 差動バッファインスタンス
-TLVDS_D2 tlvds_d2;
-TLVDS_D1 tlvds_d1;
-TLVDS_D0 tlvds_d0;
-TLVDS_CK tlvds_ck;
+    // TLVDS_OBUF 差動バッファインスタンス
+    TLVDS_D2 tlvds_d2;
+    TLVDS_D1 tlvds_d1;
+    TLVDS_D0 tlvds_d0;
+    TLVDS_CK tlvds_ck;
+#end
+
+import std::debug::assert;
+
+// シミュレーション検証用: TMDS符号を観測ポートへ写す
+#[output] uint tmds_r_o = 0;
+#[output] uint tmds_b_o = 0;
+
+async void sim_mirror(posedge pixel_clk) {
+    tmds_r_o = tmds_r as uint;
+    tmds_b_o = tmds_b as uint;
+}
+
+// 統合テスト: timing→テキスト描画→encoder パイプライン全体を検証
+#[test]
+void tb() {
+    // アクティブ領域（白背景描画中）: データ符号
+    step(10);
+    assert(tmds_r_o != 852, "active: R is data code");
+
+    // ブランキング: コントロールトークン
+    step(638);
+    assert(tmds_r_o == 852, "blank: R ctrl token");
+    assert(tmds_b_o == 683, "blank: B ctrl {vs=1,hs=1}");
+
+    // HSYNCパルス中
+    step(52);
+    assert(tmds_b_o == 340, "hsync: B ctrl {vs=1,hs=0}");
+}

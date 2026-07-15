@@ -2,10 +2,7 @@
 
 ## 目的
 
-Tang Console 138K (GW5AST-LV138PG484A) 上で、HDMI 経由のテキスト表示回路を
-Cm 言語 (SystemVerilog バックエンド) で実装する。
-ゲームボーイカラー (GBC) の画面仕様をベースとした表示設定を実現し、
-"Hello World" のアニメーション出力をデモとして動作させる。
+Tang Console 138K (GW5AST-LV138PG484A) 上で、HDMI 経由のテキスト表示回路をCm 言語 (SystemVerilog バックエンド) で実装する。ゲームボーイカラー (GBC) の画面仕様をベースとした表示設定を実現し、"Hello World" のアニメーション出力をデモとして動作させる。
 
 ## 要件
 

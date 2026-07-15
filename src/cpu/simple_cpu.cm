@@ -1,0 +1,113 @@
+//! platform: sv
+
+// ============================================================
+// SimpleCPU: 16bit命令アキュムレータ型CPUのサンプル
+// ============================================================
+// ターゲット: Sipeed Tang Console 138K (GW5AST-LV138PG484A)
+// クロック: Gowin内蔵OSC (210MHz / FREQ_DIV = 52.5MHz)
+//
+// 命令フォーマット: [15:12] オペコード / [7:0] 即値
+//   0x0 NOP          何もしない
+//   0x1 LDI  imm     acc = imm
+//   0x2 ADD  imm     acc = acc + imm
+//   0x3 SUB  imm     acc = acc - imm
+//   0x4 LDC  imm     cnt = imm（ループカウンタ）
+//   0x5 DEC          cnt = cnt - 1
+//   0x6 ADDC         acc = acc + cnt
+//   0x7 BNZ  imm     cnt != 0 なら pc = imm
+//   0x8 OUT          result_out = acc（下位8bit）
+//   0xF HALT         停止
+//
+// サンプルプログラムは 10+9+...+1 = 55 を計算して出力する
+// ============================================================
+
+#ifdef TEST
+    // シミュレーション: クロックを外部注入
+    #[input] posedge clk;
+#else
+    // Gowin 内蔵オシレータの外部モジュール定義
+    extern struct OSC {
+        #[sv::param] int FREQ_DIV = 4;
+        #[output] bool OSCOUT = clk;
+    }
+#end
+
+// 出力ポート: 計算結果（下位8bit）と停止表示
+#[output] utiny result_out = 0;
+#[output] bool halt_led = false;
+
+// プログラムROM（合成時はROM推論される）
+// 10+9+...+1 の総和を計算するプログラム
+uint[8] prog_rom = [
+    0x1000,  // 0: LDI 0   ; acc = 0
+    0x400A,  // 1: LDC 10  ; cnt = 10
+    0x6000,  // 2: ADDC    ; acc += cnt   <- ループ先頭
+    0x5000,  // 3: DEC     ; cnt -= 1
+    0x7002,  // 4: BNZ 2   ; cnt != 0 なら 2 へ
+    0x8000,  // 5: OUT     ; result_out = acc
+    0xF000,  // 6: HALT    ; 停止
+    0x0000   // 7: NOP     ; パディング
+];
+
+// CPU状態レジスタ
+uint pc = 0;        // プログラムカウンタ
+uint acc = 0;       // アキュムレータ
+uint cnt = 0;       // ループカウンタ
+bool halted = false;
+
+#ifndef TEST
+    bool clk = false;
+    OSC osc_inst;
+#end
+
+// フェッチ・デコード・実行（1命令/サイクル）
+// 注意: posedge関数内の状態変数は前サイクル値が読まれ、代入は
+// 次サイクル反映（NBA）。pcへの二重代入は後者（分岐）が勝つ
+void cpu(posedge clk) {
+    if (!halted) {
+        uint instr = prog_rom[pc & 7];
+        uint op = (instr >> 12) & 15;
+        uint imm = instr & 255;
+
+        // 既定の次アドレス（分岐命令はこの後で上書きする）
+        pc = pc + 1;
+
+        match (op) {
+            0x1 => { acc = imm; }
+            0x2 => { acc = acc + imm; }
+            0x3 => { acc = acc - imm; }
+            0x4 => { cnt = imm; }
+            0x5 => { cnt = cnt - 1; }
+            0x6 => { acc = acc + cnt; }
+            0x7 => {
+                if (cnt != 0) {
+                    pc = imm;
+                }
+            }
+            0x8 => { result_out = (acc & 255) as utiny; }
+            0xF => {
+                halted = true;
+                halt_led = true;
+            }
+            _ => {}
+        }
+    }
+}
+
+import std::debug::assert;
+
+// テストベンチ: 総和プログラムの実行結果を検証
+// 実行サイクル数: LDI+LDC(2) + ループ3命令×10周(30) + OUT+HALT(2) = 34
+#[test]
+void tb() {
+    step(10);
+    assert(!halt_led, "still running mid-program");
+    step(30);
+    assert(halt_led, "program halted");
+    // 内部レジスタも階層参照（dut.halted）で直接検証できる
+    assert(halted, "halted register readable via hierarchy");
+    assert(result_out == 55, "sum 1..10 == 55");
+    // 停止後は状態が変化しない
+    step(10);
+    assert(result_out == 55, "result stable after halt");
+}

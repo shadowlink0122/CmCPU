@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "feature/**"]
+  pull_request:
+
+env:
+  LLVM_VERSION: "17"
+
+jobs:
+  # ========================================
+  # Cmビルド → 全回路のリント → シミュレーションテスト
+  # ========================================
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install LLVM
+        run: |
+          if ! command -v llvm-config-${{ env.LLVM_VERSION }} >/dev/null; then
+            wget https://apt.llvm.org/llvm.sh
+            chmod +x llvm.sh
+            sudo ./llvm.sh ${{ env.LLVM_VERSION }}
+          fi
+          sudo apt-get install -y llvm-${{ env.LLVM_VERSION }}-dev clang-${{ env.LLVM_VERSION }} libssl-dev
+          echo "/usr/lib/llvm-${{ env.LLVM_VERSION }}/bin" >> $GITHUB_PATH
+          echo "LLVM_DIR=/usr/lib/llvm-${{ env.LLVM_VERSION }}/lib/cmake/llvm" >> $GITHUB_ENV
+
+      - name: Install simulation tools
+        run: sudo apt-get install -y iverilog verilator
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: cmcpu-cm-build
+
+      - name: Build Cm compiler
+        working-directory: Cm
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCM_USE_LLVM=ON \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          cmake --build build -j$(nproc) --target cm
+
+      - name: Lint all circuits (SV generation + verilator)
+        run: |
+          make build
+          make pwm-build
+          make button-build
+          make uart-build
+          make btn-build
+          make hdmi-build
+          make text-build
+          make cpu-build
+          make gpu-build
+
+      - name: Run circuit simulation tests
+        run: make test

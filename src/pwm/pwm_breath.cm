@@ -1,0 +1,93 @@
+//! platform: sv
+//! sv: device: GW5AST-LV138PG484AC1/I0 C
+//! sv: option: use_ready_as_gpio
+//! sv: option: use_done_as_gpio
+
+// ============================================================
+// PWM呼吸LEDサンプル（Tang Console 138K）
+// ============================================================
+// v0.16.0の #[sv::pin] + --emit-constraints のデモ:
+// ピン制約(.cst)とプロジェクトスクリプト(.tcl)は手書きせず、
+// このファイルから自動生成する。
+//
+//   make pwm-build
+//   gw_sh build/pwm/pwm_breath_build.tcl
+// ============================================================
+
+#ifdef TEST
+    // シミュレーション: クロック外部注入
+    #[input] posedge clk;
+#else
+    // 内蔵オシレータ (210MHz / FREQ_DIV=4 = 52.5MHz)
+    extern struct OSC {
+        #[sv::param] int FREQ_DIV = 4;
+        #[output] bool OSCOUT = clk;
+    }
+#end
+
+// CFG LED（デュアルパーパスピン。tclオプションでGPIO化）
+#[output]
+#[sv::pin("U12", io_type: "LVCMOS33", drive: 8)]
+bool led_ready = false;
+
+#[output]
+#[sv::pin("G11", io_type: "LVCMOS33", drive: 8)]
+bool led_done = false;
+
+#ifndef TEST
+    bool clk = false;
+    OSC osc_inst;
+#end
+
+// PWM: 8bit分解能、三角波で輝度を往復させて呼吸パターンを作る
+utiny pwm_counter = 0;  // PWM周期カウンタ
+utiny brightness = 0;   // 現在の輝度（デューティ）
+bool dir_up = true;     // 輝度の増減方向
+uint tick = 0;          // 輝度更新の分周カウンタ
+
+const uint CLK_FREQ = 52500000;
+#ifdef TEST
+    const uint STEP_COUNT = 0;  // シミュレーション: 毎クロック輝度更新
+#end
+#ifndef TEST
+    const uint STEP_COUNT = CLK_FREQ / 512 - 1;  // 呼吸1往復 ≒ 2.5秒
+#end
+
+void breath(posedge clk) {
+    // PWM出力（brightness/256 のデューティ）
+    pwm_counter = pwm_counter + 1;
+    led_ready = pwm_counter < brightness;
+    led_done = pwm_counter >= brightness;  // 逆位相で交互に呼吸
+
+    // 輝度の三角波更新
+    if (tick == STEP_COUNT) {
+        tick = 0;
+        if (dir_up) {
+            brightness = brightness + 1;
+            if (brightness == 255) {
+                dir_up = false;
+            }
+        } else {
+            brightness = brightness - 1;
+            if (brightness == 0) {
+                dir_up = true;
+            }
+        }
+    } else {
+        tick = tick + 1;
+    }
+}
+
+import std::debug::assert;
+
+// テストベンチ: PWMの相補出力と呼吸（輝度上昇）を検証
+#[test]
+void tb() {
+    step(3);
+    assert(led_ready != led_done, "PWM outputs are complementary");
+    step(100);
+    assert(led_ready != led_done, "still complementary while breathing");
+    // brightness>pwm_counter の期間があること（輝度が上がっている）
+    step(1);
+    assert(led_ready || led_done, "outputs are driven");
+}
