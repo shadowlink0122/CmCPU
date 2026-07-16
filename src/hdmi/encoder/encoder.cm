@@ -116,21 +116,25 @@ export async void tmds_encode(posedge pixel_clk) {
                     if (r_n1_qm > 4) {
                         // ケース B: cnt>0, N1>N0 → データ反転
                         tmds_r = ((r_qm ^ 255) & 255) | (r_qm & 256) | (1 << 9);
-                        cnt_r = cnt_r + ((r_qm >> 8) & 1) + ((r_qm >> 8) & 1) + 8 - r_n1_qm - r_n1_qm;
+                        cnt_r = cnt_r + ((r_qm >> 8) & 1) + ((r_qm >> 8) & 1) + 8 - r_n1_qm
+                            - r_n1_qm;
                     } else {
                         // ケース C: cnt>0, N1<N0 → データそのまま
                         tmds_r = r_qm & 511;
-                        cnt_r = cnt_r + ((r_qm >> 8) & 1) + ((r_qm >> 8) & 1) + r_n1_qm + r_n1_qm - 10;
+                        cnt_r = cnt_r + ((r_qm >> 8) & 1) + ((r_qm >> 8) & 1) + r_n1_qm + r_n1_qm
+                            - 10;
                     }
                 } else {
                     if (r_n1_qm < 4) {
                         // ケース B: cnt<0, N0>N1 → データ反転
                         tmds_r = ((r_qm ^ 255) & 255) | (r_qm & 256) | (1 << 9);
-                        cnt_r = cnt_r + ((r_qm >> 8) & 1) + ((r_qm >> 8) & 1) + 8 - r_n1_qm - r_n1_qm;
+                        cnt_r = cnt_r + ((r_qm >> 8) & 1) + ((r_qm >> 8) & 1) + 8 - r_n1_qm
+                            - r_n1_qm;
                     } else {
                         // ケース C: cnt<0, N1>N0 → データそのまま
                         tmds_r = r_qm & 511;
-                        cnt_r = cnt_r + ((r_qm >> 8) & 1) + ((r_qm >> 8) & 1) + r_n1_qm + r_n1_qm - 10;
+                        cnt_r = cnt_r + ((r_qm >> 8) & 1) + ((r_qm >> 8) & 1) + r_n1_qm + r_n1_qm
+                            - 10;
                     }
                 }
             }
@@ -164,18 +168,22 @@ export async void tmds_encode(posedge pixel_clk) {
                 if (cnt_g > 0) {
                     if (g_n1_qm > 4) {
                         tmds_g = ((g_qm ^ 255) & 255) | (g_qm & 256) | (1 << 9);
-                        cnt_g = cnt_g + ((g_qm >> 8) & 1) + ((g_qm >> 8) & 1) + 8 - g_n1_qm - g_n1_qm;
+                        cnt_g = cnt_g + ((g_qm >> 8) & 1) + ((g_qm >> 8) & 1) + 8 - g_n1_qm
+                            - g_n1_qm;
                     } else {
                         tmds_g = g_qm & 511;
-                        cnt_g = cnt_g + ((g_qm >> 8) & 1) + ((g_qm >> 8) & 1) + g_n1_qm + g_n1_qm - 10;
+                        cnt_g = cnt_g + ((g_qm >> 8) & 1) + ((g_qm >> 8) & 1) + g_n1_qm + g_n1_qm
+                            - 10;
                     }
                 } else {
                     if (g_n1_qm < 4) {
                         tmds_g = ((g_qm ^ 255) & 255) | (g_qm & 256) | (1 << 9);
-                        cnt_g = cnt_g + ((g_qm >> 8) & 1) + ((g_qm >> 8) & 1) + 8 - g_n1_qm - g_n1_qm;
+                        cnt_g = cnt_g + ((g_qm >> 8) & 1) + ((g_qm >> 8) & 1) + 8 - g_n1_qm
+                            - g_n1_qm;
                     } else {
                         tmds_g = g_qm & 511;
-                        cnt_g = cnt_g + ((g_qm >> 8) & 1) + ((g_qm >> 8) & 1) + g_n1_qm + g_n1_qm - 10;
+                        cnt_g = cnt_g + ((g_qm >> 8) & 1) + ((g_qm >> 8) & 1) + g_n1_qm + g_n1_qm
+                            - 10;
                     }
                 }
             }
@@ -208,18 +216,22 @@ export async void tmds_encode(posedge pixel_clk) {
                 if (cnt_b > 0) {
                     if (b_n1_qm > 4) {
                         tmds_b = ((b_qm ^ 255) & 255) | (b_qm & 256) | (1 << 9);
-                        cnt_b = cnt_b + ((b_qm >> 8) & 1) + ((b_qm >> 8) & 1) + 8 - b_n1_qm - b_n1_qm;
+                        cnt_b = cnt_b + ((b_qm >> 8) & 1) + ((b_qm >> 8) & 1) + 8 - b_n1_qm
+                            - b_n1_qm;
                     } else {
                         tmds_b = b_qm & 511;
-                        cnt_b = cnt_b + ((b_qm >> 8) & 1) + ((b_qm >> 8) & 1) + b_n1_qm + b_n1_qm - 10;
+                        cnt_b = cnt_b + ((b_qm >> 8) & 1) + ((b_qm >> 8) & 1) + b_n1_qm + b_n1_qm
+                            - 10;
                     }
                 } else {
                     if (b_n1_qm < 4) {
                         tmds_b = ((b_qm ^ 255) & 255) | (b_qm & 256) | (1 << 9);
-                        cnt_b = cnt_b + ((b_qm >> 8) & 1) + ((b_qm >> 8) & 1) + 8 - b_n1_qm - b_n1_qm;
+                        cnt_b = cnt_b + ((b_qm >> 8) & 1) + ((b_qm >> 8) & 1) + 8 - b_n1_qm
+                            - b_n1_qm;
                     } else {
                         tmds_b = b_qm & 511;
-                        cnt_b = cnt_b + ((b_qm >> 8) & 1) + ((b_qm >> 8) & 1) + b_n1_qm + b_n1_qm - 10;
+                        cnt_b = cnt_b + ((b_qm >> 8) & 1) + ((b_qm >> 8) & 1) + b_n1_qm + b_n1_qm
+                            - 10;
                     }
                 }
             }

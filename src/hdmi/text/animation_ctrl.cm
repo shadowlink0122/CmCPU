@@ -184,7 +184,8 @@ export async void process_anim(posedge pixel_clk) {
                 if (row_idx <= 38) {
                     // グリッドデータ行の描画 (37行表示)
                     utiny r = row_idx - 2;
-                    text_addr = (((16 + r as ushort) * (TEXT_COLS as ushort)) + (write_cnt as ushort)) as ushort;
+                    text_addr = (((16 + r as ushort) * (TEXT_COLS as ushort))
+                        + (write_cnt as ushort)) as ushort;
                     text_char = get_table_char(r, write_cnt);
                     text_we = true;
                     // 1行は80文字 (インデックス0..79)。タイトル行と同様に加算前の値で行末を判定する

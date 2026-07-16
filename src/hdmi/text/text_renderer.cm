@@ -59,7 +59,8 @@ export async void render_process(posedge pixel_clk) {
 
     // バッファアドレス計算 (Stage 1 更新用)
     const ushort T_COLS = TEXT_COLS as ushort;
-    ushort calc_addr = ((gbc_y >> LOG2_FONT_SIZE) as ushort) * T_COLS + ((gbc_x >> LOG2_FONT_SIZE) as ushort);
+    ushort calc_addr = ((gbc_y >> LOG2_FONT_SIZE) as ushort) * T_COLS
+        + ((gbc_x >> LOG2_FONT_SIZE) as ushort);
     if (calc_addr < TEXT_BUF_SIZE as ushort) {
         char_code = text_buf[calc_addr];
     } else {
