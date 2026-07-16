@@ -1,0 +1,27 @@
+module adder;
+
+// ============================================================
+// 基本回路: 全加算器とリップルキャリー加算器
+// ============================================================
+// CPUの算術演算はすべてここの全加算器の合成で構成する
+// ============================================================
+
+// 全加算器: 1bitの加算 (返り値 bit1=キャリー, bit0=和)
+export uint full_adder(uint a, uint b, uint cin) {
+    uint s = (a ^ b ^ cin) & 1;
+    uint c = ((a & b) | (cin & (a ^ b))) & 1;
+    return (c << 1) | s;
+}
+
+// 32bitリップルキャリー加算器: 全加算器を32段連結する
+// cin=1 と反転入力の組み合わせで減算(2の補数)にも使う
+export uint add32(uint a, uint b, uint cin) {
+    uint result = 0;
+    uint carry = cin & 1;
+    for (uint i = 0; i < 32; i = i + 1) {
+        uint fa = full_adder((a >> i) & 1, (b >> i) & 1, carry);
+        result = result | ((fa & 1) << i);
+        carry = (fa >> 1) & 1;
+    }
+    return result;
+}

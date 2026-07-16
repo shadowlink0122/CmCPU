@@ -4,30 +4,33 @@
 
 Cm言語のSVバックエンドで「計算する回路」を書くサンプルとして、アキュムレータ型CPU（`src/cpu/simple_cpu.cm`）と矩形フィルGPU（`src/gpu/simple_gpu.cm`）を追加した。どちらも `#[test]` によるシミュレーションテスト付きで、`make test` の自動発見対象。
 
-## SimpleCPU（src/cpu/simple_cpu.cm）
+## SimpleCPU（src/cpu/）
 
-16bit命令・1命令/サイクルのアキュムレータ型CPU。プログラムROM（`uint[8]` 配列、合成時はROM推論）上の総和プログラム（10+9+...+1 = 55）を実行し、結果を `result_out` に出力して停止する。
+8レジスタ・16bit命令のロード/ストア型CPU。C言語風の簡単なプログラミング言語のコンパイル対象にできる基本命令セット（算術論理・ロード/ストア・pc相対分岐・JAL/JRによる関数呼び出し・MMIO出力）を持つ。
+命令セットと呼び出し規約の詳細は [SimpleCPU ISA](cpu_isa.md) を参照。
 
-### 命令セット
+デモプログラム（`program/demo_program.cm`）は「1..10の総和を関数 `twice()` で2倍してMMIOへ出力する」C風コードを手動コンパイルしたもので、実行結果110を `result_out` で検証する。
 
-| opcode | ニーモニック | 動作 |
-|---|---|---|
-| 0x0 | NOP | 何もしない |
-| 0x1 | LDI imm | acc = imm |
-| 0x2 | ADD imm | acc += imm |
-| 0x3 | SUB imm | acc -= imm |
-| 0x4 | LDC imm | cnt = imm |
-| 0x5 | DEC | cnt -= 1 |
-| 0x6 | ADDC | acc += cnt |
-| 0x7 | BNZ imm | cnt != 0 なら pc = imm |
-| 0x8 | OUT | result_out = acc下位8bit |
-| 0xF | HALT | 停止（halt_led点灯） |
+### 構成（基本回路のファイル分割）
+
+| ファイル | 内容 |
+|---|---|
+| `core/adder.cm` | 全加算器と32bitリップルキャリー加算器 |
+| `core/alu.cm` | ALU（加減算は全加算器ベース、減算は2の補数） |
+| `core/decoder.cm` | 命令デコーダとオペコード定義 |
+| `core/register_file.cm` | レジスタファイル（r0固定0） |
+| `core/core.cm` | フェッチ・デコード・実行コア |
+| `memory/ram.cm` | データRAM（256ワード）とMMIO出力（0xFF） |
+| `program/demo_program.cm` | デモプログラム（手書きアセンブリ） |
+| `simple_cpu.cm` | トップモジュールと統合テスト |
+| `core/alu_test.cm` | 基本回路の検証ラッパー |
 
 ### 実装の要点
 
-- デコードは `match (op)` で記述（v0.16.0のmatch→casez変換のデモ）
-- posedge関数内はNBA意味論のため、`pc = pc + 1` を先に書き、分岐命令が後から `pc = imm` で上書きする（後の代入が勝つ）
-- ローカル変数（`instr`/`op`/`imm`）は即時代入なので同サイクル内で使える
+- 算術演算は全加算器（`full_adder`）を32段連結したリップルキャリー加算器で構成し、減算は2の補数（`a + ~b + 1`）で行う
+- posedge関数内はNBA意味論のため、`pc = next_pc` を先に書き、分岐・ジャンプ命令が後から上書きする（後の代入が勝つ）
+- レジスタ書き込みは全てコアの実行プロセスが行い、r0への書き込みは `if (rd != 0)` で抑止、読み出しは `rf_read()` で固定0を保証する
+- exportする配列（`prog_rom`）の初期化子は1行で書く必要がある（プリプロセッサのexport再宣言が複数行初期化子に未対応。Cm側の既知の問題として報告済み）
 
 ## SimpleGPU（src/gpu/simple_gpu.cm）
 

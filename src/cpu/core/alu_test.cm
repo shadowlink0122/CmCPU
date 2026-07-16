@@ -1,0 +1,50 @@
+//! platform: sv
+module alu_test;
+
+// ============================================================
+// 基本回路の検証ラッパー: 全加算器・加算器・ALU
+// ============================================================
+
+#[input] posedge clk;
+
+import ./adder;
+import ./alu;
+
+#[output] uint fa_o = 0;
+#[output] uint add_o = 0;
+#[output] uint wrap_o = 0;
+#[output] uint sub_o = 0;
+#[output] uint and_o = 0;
+#[output] uint or_o = 0;
+#[output] uint xor_o = 0;
+#[output] uint shl_o = 0;
+#[output] uint shr_o = 0;
+
+async void drive(posedge clk) {
+    // 全加算器の真理値表の代表点: (1,1,1)->{c=1,s=1}=3 / (1,0,0)->{c=0,s=1}=1
+    fa_o = (full_adder(1, 1, 1) << 4) | full_adder(1, 0, 0);
+    add_o = add32(100, 55, 0);
+    wrap_o = add32(0xFFFFFFFF, 1, 0);      // 桁あふれは32bitで折り返す
+    sub_o = alu_exec(2, 0, 100, 45);
+    and_o = alu_exec(3, 0, 0xF0F0, 0xFF00);
+    or_o = alu_exec(4, 0, 0xF0F0, 0x0F0F);
+    xor_o = alu_exec(5, 0, 0xFF00, 0x0FF0);
+    shl_o = alu_exec(6, FN_SHL, 21, 0);
+    shr_o = alu_exec(6, FN_SHR, 84, 0);
+}
+
+import std::debug::assert;
+
+#[test]
+void tb() {
+    step(2);
+    assert(fa_o == 0x31, "full adder (1,1,1)=3 / (1,0,0)=1");
+    assert(add_o == 155, "add32 100+55");
+    assert(wrap_o == 0, "add32 wraps at 32bit");
+    assert(sub_o == 55, "sub via two's complement");
+    assert(and_o == 0xF000, "and");
+    assert(or_o == 0xFFFF, "or");
+    assert(xor_o == 0xF0F0, "xor");
+    assert(shl_o == 42, "shl 21<<1");
+    assert(shr_o == 42, "shr 84>>1");
+}
