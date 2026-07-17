@@ -54,8 +54,8 @@ IDLE →（start）→ CLEAR（128px消去）→ FILL（w×h走査）→ DONE �
 ## ビルド・テスト
 
 ```bash
-make cpu-build   # SV生成 + Verilatorリント
-make gpu-build
+make build-cpu   # SV生成 + Verilatorリント
+make build-gpu
 make test        # 全回路テスト（cpu/gpuも自動発見される）
 ```
 

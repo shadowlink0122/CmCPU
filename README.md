@@ -32,27 +32,24 @@ git submodule update --init --recursive
 # 2. Cmコンパイラのビルド
 make build-cm
 
-# 3. Cm → SystemVerilog 変換
-make compile-sv
+# 3. Cm → SystemVerilog 変換 + リントチェック
+make build-blink
 
-# 4. リントチェック
-make lint
-
-# 5. FPGAへの書き込み（Gowin EDAでビットストリーム生成後）
-make flash
+# 4. FPGAへの書き込み（Gowin EDAでビットストリーム生成後）
+make flash-blink
 ```
 
 ## サンプル一覧
 
 | サンプル | ビルド | 内容 |
 |---|---|---|
-| blink | `make build` | Lチカ（内蔵OSC + CFG LED、手書き.cst/.tclの従来フロー） |
-| pwm | `make pwm-build` | **PWM呼吸LED** — `#[sv::pin]` + `--emit-constraints` で .cst/.tcl を自動生成（v0.16.0） |
-| button | `make button-build` | **ボタンカウンタ** — `#[sv::sync]` によるCDC 2FF同期 + デバウンス + エッジ検出（v0.16.0） |
-| uart | `make uart-build` | UART送信（"Hello" 送出） |
-| hdmi | `make hdmi-build` / `make text-build` | HDMI出力（カラーバー / テキスト表示。フォントROMはBRAM + $readmemh） |
-| cpu | `make cpu-build` | **SimpleCPU** — 16bit命令アキュムレータ型CPU（ROM上の総和プログラムを実行、matchデコード） |
-| gpu | `make gpu-build` | **SimpleGPU** — 矩形フィルラスタライザ（クリア→フィルFSM + デュアルポートRAM読み出し） |
+| blink | `make build-blink` | Lチカ（内蔵OSC + CFG LED、手書き.cst/.tclの従来フロー） |
+| pwm | `make build-pwm` | **PWM呼吸LED** — `#[sv::pin]` + `--emit-constraints` で .cst/.tcl を自動生成（v0.16.0） |
+| button | `make build-button` | **ボタンカウンタ** — `#[sv::sync]` によるCDC 2FF同期 + デバウンス + エッジ検出（v0.16.0） |
+| uart | `make build-uart-hello` | UART送信（"Hello" 送出） |
+| hdmi | `make build-hdmi-colorbar` / `make build-hdmi-text` | HDMI出力（カラーバー / テキスト表示。フォントROMはBRAM + $readmemh） |
+| cpu | `make build-cpu` | **SimpleCPU** — 16bit命令アキュムレータ型CPU（ROM上の総和プログラムを実行、matchデコード） |
+| gpu | `make build-gpu` | **SimpleGPU** — 矩形フィルラスタライザ（クリア→フィルFSM + デュアルポートRAM読み出し） |
 
 pwm / button は制約ファイルを手書きしません。生成された
 `build/<name>/<name>_build.tcl` を `gw_sh` に渡すだけで合成まで実行できます。
@@ -95,7 +92,7 @@ iverilog + vvp で実行します。テストモードでは定義 `TEST` が自
 
 PLL / OSER10 / TLVDS_OBUF はGowinベンダプリミティブのため
 シミュレーション対象外です（`#ifdef TEST` で除外し、実機フローと
-verilatorリントで検証）。合成用ビルド（`make build` 等）はテストモードでは
+verilatorリントで検証）。合成用ビルド（`make build-<対象>`）はテストモードでは
 ないため `#[test]` 関数ごと除去され、影響を受けません
 （内蔵OSC・実タイミング定数のまま）。
 

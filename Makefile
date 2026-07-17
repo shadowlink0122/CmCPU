@@ -56,39 +56,36 @@ GOWIN_PACK := $(HOME)/Library/Python/3.14/bin/gowin_pack
 # ============================================================
 .PHONY: help
 help:
-	@echo "CmCPU プロジェクト - Make コマンド"
+	@echo "CmCPU プロジェクト - Make コマンド（動詞-対象 で統一）"
 	@echo ""
 	@echo "テスト:"
-	@echo "  make test         - 全回路のシミュレーションテスト実行"
+	@echo "  make test          - 全回路のシミュレーションテスト実行"
+	@echo "  make test-<対象>   - フォルダ単位のテスト"
+	@echo "                       対象: blink / pwm / button / uart / cpu / gpu /"
+	@echo "                             hdmi-colorbar / hdmi-text / modules"
 	@echo ""
-	@echo "Lチカ (blink):"
-	@echo "  make build        - Cm → SV 変換 + リントチェック"
-	@echo "  make gowin        - Gowin EDA フルフロー (SV → FS)"
-	@echo "  make flash        - FPGAに書き込み (.fs)"
-	@echo "  make apply        - build + gowin + flash 一括実行"
+	@echo "ビルド (Cm → SV 変換 + Verilatorリント):"
+	@echo "  make build-<対象>  - blink / pwm / button / uart-hello / uart-button /"
+	@echo "                       hdmi-colorbar / hdmi-text / cpu / gpu"
 	@echo ""
-	@echo "UART Hello:"
-	@echo "  make uart-build   - Cm → SV 変換 + リントチェック"
-	@echo "  make uart-gowin   - Gowin EDA フルフロー (SV → FS)"
-	@echo "  make uart-flash   - FPGAに書き込み (.fs)"
-	@echo "  make uart-apply   - build + gowin + flash 一括実行"
+	@echo "合成・書き込み (Gowin EDA。対象: blink / uart-hello / uart-button / hdmi-colorbar / hdmi-text):"
+	@echo "  make gowin-<対象>  - 合成〜ビットストリーム生成 (SV → FS)"
+	@echo "  make flash-<対象>  - FPGAに書き込み (.fs)"
+	@echo "  make apply-<対象>  - build + gowin + flash 一括実行"
 	@echo ""
-	@echo "HDMI カラーバー:"
-	@echo "  make hdmi-build   - Cm → SV 変換 + ポスト処理"
-	@echo "  make hdmi-gowin   - Gowin EDA フルフロー (SV → FS)"
-	@echo "  make hdmi-flash   - FPGAに書き込み (.fs)"
-	@echo "  make hdmi-apply   - build + gowin + flash 一括実行"
+	@echo "OSSフロー (blinkのみ・実験的):"
+	@echo "  make synth / pnr / bitstream / apply-oss / flash-sram"
 	@echo ""
 	@echo "共通:"
-	@echo "  make build-cm     - Cmコンパイラ自体をビルド"
-	@echo "  make clean        - ビルド出力をクリーン"
-	@echo "  make setup        - 開発環境セットアップ (macOS)"
+	@echo "  make build-cm      - Cmコンパイラ自体をビルド"
+	@echo "  make clean         - ビルド出力をクリーン"
+	@echo "  make setup         - 開発環境セットアップ (macOS)"
 
 # ============================================================
 # Cm ビルド: Cm → SV 変換 + リントチェック
 # ============================================================
-.PHONY: build
-build: $(BLINK_SV)
+.PHONY: build-blink
+build-blink: $(BLINK_SV)
 	@echo "Verilator リントチェック中..."
 	$(VERILATOR_LINT) $(BLINK_SV) $(LINT_STUBS)
 	@echo ""
@@ -114,8 +111,8 @@ build-cm:
 # ============================================================
 # FPGA 合成フロー (Gowin EDA 公式): SV → FS
 # ============================================================
-.PHONY: gowin
-gowin: $(BLINK_SV)
+.PHONY: gowin-blink
+gowin-blink: $(BLINK_SV)
 	@echo "Gowin EDA で合成・配置配線・ビットストリーム生成中..."
 	DYLD_LIBRARY_PATH=$(GW_LIB) DYLD_FRAMEWORK_PATH=$(GW_LIB) $(GW_SH) $(GOWIN_TCL)
 	@echo ""
@@ -130,8 +127,8 @@ gowin: $(BLINK_SV)
 #       pnr ステップは現在動作しません。
 
 # 統合ターゲット: make appy = synth + pnr + bitstream
-.PHONY: appy
-appy: synth pnr bitstream
+.PHONY: apply-oss
+apply-oss: synth pnr bitstream
 	@echo ""
 	@echo "=========================================="
 	@echo "✅ FPGA ビルド完了! $(BLINK_FS)"
@@ -168,15 +165,15 @@ $(BLINK_FS): $(BLINK_PNR)
 # ============================================================
 # FPGA書き込み
 # ============================================================
-.PHONY: flash
-flash:
+.PHONY: flash-blink
+flash-blink:
 	@echo "FPGAに書き込み中 (Flash)..."
 	openFPGALoader -b $(BOARD) $(BLINK_FS)
 	@echo "✅ 書き込み完了!"
 
 # Cm → SV → FS → FPGA 一括実行
-.PHONY: apply
-apply: build gowin flash
+.PHONY: apply-blink
+apply-blink: build-blink gowin-blink flash-blink
 
 .PHONY: flash-sram
 flash-sram:
@@ -215,6 +212,11 @@ setup:
 test:
 	@./scripts/test_circuits.sh
 
+# フォルダ単位のテスト（例: make test-cpu → src/cpu 配下を実行）
+# ターゲット名のハイフンはフォルダ名のアンダースコアに対応する（test-hdmi-colorbar → src/hdmi_colorbar）
+test-%:
+	@./scripts/test_circuits.sh "src/$(subst -,_,$*)"
+
 clean:
 	@echo "ビルド出力をクリーン中..."
 	@rm -rf $(BUILD_DIR)
@@ -223,8 +225,8 @@ clean:
 # ============================================================
 # UART Hello: Cm → SV + リントチェック
 # ============================================================
-.PHONY: uart-build
-uart-build: $(UART_SV)
+.PHONY: build-uart-hello
+build-uart-hello: $(UART_SV)
 	@echo "Verilator リントチェック中..."
 	$(VERILATOR_LINT) $(UART_SV) $(LINT_STUBS)
 	@echo ""
@@ -241,8 +243,8 @@ $(UART_SV): $(UART_SRC)
 # ============================================================
 # UART Hello: Gowin EDA フルフロー
 # ============================================================
-.PHONY: uart-gowin
-uart-gowin: $(UART_SV)
+.PHONY: gowin-uart-hello
+gowin-uart-hello: $(UART_SV)
 	@echo "Gowin EDA で合成・配置配線・ビットストリーム生成中 (UART)..."
 	DYLD_LIBRARY_PATH=$(GW_LIB) DYLD_FRAMEWORK_PATH=$(GW_LIB) $(GW_SH) $(UART_TCL)
 	@echo ""
@@ -253,15 +255,15 @@ uart-gowin: $(UART_SV)
 # ============================================================
 # UART Hello: FPGA書き込み
 # ============================================================
-.PHONY: uart-flash
-uart-flash:
+.PHONY: flash-uart-hello
+flash-uart-hello:
 	@echo "FPGAに書き込み中 (UART)..."
 	openFPGALoader -b $(BOARD) $(UART_FS)
 	@echo "✅ UART 書き込み完了!"
 
 # UART: Cm → SV → FS → FPGA 一括実行
-.PHONY: uart-apply
-uart-apply: uart-build uart-gowin uart-flash
+.PHONY: apply-uart-hello
+apply-uart-hello: build-uart-hello gowin-uart-hello flash-uart-hello
 
 # ============================================================
 # Button UART: 変数定義
@@ -274,8 +276,8 @@ BTN_FS := $(BUILD_DIR)/uart_button/impl/pnr/uart_button.fs
 # ============================================================
 # Button UART: Cm → SV + リントチェック
 # ============================================================
-.PHONY: btn-build
-btn-build: $(BTN_SV)
+.PHONY: build-uart-button
+build-uart-button: $(BTN_SV)
 	@echo "Verilator リントチェック中..."
 	$(VERILATOR_LINT) $(BTN_SV) $(LINT_STUBS)
 	@echo ""
@@ -289,20 +291,20 @@ $(BTN_SV): $(BTN_SRC)
 	$(CM) compile --target=sv $(BTN_SRC) -o $(BTN_SV)
 	@echo "✅ SV生成完了: $(BTN_SV)"
 
-.PHONY: btn-gowin
-btn-gowin: $(BTN_SV)
+.PHONY: gowin-uart-button
+gowin-uart-button: $(BTN_SV)
 	@echo "Gowin EDA で合成中 (Button)..."
 	DYLD_LIBRARY_PATH=$(GW_LIB) DYLD_FRAMEWORK_PATH=$(GW_LIB) $(GW_SH) $(BTN_TCL)
 	@echo "✅ Gowin EDA Button ビルド完了!"
 
-.PHONY: btn-flash
-btn-flash:
+.PHONY: flash-uart-button
+flash-uart-button:
 	@echo "FPGAに書き込み中 (Button)..."
 	openFPGALoader -b $(BOARD) $(BTN_FS)
 	@echo "✅ Button 書き込み完了!"
 
-.PHONY: btn-apply
-btn-apply: btn-build btn-gowin btn-flash
+.PHONY: apply-uart-button
+apply-uart-button: build-uart-button gowin-uart-button flash-uart-button
 
 # ============================================================
 # HDMI カラーバー: 変数定義
@@ -315,8 +317,8 @@ HDMI_FS := $(BUILD_DIR)/hdmi/hdmi_colorbar/impl/pnr/hdmi_colorbar.fs
 # ============================================================
 # HDMI カラーバー: Cm → SV
 # ============================================================
-.PHONY: hdmi-build
-hdmi-build: $(HDMI_SV)
+.PHONY: build-hdmi-colorbar
+build-hdmi-colorbar: $(HDMI_SV)
 	@echo "Verilator リントチェック中..."
 	$(VERILATOR_LINT) $(HDMI_SV) $(LINT_STUBS)
 	@echo ""
@@ -333,8 +335,8 @@ $(HDMI_SV): $(HDMI_SRC)
 # ============================================================
 # HDMI カラーバー: Gowin EDA フルフロー
 # ============================================================
-.PHONY: hdmi-gowin
-hdmi-gowin: $(HDMI_SV)
+.PHONY: gowin-hdmi-colorbar
+gowin-hdmi-colorbar: $(HDMI_SV)
 	@echo "Gowin EDA で合成・配置配線・ビットストリーム生成中 (HDMI)..."
 	@if [ -f "$(HDMI_FS)" ]; then echo "[WARN] 古いビットストリームを削除: $(HDMI_FS)"; rm -f "$(HDMI_FS)"; fi
 	DYLD_LIBRARY_PATH=$(GW_LIB) DYLD_FRAMEWORK_PATH=$(GW_LIB) $(GW_SH) $(HDMI_TCL)
@@ -346,15 +348,15 @@ hdmi-gowin: $(HDMI_SV)
 # ============================================================
 # HDMI カラーバー: FPGA書き込み
 # ============================================================
-.PHONY: hdmi-flash
-hdmi-flash:
+.PHONY: flash-hdmi-colorbar
+flash-hdmi-colorbar:
 	@echo "FPGAに書き込み中 (HDMI)..."
 	eval "$$(/opt/homebrew/bin/brew shellenv)" && openFPGALoader --cable ft2232 -b $(BOARD) $(HDMI_FS)
 	@echo "✅ HDMI 書き込み完了!"
 
 # HDMI: Cm → SV → FS → FPGA 一括実行
-.PHONY: hdmi-apply
-hdmi-apply: hdmi-build hdmi-gowin hdmi-flash
+.PHONY: apply-hdmi-colorbar
+apply-hdmi-colorbar: build-hdmi-colorbar gowin-hdmi-colorbar flash-hdmi-colorbar
 
 # ============================================================
 # HDMI テキスト/アニメーション: 変数定義
@@ -367,8 +369,8 @@ TEXT_FS := $(BUILD_DIR)/hdmi/hdmi_text/impl/pnr/hdmi_text.fs
 # ============================================================
 # HDMI テキスト/アニメーション: Cm → SV
 # ============================================================
-.PHONY: text-build
-text-build: $(TEXT_SV)
+.PHONY: build-hdmi-text
+build-hdmi-text: $(TEXT_SV)
 	@echo "Verilator リントチェック中..."
 	$(VERILATOR_LINT) $(TEXT_SV) $(LINT_STUBS)
 	@echo ""
@@ -389,8 +391,8 @@ $(TEXT_SV): $(TEXT_SRC) $(SRC_DIR)/hdmi_text/font/font_rom.cm
 # ============================================================
 # HDMI テキスト/アニメーション: Gowin EDA フルフロー
 # ============================================================
-.PHONY: text-gowin
-text-gowin: $(TEXT_SV)
+.PHONY: gowin-hdmi-text
+gowin-hdmi-text: $(TEXT_SV)
 	@echo "Gowin EDA で合成・配置配線・ビットストリーム生成中 (HDMI Text)..."
 	@if [ -f "$(TEXT_FS)" ]; then echo "[WARN] 古いビットストリームを削除: $(TEXT_FS)"; rm -f "$(TEXT_FS)"; fi
 	DYLD_LIBRARY_PATH=$(GW_LIB) DYLD_FRAMEWORK_PATH=$(GW_LIB) $(GW_SH) $(TEXT_TCL)
@@ -402,22 +404,22 @@ text-gowin: $(TEXT_SV)
 # ============================================================
 # HDMI テキスト/アニメーション: FPGA書き込み
 # ============================================================
-.PHONY: text-flash
-text-flash:
+.PHONY: flash-hdmi-text
+flash-hdmi-text:
 	@echo "FPGAに書き込み中 (HDMI Text)..."
 	eval "$$(/opt/homebrew/bin/brew shellenv)" && openFPGALoader --cable ft2232 -b $(BOARD) $(TEXT_FS)
 	@echo "✅ HDMI テキスト書き込み完了!"
 
 # HDMI テキスト: Cm → SV → FS → FPGA 一括実行
-.PHONY: text-apply
-text-apply: text-build text-gowin text-flash
+.PHONY: apply-hdmi-text
+apply-hdmi-text: build-hdmi-text gowin-hdmi-text flash-hdmi-text
 
 # ============================================================
 # v0.16.0サンプル: PWM呼吸LED / ボタンカウンタ
 # 制約ファイル(.cst/.tcl)は #[sv::pin] + --emit-constraints で自動生成
 # ============================================================
-.PHONY: pwm-build
-pwm-build:
+.PHONY: build-pwm
+build-pwm:
 	@echo "Cm → SystemVerilog 変換中 (PWM呼吸LED)..."
 	@mkdir -p $(BUILD_DIR)/pwm
 	$(CM) compile --target=sv $(SRC_DIR)/pwm/pwm_breath.cm -o $(BUILD_DIR)/pwm/pwm_breath.sv --emit-constraints
@@ -425,8 +427,8 @@ pwm-build:
 	$(VERILATOR_LINT) $(BUILD_DIR)/pwm/pwm_breath.sv $(LINT_STUBS)
 	@echo "✅ PWMビルド完了! $(BUILD_DIR)/pwm/pwm_breath.sv (+ .cst / _build.tcl)"
 
-.PHONY: button-build
-button-build:
+.PHONY: build-button
+build-button:
 	@echo "Cm → SystemVerilog 変換中 (ボタンカウンタ)..."
 	@mkdir -p $(BUILD_DIR)/button
 	$(CM) compile --target=sv $(SRC_DIR)/button/button_counter.cm -o $(BUILD_DIR)/button/button_counter.sv --emit-constraints
@@ -438,8 +440,8 @@ button-build:
 # CPU/GPUサンプル: SimpleCPU（16bit命令アキュムレータ型）
 #                  SimpleGPU（矩形フィルラスタライザ）
 # ============================================================
-.PHONY: cpu-build
-cpu-build:
+.PHONY: build-cpu
+build-cpu:
 	@echo "Cm → SystemVerilog 変換中 (SimpleCPU)..."
 	@mkdir -p $(BUILD_DIR)/cpu
 	$(CM) compile --target=sv $(SRC_DIR)/cpu/simple_cpu.cm -o $(BUILD_DIR)/cpu/simple_cpu.sv
@@ -447,8 +449,8 @@ cpu-build:
 	$(VERILATOR_LINT) $(BUILD_DIR)/cpu/simple_cpu.sv $(LINT_STUBS)
 	@echo "✅ SimpleCPUビルド完了! $(BUILD_DIR)/cpu/simple_cpu.sv"
 
-.PHONY: gpu-build
-gpu-build:
+.PHONY: build-gpu
+build-gpu:
 	@echo "Cm → SystemVerilog 変換中 (SimpleGPU)..."
 	@mkdir -p $(BUILD_DIR)/gpu
 	$(CM) compile --target=sv $(SRC_DIR)/gpu/simple_gpu.cm -o $(BUILD_DIR)/gpu/simple_gpu.sv

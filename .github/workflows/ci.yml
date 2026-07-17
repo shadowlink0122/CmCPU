@@ -51,15 +51,15 @@ jobs:
 
       - name: Lint all circuits (SV generation + verilator)
         run: |
-          make build
-          make pwm-build
-          make button-build
-          make uart-build
-          make btn-build
-          make hdmi-build
-          make text-build
-          make cpu-build
-          make gpu-build
+          make build-blink
+          make build-pwm
+          make build-button
+          make build-uart-hello
+          make build-uart-button
+          make build-hdmi-colorbar
+          make build-hdmi-text
+          make build-cpu
+          make build-gpu
 
       - name: Run circuit simulation tests
         run: make test
