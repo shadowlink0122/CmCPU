@@ -53,7 +53,20 @@ for src in $TARGETS; do
         rest="${category#modules/}"
         top="modules_${rest%%/*}"
     fi
-    name="${top}_${base}"
+    # カテゴリ末尾とテスト名先頭の重複トークンを除去
+    # 例: hdmi_text + text_renderer → hdmi_text_renderer / blink + blink → blink
+    last="${top##*_}"
+    if [ "$base" = "$last" ] || [ "$base" = "${last}_test" ]; then
+        base="${base#"$last"}"
+        base="${base#_}"
+    elif [ "${base#"${last}"_}" != "$base" ]; then
+        base="${base#"${last}"_}"
+    fi
+    if [ -n "$base" ]; then
+        name="${top}_${base}"
+    else
+        name="$top"
+    fi
     case "$name" in
         *_test) ;;
         *) name="${name}_test" ;;
