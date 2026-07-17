@@ -437,7 +437,7 @@ build-button:
 	@echo "✅ ボタンカウンタビルド完了! $(BUILD_DIR)/button/button_counter.sv (+ .cst / _build.tcl)"
 
 # ============================================================
-# CPU/GPUサンプル: SimpleCPU（16bit命令アキュムレータ型）
+# CPU/GPUサンプル: SimpleCPU（8レジスタ・16bit命令のロード/ストア型）
 #                  SimpleGPU（矩形フィルラスタライザ）
 # ============================================================
 .PHONY: build-cpu
