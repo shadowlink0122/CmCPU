@@ -18,7 +18,7 @@ OUT=.tmp/test
 mkdir -p "$OUT"
 
 # テキスト系はフォントROM（$readmemh）を実行ディレクトリに要する
-cp src/hdmi/text/font_rom.hex "$OUT/" 2>/dev/null || true
+cp src/hdmi_text/font_rom.hex "$OUT/" 2>/dev/null || true
 
 # テスト対象の自動発見（*_test.cm + #[test] を含むファイル）
 TARGETS=$( { find src -name "*_test.cm"; grep -rl '#\[test\]' src --include="*.cm"; } | sort -u )

@@ -1,6 +1,6 @@
 module oser;
 
-import ../encoder/encoder;
+import ./encoder;
 
 // シリアライザ出力信号
 export bool ser_d0 = false;

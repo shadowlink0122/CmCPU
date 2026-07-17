@@ -1,7 +1,7 @@
 # ============================================================
-# Gowin EDA Tcl スクリプト: HDMI テキストアニメーション SV → FS 変換
+# Gowin EDA Tcl スクリプト: HDMI カラーバー SV → FS 変換
 # ============================================================
-# 使い方: CmCPU ルートで実行: gw_sh src/hdmi/gowin_hdmi_text.tcl
+# 使い方: CmCPU ルートで実行: gw_sh src/hdmi_colorbar/gowin_hdmi.tcl
 # ============================================================
 
 # プロジェクトルート（gw_sh 実行時のカレントディレクトリ）
@@ -12,10 +12,10 @@ set device_pn "GW5AST-LV138FPG676AC2/I1"
 set device_version "C"
 
 # ファイルパス（絶対パスで指定）
-set sv_file "${project_root}/build/hdmi/hdmi_text.sv"
-set cst_file "${project_root}/src/hdmi/tang_console_138k_hdmi_text.cst"
+set sv_file "${project_root}/build/hdmi/hdmi_colorbar.sv"
+set cst_file "${project_root}/src/hdmi_colorbar/tang_console_138k_hdmi.cst"
 set output_dir "${project_root}/build/hdmi"
-set project_name "hdmi_text"
+set project_name "hdmi_colorbar"
 
 # フォールバックフラグ
 set is_fallback 0
@@ -28,7 +28,7 @@ if { [catch {create_project -name check_dev -dir $check_dir -pn $device_pn -devi
     puts "⚠️  FPG676 パッケージが未登録のため、PG484 にフォールバックします。"
     puts "   ピン配置は PG484 用となり、実機 (FPG676/Tang Console 138K) のピンとは異なります。"
     set device_pn "GW5AST-LV138PG484AC1/I0"
-    set cst_file "${project_root}/src/hdmi/tang_console_138k_hdmi_text_pg484.cst"
+    set cst_file "${project_root}/src/hdmi_colorbar/tang_console_138k_hdmi_pg484.cst"
     set is_fallback 1
 } else {
     # 一時プロジェクトが開いた状態になっているのでクローズする
@@ -41,20 +41,20 @@ create_project -name $project_name -dir $output_dir -pn $device_pn -device_versi
 # ソースファイルの追加
 add_file $sv_file
 
-# ピン制約ファイル追加
+# ピン制約ファイル追加（PG484 フォールバック時は PG484 用 CST を使用）
 add_file $cst_file
 
 # 合成設定
 set_option -verilog_std sysv2017
-set_option -top_module hdmi_text_top
-set_option -output_base_name hdmi_text
+set_option -top_module hdmi_colorbar
+set_option -output_base_name hdmi_colorbar
 
 # デュアルパーパスピンをGPIOとして使用
 set_option -use_ready_as_gpio 1
 set_option -use_done_as_gpio 1
 
-# 合成 + P&R + ビットストリーム生成
-puts "Gowin Synthesis + P&R + Bitstream 開始 (HDMI Text)..."
+# 合成 + P&R + ビットストリーム生成 (PG484 フォールバック時も実行)
+puts "Gowin Synthesis + P&R + Bitstream 開始..."
 run all
 
 if { $is_fallback } {

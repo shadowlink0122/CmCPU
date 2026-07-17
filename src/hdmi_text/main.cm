@@ -2,17 +2,17 @@
 module hdmi_text_top;
 
 // ============================================================
-// HDMI "Hello, World!" テキスト出力回路 (トップレベルモジュール)
+// HDMI 文字コード表テキスト出力回路（機能トップ）
 // ============================================================
-// ターゲット: Tang Console 138K (GW5AST-LV138FPG676)
-// クロック: 50MHz 外部オシレータ -> PLL -> 25.2MHz + 126MHz
-// 出力: HDMI (DVI モード) 640×480@60Hz
+// 汎用HDMI出力モジュール（src/modules/hdmi）を使用し、テキスト
+// レンダラ＋アニメーション制御の出力を r_out/g_out/b_out へ供給する。
+// ターゲット: Tang Console 138K / 640×480@60Hz DVIモード
 // ============================================================
 
 // 50MHz 外部システムクロック
 #[input] posedge clk_50m;
 
-// HDMI TMDS 差動出力ピン
+// HDMI TMDS 差動出力ピン (汎用モジュール内のTLVDS_OBUFが駆動)
 #[output] bool tmds_d2_p = false;
 #[output] bool tmds_d2_n = false;
 #[output] bool tmds_d1_p = false;
@@ -22,45 +22,18 @@ module hdmi_text_top;
 #[output] bool tmds_clk_p = false;
 #[output] bool tmds_clk_n = false;
 
-// 内部グローバル信号
 #ifdef TEST
     // シミュレーション: PLLの代わりにピクセルクロックを外部注入
     #[input] posedge pixel_clk;
-    bool serial_clk = false;
-    bool pll_lock = true;
-#else
-    bool pixel_clk  = false;
-    bool serial_clk = false;
-    bool pll_lock    = false;
 #end
 
-// サブモジュールのインポート (不要な冗長インポートを削減)
-import ./pll/pll;
-import ./encoder/encoder;
-import ./serdes/oser;
-import ./serdes/obuf;
-import ./text/animation_ctrl;
+// 汎用HDMI出力モジュールと機能（テキスト描画・アニメーション）
+import ../modules/hdmi/hdmi_out;
+import ./animation_ctrl;
 
 // ボード上のステータスLED (Red/Blue)
 #[output] assign bool led_ready = anim_ready;
 #[output] assign bool led_done = anim_done;
-
-#ifndef TEST
-    // PLLインスタンス
-    PLL pll_inst;
-
-    // OSER10 10:1 シリアライザインスタンス
-    OSER10_R oser_r;
-    OSER10_G oser_g;
-    OSER10_B oser_b;
-    OSER10_CK oser_ck;
-
-    // TLVDS_OBUF 差動バッファインスタンス
-    TLVDS_D2 tlvds_d2;
-    TLVDS_D1 tlvds_d1;
-    TLVDS_D0 tlvds_d0;
-    TLVDS_CK tlvds_ck;
-#end
 
 import std::debug::assert;
 

@@ -1,6 +1,14 @@
 # HDMI出力 ハードウェア設計・ピンアサイン詳細
 
-本ディレクトリ（`src/hdmi`）の実装に対応するFPGAボード、ピン配置、およびHDMI出力（TMDS）の回路設計について記述します。
+汎用HDMI出力モジュール（本ディレクトリ `src/modules/hdmi`）と、それを使用する機能回路（`src/hdmi_colorbar`・`src/hdmi_text`）に対応するFPGAボード、ピン配置、およびHDMI出力（TMDS）の回路設計について記述します。
+
+## 構成（汎用モジュールと機能の分離）
+
+| ディレクトリ | 役割 |
+|:---|:---|
+| `src/modules/hdmi/` | 汎用HDMI出力モジュール（`hdmi_out.cm` がタイミング・TMDSエンコーダ・シリアライザ・PLLを集約） |
+| `src/hdmi_colorbar/` | 機能: カラーバー出力（`hdmi_out` をimportし `r_out/g_out/b_out` を駆動） |
+| `src/hdmi_text/` | 機能: 文字コード表テキスト出力（同上） |
 
 ---
 
@@ -22,7 +30,7 @@
 
 ### 2.1 標準ターゲット (FPG676 パッケージ)
 開発ボード上の実際のHDMI物理端子に配線されたピンアサインです。
-制約定義ファイル: [tang_console_138k_hdmi.cst](./tang_console_138k_hdmi.cst)
+制約定義ファイル: [tang_console_138k_hdmi.cst](../../hdmi_colorbar/tang_console_138k_hdmi.cst)
 
 | 信号名 | 物理ピン (P側) | 物理ピン (N側) | I/O 規格 | バンク | 機能詳細 |
 |:---|:---|:---|:---|:---|:---|
@@ -37,7 +45,7 @@
 
 ### 2.2 フォールバックターゲット (PG484 パッケージ)
 macOS上で配置配線 (P&R) を完了しビットストリーム (`.fs`) を生成して、書き込みフローを検証するためのピンアサインです。物理的に存在する Bank 3 のI/Oピンから差動ペアを割り当てています。
-制約定義ファイル: [tang_console_138k_hdmi_pg484.cst](./tang_console_138k_hdmi_pg484.cst)
+制約定義ファイル: [tang_console_138k_hdmi_pg484.cst](../../hdmi_colorbar/tang_console_138k_hdmi_pg484.cst)
 
 | 信号名 | 物理ピン (P側) | 物理ピン (N側) | I/O 規格 | バンク | 備考 |
 |:---|:---|:---|:---|:---|:---|

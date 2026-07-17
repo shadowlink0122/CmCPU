@@ -1,6 +1,6 @@
 module animation_ctrl;
 
-import ../timing/timing;
+import ../modules/hdmi/timing;
 import ./text_renderer;
 import ./font_rom;
 import ./ctrl_abbrev;

@@ -1,7 +1,7 @@
 module pattern;
 
-import ../constants/hdmi_constants;
-import ../timing/timing;
+import ../modules/hdmi/hdmi_constants;
+import ../modules/hdmi/timing;
 
 // (r_out, g_out, b_out declarations removed, now imported from timing.cm)
 
