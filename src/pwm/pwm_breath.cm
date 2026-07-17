@@ -45,7 +45,7 @@ utiny brightness = 0;   // 現在の輝度（デューティ）
 bool dir_up = true;     // 輝度の増減方向
 uint tick = 0;          // 輝度更新の分周カウンタ
 
-const uint CLK_FREQ = 52500000;
+const uint CLK_FREQ = 210000000 / 4;  // 内蔵OSC 210MHz / FREQ_DIV(4)
 #ifdef TEST
     const uint STEP_COUNT = 0;  // シミュレーション: 毎クロック輝度更新
 #end

@@ -17,7 +17,7 @@
 import ../modules/common/ascii;
 
 // 定数定義
-const uint CLK_FREQ = 52500000;  // クロック周波数 (Hz)
+const uint CLK_FREQ = 210000000 / 4;  // 内蔵OSC 210MHz / FREQ_DIV(4)
 const uint BAUD_RATE = 115200;
 #ifdef TEST
     const uint CLKS_PER_BIT = 2;
@@ -31,7 +31,7 @@ const uint MSG_LEN = 12;  // "Pressed: N\r\n"
     #[input] posedge clk;
     const uint DEBOUNCE_LIMIT = 2;
 #else
-    const uint DEBOUNCE_LIMIT = 1050000;  // 20ms = 52500000 * 0.02
+    const uint DEBOUNCE_LIMIT = CLK_FREQ * 0.02;  // 20ms
 
     // Gowin 内蔵オシレータ
     extern struct OSC {

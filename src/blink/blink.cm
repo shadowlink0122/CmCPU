@@ -8,7 +8,7 @@
 // LED: CFG LED READY (U12), DONE (G11)
 
 // 定数定義
-const uint CLK_FREQ = 52500000;  // 内蔵OSCクロック周波数 (Hz)
+const uint CLK_FREQ = 210000000 / 4;  // 内蔵OSC 210MHz / FREQ_DIV(4)
 
 #ifdef TEST
     // シミュレーション: クロックを外部注入し、トグル周期を短縮

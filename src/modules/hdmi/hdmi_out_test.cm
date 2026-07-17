@@ -38,18 +38,18 @@ import std::debug::assert;
 void tb() {
     // アクティブ領域: 3チャネルとも同一のデータ符号（コントロールトークンではない）
     step(10);
-    assert(tmds_r_o != 852, "active: R is data code");
+    assert(tmds_r_o != CTRL_00, "active: R is data code");
     assert(tmds_r_o == tmds_g_o, "active: R and G codes match (same input history)");
     assert(tmds_r_o == tmds_b_o, "active: R and B codes match (same input history)");
 
     // 水平ブランキング: コントロールトークン
     step(638);
-    assert(tmds_r_o == 852, "blank: R ctrl token CTRL_00");
-    assert(tmds_g_o == 852, "blank: G ctrl token CTRL_00");
-    assert(tmds_b_o == 683, "blank: B ctrl {vs=1,hs=1}");
+    assert(tmds_r_o == CTRL_00, "blank: R ctrl token CTRL_00");
+    assert(tmds_g_o == CTRL_00, "blank: G ctrl token CTRL_00");
+    assert(tmds_b_o == CTRL_11, "blank: B ctrl {vs=1,hs=1}");
 
     // HSYNCパルス中: Bチャネルのみhsが反映される
     step(52);
-    assert(tmds_b_o == 340, "hsync: B ctrl {vs=1,hs=0}");
-    assert(tmds_r_o == 852, "hsync: R stays CTRL_00");
+    assert(tmds_b_o == CTRL_10, "hsync: B ctrl {vs=1,hs=0}");
+    assert(tmds_r_o == CTRL_00, "hsync: R stays CTRL_00");
 }

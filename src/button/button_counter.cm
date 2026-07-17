@@ -14,6 +14,8 @@
 //   gw_sh build/button/button_counter_build.tcl
 // ============================================================
 
+const uint CLK_FREQ = 210000000 / 4;  // 内蔵OSC 210MHz / FREQ_DIV(4)
+
 #ifdef TEST
     // シミュレーション: クロック外部注入
     #[input] posedge clk;
@@ -50,7 +52,7 @@ bool btn_sync;
 #ifdef TEST
     const uint DEBOUNCE_COUNT = 2;  // シミュレーション: 短縮
 #else
-    const uint DEBOUNCE_COUNT = 525000;  // 10ms @ 52.5MHz
+    const uint DEBOUNCE_COUNT = CLK_FREQ * 0.01;  // 10ms
 #end
 uint stable_count = 0;
 bool btn_state = true;  // プルアップのため初期High

@@ -44,16 +44,16 @@ void tb() {
 
     // アクティブ領域: データ符号はコントロールトークンにならない（TMDSの性質）
     step(10);
-    assert(tmds_r_o != 852, "active: R is data code (not CTRL_00)");
-    assert(tmds_b_o != 683, "active: B is data code (not CTRL_11)");
+    assert(tmds_r_o != CTRL_00, "active: R is data code (not CTRL_00)");
+    assert(tmds_b_o != CTRL_11, "active: B is data code (not CTRL_11)");
 
     // ブランキング（sync非アクティブ、hc≈648）: R/G=CTRL_00, B=CTRL_11
     step(638);
-    assert(tmds_r_o == 852, "blank: R ctrl token CTRL_00");
-    assert(tmds_g_o == 852, "blank: G ctrl token CTRL_00");
-    assert(tmds_b_o == 683, "blank: B ctrl {vs=1,hs=1} CTRL_11");
+    assert(tmds_r_o == CTRL_00, "blank: R ctrl token CTRL_00");
+    assert(tmds_g_o == CTRL_00, "blank: G ctrl token CTRL_00");
+    assert(tmds_b_o == CTRL_11, "blank: B ctrl {vs=1,hs=1} CTRL_11");
 
     // HSYNCパルス中（hc≈700）: B=CTRL_01
     step(52);
-    assert(tmds_b_o == 340, "hsync pulse: B ctrl {vs=1,hs=0} CTRL_10");
+    assert(tmds_b_o == CTRL_10, "hsync pulse: B ctrl {vs=1,hs=0} CTRL_10");
 }
