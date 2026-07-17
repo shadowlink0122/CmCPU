@@ -29,7 +29,7 @@ module hdmi_text_top;
 
 // 汎用HDMI出力モジュールと機能（テキスト描画・アニメーション）
 import ../modules/hdmi/hdmi_out;
-import ./animation_ctrl;
+import ./animation/animation_ctrl;
 
 // ボード上のステータスLED (Red/Blue)
 #[output] assign bool led_ready = anim_ready;

@@ -14,12 +14,12 @@ module hdmi_out;
 //   #ifdef TEST → #[input] posedge pixel_clk;     シミュレーション用クロック注入
 // ============================================================
 
-import ./hdmi_constants;
-import ./pll;
-import ./timing;
-import ./encoder;
-import ./oser;
-import ./obuf;
+import ./constants/hdmi_constants;
+import ./pll/pll;
+import ./timing/timing;
+import ./encoder/encoder;
+import ./serdes/oser;
+import ./serdes/obuf;
 
 // 内部グローバル信号（PLL出力・ロック状態）
 #ifdef TEST

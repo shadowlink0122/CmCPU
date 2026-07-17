@@ -32,7 +32,7 @@ module hdmi_colorbar;
 
 // 汎用HDMI出力モジュールと機能（カラーバーパターン）
 import ../modules/hdmi/hdmi_out;
-import ./pattern;
+import ./pattern/pattern;
 
 // LEDステータス同期制御
 async void led_control(posedge pixel_clk) {

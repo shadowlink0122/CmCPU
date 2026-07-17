@@ -6,9 +6,14 @@
 
 | ディレクトリ | 役割 |
 |:---|:---|
-| `src/modules/hdmi/` | 汎用HDMI出力モジュール（`hdmi_out.cm` がタイミング・TMDSエンコーダ・シリアライザ・PLLを集約） |
-| `src/hdmi_colorbar/` | 機能: カラーバー出力（`hdmi_out` をimportし `r_out/g_out/b_out` を駆動） |
-| `src/hdmi_text/` | 機能: 文字コード表テキスト出力（同上） |
+| `src/modules/hdmi/hdmi_out.cm` | 汎用HDMI出力の集約モジュール（機能側はこれをimportする） |
+| `src/modules/hdmi/constants/` | 解像度・タイミング定数 |
+| `src/modules/hdmi/timing/` | 640×480@60Hz タイミング生成（+検証ラッパー） |
+| `src/modules/hdmi/encoder/` | TMDSエンコーダ（+検証ラッパー） |
+| `src/modules/hdmi/serdes/` | OSER10 10:1シリアライザ・TLVDS差動出力（Gowinプリミティブ定義） |
+| `src/modules/hdmi/pll/` | PLL 50MHz→25.2MHz/126MHz（Gowinプリミティブ定義） |
+| `src/hdmi_colorbar/` | 機能: カラーバー出力（`main.cm` + `pattern/` + `synth/` 制約・合成スクリプト） |
+| `src/hdmi_text/` | 機能: 文字コード表テキスト出力（`main.cm` + `renderer/` + `font/` + `animation/` + `synth/`） |
 
 ---
 
@@ -30,7 +35,7 @@
 
 ### 2.1 標準ターゲット (FPG676 パッケージ)
 開発ボード上の実際のHDMI物理端子に配線されたピンアサインです。
-制約定義ファイル: [tang_console_138k_hdmi.cst](../../hdmi_colorbar/tang_console_138k_hdmi.cst)
+制約定義ファイル: [tang_console_138k_hdmi.cst](../../hdmi_colorbar/synth/tang_console_138k_hdmi.cst)
 
 | 信号名 | 物理ピン (P側) | 物理ピン (N側) | I/O 規格 | バンク | 機能詳細 |
 |:---|:---|:---|:---|:---|:---|
@@ -45,7 +50,7 @@
 
 ### 2.2 フォールバックターゲット (PG484 パッケージ)
 macOS上で配置配線 (P&R) を完了しビットストリーム (`.fs`) を生成して、書き込みフローを検証するためのピンアサインです。物理的に存在する Bank 3 のI/Oピンから差動ペアを割り当てています。
-制約定義ファイル: [tang_console_138k_hdmi_pg484.cst](../../hdmi_colorbar/tang_console_138k_hdmi_pg484.cst)
+制約定義ファイル: [tang_console_138k_hdmi_pg484.cst](../../hdmi_colorbar/synth/tang_console_138k_hdmi_pg484.cst)
 
 | 信号名 | 物理ピン (P側) | 物理ピン (N側) | I/O 規格 | バンク | 備考 |
 |:---|:---|:---|:---|:---|:---|

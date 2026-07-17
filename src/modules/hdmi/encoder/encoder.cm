@@ -1,7 +1,7 @@
 module encoder;
 
-import ./hdmi_constants;
-import ./timing;
+import ../constants/hdmi_constants;
+import ../timing/timing;
 
 // 10bit TMDS 出力信号
 export int tmds_r = 0;

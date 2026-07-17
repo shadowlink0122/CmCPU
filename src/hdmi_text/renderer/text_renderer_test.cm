@@ -11,9 +11,9 @@ module text_renderer_test;
 #[input] posedge clk;
 assign bool pixel_clk = clk;
 
-import ../modules/hdmi/timing;
+import ../../modules/hdmi/timing/timing;
 import ./gbc_display;
-import ./font_rom;
+import ../font/font_rom;
 import ./text_renderer;
 
 #[input] uint waddr;

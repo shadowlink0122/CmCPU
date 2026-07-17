@@ -1,8 +1,8 @@
 module text_renderer;
 
-import ../modules/hdmi/timing;
+import ../../modules/hdmi/timing/timing;
 import ./gbc_display;
-import ./font_rom;
+import ../font/font_rom;
 
 // テキストバッファ (列数×行数 = バッファサイズ)
 export ushort[4800] text_buf;

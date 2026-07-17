@@ -309,7 +309,7 @@ btn-apply: btn-build btn-gowin btn-flash
 # ============================================================
 HDMI_SRC := $(SRC_DIR)/hdmi_colorbar/main.cm
 HDMI_SV := $(BUILD_DIR)/hdmi/hdmi_colorbar.sv
-HDMI_TCL := $(SRC_DIR)/hdmi_colorbar/gowin_hdmi.tcl
+HDMI_TCL := $(SRC_DIR)/hdmi_colorbar/synth/gowin_hdmi.tcl
 HDMI_FS := $(BUILD_DIR)/hdmi/hdmi_colorbar/impl/pnr/hdmi_colorbar.fs
 
 # ============================================================
@@ -361,7 +361,7 @@ hdmi-apply: hdmi-build hdmi-gowin hdmi-flash
 # ============================================================
 TEXT_SRC := $(SRC_DIR)/hdmi_text/main.cm
 TEXT_SV := $(BUILD_DIR)/hdmi/hdmi_text.sv
-TEXT_TCL := $(SRC_DIR)/hdmi_text/gowin_hdmi_text.tcl
+TEXT_TCL := $(SRC_DIR)/hdmi_text/synth/gowin_hdmi_text.tcl
 TEXT_FS := $(BUILD_DIR)/hdmi/hdmi_text/impl/pnr/hdmi_text.fs
 
 # ============================================================
@@ -376,15 +376,15 @@ text-build: $(TEXT_SV)
 	@echo "✅ HDMI テキストビルド完了! $(TEXT_SV)"
 	@echo "=========================================="
 
-$(SRC_DIR)/hdmi_text/font_rom.cm: $(SRC_DIR)/hdmi_text/font_rom.txt $(SRC_DIR)/hdmi_text/generate_font.py
-	python3 $(SRC_DIR)/hdmi_text/generate_font.py
+$(SRC_DIR)/hdmi_text/font/font_rom.cm: $(SRC_DIR)/hdmi_text/font/font_rom.txt $(SRC_DIR)/hdmi_text/font/generate_font.py
+	python3 $(SRC_DIR)/hdmi_text/font/generate_font.py
 
-$(TEXT_SV): $(TEXT_SRC) $(SRC_DIR)/hdmi_text/font_rom.cm
+$(TEXT_SV): $(TEXT_SRC) $(SRC_DIR)/hdmi_text/font/font_rom.cm
 	@echo "Cm → SystemVerilog 変換中 (HDMI Text)..."
 	@mkdir -p $(BUILD_DIR)/hdmi
 	$(CM) compile --target=sv $(TEXT_SRC) -o $(TEXT_SV)
 	@echo "✅ SV生成完了: $(TEXT_SV)"
-	cp $(SRC_DIR)/hdmi_text/font_rom.hex $(BUILD_DIR)/hdmi/
+	cp $(SRC_DIR)/hdmi_text/font/font_rom.hex $(BUILD_DIR)/hdmi/
 
 # ============================================================
 # HDMI テキスト/アニメーション: Gowin EDA フルフロー

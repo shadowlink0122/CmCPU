@@ -12,7 +12,7 @@ module animation_ctrl_test;
 #[input] posedge clk;
 assign bool pixel_clk = clk;
 
-import ./text_renderer;
+import ../renderer/text_renderer;
 import ./animation_ctrl;
 
 // タイトル行はセル(row=8, col=18)起点 → 先頭アドレス 8*80+18 = 658、最終文字 700、直後 701

@@ -11,8 +11,8 @@ module encoder_test;
 #[input] posedge clk;
 assign bool pixel_clk = clk;
 
-import ./hdmi_constants;
-import ./timing;
+import ../constants/hdmi_constants;
+import ../timing/timing;
 import ./encoder;
 
 #[input] uint r_in;

@@ -1,8 +1,8 @@
 module animation_ctrl;
 
-import ../modules/hdmi/timing;
-import ./text_renderer;
-import ./font_rom;
+import ../../modules/hdmi/timing/timing;
+import ../renderer/text_renderer;
+import ../font/font_rom;
 import ./ctrl_abbrev;
 import ./display_strings;
 

@@ -8,7 +8,7 @@ module pattern_test;
 #[input] posedge clk;
 assign bool pixel_clk = clk;
 
-import ../modules/hdmi/timing;
+import ../../modules/hdmi/timing/timing;
 import ./pattern;
 
 #[output] uint r_o = 0;

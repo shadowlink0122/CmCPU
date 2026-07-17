@@ -1,7 +1,7 @@
 module gbc_display;
 
-import ../modules/hdmi/hdmi_constants;
-import ../modules/hdmi/timing;
+import ../../modules/hdmi/constants/hdmi_constants;
+import ../../modules/hdmi/timing/timing;
 
 // 画面設定定数 (等倍 640x480 表示)
 const uint SCALE      = 1;     // 整数スケーリング倍率 (等倍)
