@@ -74,21 +74,23 @@ iverilog + vvp で実行します。テストモードでは定義 `TEST` が自
 
 | テスト | 対象 | 検証内容 |
 |---|---|---|
-| blink | src/blink | LEDトグル周期 |
-| pwm_breath | src/pwm | PWM相補出力・呼吸動作 |
-| button_counter | src/button | 同期→デバウンス→押下エッジ→2bitカウント |
-| uart_hello | src/uart | 起動待機→スタートビット→14バイト送信完了 |
-| uart_button | src/uart | 押下検出→"Pressed: N"送信開始→完了 |
-| timing_test | src/modules/hdmi | VGA水平・垂直タイミング（アクティブ/FP/SYNC/BP・VSYNCパルス・フレーム境界、DE） |
-| hdmi_out_test | src/modules/hdmi | 汎用HDMI出力モジュール単体（固定色→3ch同一データ符号・コントロールトークン） |
-| pattern_test | src/hdmi_colorbar | カラーバー8色の境界（白/黄/シアン/黒） |
-| encoder_test | src/modules/hdmi | TMDSコントロールトークン（CTRL_00/11/10）とデータ符号 |
-| text_renderer_test | src/hdmi_text | フォントROM経由の文字描画（'H'横棒の黒画素・白背景） |
-| gbc_display_test | src/hdmi_text | 表示領域の座標変換（論理X/Y追従・アクティブ判定・行末飽和） |
-| hdmi_colorbar | src/hdmi_colorbar/main.cm | カラーバートップ統合（バー色ごとのTMDS符号一致性・コントロールトークン） |
-| hdmi_text_top | src/hdmi_text | テキストトップ統合（TMDS符号・アニメーション完了後のタイトル行描画） |
-| simple_cpu | src/cpu | 総和プログラム実行（result=55）→HALT→停止後の安定性 |
-| simple_gpu | src/gpu | クリア→矩形フィル→フレームバッファ読み出し（矩形内外） |
+| blink_blink_test | src/blink | LEDトグル周期 |
+| pwm_pwm_breath_test | src/pwm | PWM相補出力・呼吸動作 |
+| button_button_counter_test | src/button | 同期→デバウンス→押下エッジ→2bitカウント |
+| uart_uart_hello_test | src/uart | 起動待機→スタートビット→14バイト送信完了 |
+| uart_uart_button_test | src/uart | 押下検出→"Pressed: N"送信開始→完了 |
+| modules_hdmi_timing_test | src/modules/hdmi | VGA水平・垂直タイミング（アクティブ/FP/SYNC/BP・VSYNCパルス・フレーム境界、DE） |
+| modules_hdmi_hdmi_out_test | src/modules/hdmi | 汎用HDMI出力モジュール単体（固定色→3ch同一データ符号・コントロールトークン） |
+| hdmi_colorbar_pattern_test | src/hdmi_colorbar | カラーバー8色の境界（白/黄/シアン/黒） |
+| modules_hdmi_encoder_test | src/modules/hdmi | TMDSコントロールトークン（CTRL_00/11/10）とデータ符号 |
+| hdmi_text_text_renderer_test | src/hdmi_text | フォントROM経由の文字描画（'H'横棒の黒画素・白背景） |
+| hdmi_text_gbc_display_test | src/hdmi_text | 表示領域の座標変換（論理X/Y追従・アクティブ判定・行末飽和） |
+| hdmi_text_animation_ctrl_test | src/hdmi_text | タイトル描画境界（書き込み最大アドレス700・境界セルの空白維持） |
+| hdmi_colorbar_main_test | src/hdmi_colorbar/main.cm | カラーバートップ統合（バー色ごとのTMDS符号一致性・コントロールトークン） |
+| hdmi_text_main_test | src/hdmi_text | テキストトップ統合（TMDS符号・アニメーション完了後のタイトル行描画） |
+| cpu_simple_cpu_test | src/cpu | 総和プログラム実行（result=55）→HALT→停止後の安定性 |
+| cpu_alu_test | src/cpu | 全加算器真理値表・加算/桁あふれ・2の補数減算・論理演算・シフト |
+| gpu_simple_gpu_test | src/gpu | クリア→矩形フィル→フレームバッファ読み出し（矩形内外） |
 
 PLL / OSER10 / TLVDS_OBUF はGowinベンダプリミティブのため
 シミュレーション対象外です（`#ifdef TEST` で除外し、実機フローと

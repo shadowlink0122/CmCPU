@@ -42,7 +42,22 @@ PASSED=0
 FAILED=0
 
 for src in $TARGETS; do
-    name=$(echo "$src" | sed 's|^src/||; s|/|_|g; s|\.cm$||')
+    # テスト名は「カテゴリ_テスト名_test」形式（中間サブフォルダは含めない。同一カテゴリ内でテストファイル名は一意にすること）
+    # カテゴリ = src直下のフォルダ名（modulesは modules_<モジュール名>）
+    # 例: src/hdmi_text/renderer/text_renderer_test.cm → hdmi_text_text_renderer_test
+    rel="${src#src/}"
+    base=$(basename "$rel" .cm)
+    category=$(dirname "$rel")
+    top="${category%%/*}"
+    if [ "$top" = "modules" ]; then
+        rest="${category#modules/}"
+        top="modules_${rest%%/*}"
+    fi
+    name="${top}_${base}"
+    case "$name" in
+        *_test) ;;
+        *) name="${name}_test" ;;
+    esac
     log="$OUT/$name.log"
 
     if "$CM" test "$src" > "$log" 2>&1; then
