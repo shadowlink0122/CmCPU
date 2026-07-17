@@ -37,13 +37,17 @@ import ./animation/animation_ctrl;
 
 import std::debug::assert;
 
-// シミュレーション検証用: TMDS符号を観測ポートへ写す
+// シミュレーション検証用: TMDS符号とタイトル行バッファを観測ポートへ写す
 #[output] uint tmds_r_o = 0;
 #[output] uint tmds_b_o = 0;
+#[output] uint title_first_o = 0;
+#[output] uint title_after_o = 0;
 
 async void sim_mirror(posedge pixel_clk) {
     tmds_r_o = tmds_r as uint;
     tmds_b_o = tmds_b as uint;
+    title_first_o = text_buf[658] as uint;
+    title_after_o = text_buf[701] as uint;
 }
 
 // 統合テスト: timing→テキスト描画→encoder パイプライン全体を検証
@@ -61,4 +65,10 @@ void tb() {
     // HSYNCパルス中
     step(52);
     assert(tmds_b_o == 340, "hsync: B ctrl {vs=1,hs=0}");
+
+    // アニメーション完了後: タイトル行がテキストバッファへ描画されている
+    // （TEST用短縮定数: 起動200 + クリア4800 + タイトル43文字 ≈ 5045クロック）
+    step(4600);
+    assert(title_first_o == 61, "title first char is '=' after animation");
+    assert(title_after_o == 32, "cell after title stays blank");
 }

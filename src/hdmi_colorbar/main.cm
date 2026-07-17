@@ -43,23 +43,32 @@ import std::debug::assert;
 
 // シミュレーション検証用: TMDS符号を観測ポートへ写す
 #[output] uint tmds_r_o = 0;
+#[output] uint tmds_g_o = 0;
 #[output] uint tmds_b_o = 0;
 
 async void sim_mirror(posedge pixel_clk) {
     tmds_r_o = tmds_r as uint;
+    tmds_g_o = tmds_g as uint;
     tmds_b_o = tmds_b as uint;
 }
 
 // 統合テスト: timing→pattern→encoder パイプライン全体を検証
 #[test]
 void tb() {
-    // アクティブ領域（カラーバー描画中）: データ符号
+    // アクティブ領域（バー0: 白 R=G=B=255）: 3チャネル同一のデータ符号
     step(10);
     assert(tmds_r_o != 852, "active: R is data code");
+    assert(tmds_r_o == tmds_g_o, "bar0 white: R and G codes match");
+    assert(tmds_r_o == tmds_b_o, "bar0 white: R and B codes match");
     assert(led, "pll_lock passthrough LED on");
 
+    // バー1（黄 R=G=255, B=0）: R/Gは一致したまま、Bは分岐する
+    step(75);
+    assert(tmds_r_o == tmds_g_o, "bar1 yellow: R and G codes match");
+    assert(tmds_r_o != tmds_b_o, "bar1 yellow: B code differs");
+
     // ブランキング: コントロールトークン
-    step(638);
+    step(563);
     assert(tmds_r_o == 852, "blank: R ctrl token");
     assert(tmds_b_o == 683, "blank: B ctrl {vs=1,hs=1}");
 

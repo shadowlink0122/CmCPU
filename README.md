@@ -82,12 +82,14 @@ iverilog + vvp で実行します。テストモードでは定義 `TEST` が自
 | button_counter | src/button | 同期→デバウンス→押下エッジ→2bitカウント |
 | uart_hello | src/uart | 起動待機→スタートビット→14バイト送信完了 |
 | uart_button | src/uart | 押下検出→"Pressed: N"送信開始→完了 |
-| timing_test | src/modules/hdmi | VGA水平タイミング（アクティブ/FP/SYNC/BP、DE） |
+| timing_test | src/modules/hdmi | VGA水平・垂直タイミング（アクティブ/FP/SYNC/BP・VSYNCパルス・フレーム境界、DE） |
+| hdmi_out_test | src/modules/hdmi | 汎用HDMI出力モジュール単体（固定色→3ch同一データ符号・コントロールトークン） |
 | pattern_test | src/hdmi_colorbar | カラーバー8色の境界（白/黄/シアン/黒） |
 | encoder_test | src/modules/hdmi | TMDSコントロールトークン（CTRL_00/11/10）とデータ符号 |
 | text_renderer_test | src/hdmi_text | フォントROM経由の文字描画（'H'横棒の黒画素・白背景） |
-| hdmi_colorbar | src/hdmi_colorbar/main.cm | カラーバートップ統合（timing→pattern→encoder） |
-| hdmi_text_top | src/hdmi_text | テキストトップ統合（timing→描画→encoder） |
+| gbc_display_test | src/hdmi_text | 表示領域の座標変換（論理X/Y追従・アクティブ判定・行末飽和） |
+| hdmi_colorbar | src/hdmi_colorbar/main.cm | カラーバートップ統合（バー色ごとのTMDS符号一致性・コントロールトークン） |
+| hdmi_text_top | src/hdmi_text | テキストトップ統合（TMDS符号・アニメーション完了後のタイトル行描画） |
 | simple_cpu | src/cpu | 総和プログラム実行（result=55）→HALT→停止後の安定性 |
 | simple_gpu | src/gpu | クリア→矩形フィル→フレームバッファ読み出し（矩形内外） |
 
