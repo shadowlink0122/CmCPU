@@ -22,14 +22,18 @@ async void drive(posedge pixel_clk) {
 }
 
 // 検証用出力: TMDS符号の写し
-#[output] uint tmds_r_o = 0;
-#[output] uint tmds_g_o = 0;
-#[output] uint tmds_b_o = 0;
+struct hdmi_out_test_io {
+    #[output] uint tmds_r_o = 0;
+    #[output] uint tmds_g_o = 0;
+    #[output] uint tmds_b_o = 0;
+};
+
+hdmi_out_test_io io;
 
 async void mirror(posedge pixel_clk) {
-    tmds_r_o = tmds_r as uint;
-    tmds_g_o = tmds_g as uint;
-    tmds_b_o = tmds_b as uint;
+    io.tmds_r_o = tmds_r as uint;
+    io.tmds_g_o = tmds_g as uint;
+    io.tmds_b_o = tmds_b as uint;
 }
 
 import std::debug::assert;
@@ -38,18 +42,18 @@ import std::debug::assert;
 void tb() {
     // アクティブ領域: 3チャネルとも同一のデータ符号（コントロールトークンではない）
     step(10);
-    assert(tmds_r_o != CTRL_00, "active: R is data code");
-    assert(tmds_r_o == tmds_g_o, "active: R and G codes match (same input history)");
-    assert(tmds_r_o == tmds_b_o, "active: R and B codes match (same input history)");
+    assert(io.tmds_r_o != CTRL_00, "active: R is data code");
+    assert(io.tmds_r_o == io.tmds_g_o, "active: R and G codes match (same input history)");
+    assert(io.tmds_r_o == io.tmds_b_o, "active: R and B codes match (same input history)");
 
     // 水平ブランキング: コントロールトークン
     step(638);
-    assert(tmds_r_o == CTRL_00, "blank: R ctrl token CTRL_00");
-    assert(tmds_g_o == CTRL_00, "blank: G ctrl token CTRL_00");
-    assert(tmds_b_o == CTRL_11, "blank: B ctrl {vs=1,hs=1}");
+    assert(io.tmds_r_o == CTRL_00, "blank: R ctrl token CTRL_00");
+    assert(io.tmds_g_o == CTRL_00, "blank: G ctrl token CTRL_00");
+    assert(io.tmds_b_o == CTRL_11, "blank: B ctrl {vs=1,hs=1}");
 
     // HSYNCパルス中: Bチャネルのみhsが反映される
     step(52);
-    assert(tmds_b_o == CTRL_10, "hsync: B ctrl {vs=1,hs=0}");
-    assert(tmds_r_o == CTRL_00, "hsync: R stays CTRL_00");
+    assert(io.tmds_b_o == CTRL_10, "hsync: B ctrl {vs=1,hs=0}");
+    assert(io.tmds_r_o == CTRL_00, "hsync: R stays CTRL_00");
 }

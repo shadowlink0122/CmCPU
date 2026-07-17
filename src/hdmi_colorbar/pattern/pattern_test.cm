@@ -11,14 +11,18 @@ assign bool pixel_clk = clk;
 import ../../modules/hdmi/timing/timing;
 import ./pattern;
 
-#[output] uint r_o = 0;
-#[output] uint g_o = 0;
-#[output] uint b_o = 0;
+struct pattern_test_io {
+    #[output] uint r_o = 0;
+    #[output] uint g_o = 0;
+    #[output] uint b_o = 0;
+};
+
+pattern_test_io io;
 
 async void mirror(posedge pixel_clk) {
-    r_o = r_out as uint;
-    g_o = g_out as uint;
-    b_o = b_out as uint;
+    io.r_o = r_out as uint;
+    io.g_o = g_out as uint;
+    io.b_o = b_out as uint;
 }
 
 import std::debug::assert;
@@ -27,20 +31,20 @@ import std::debug::assert;
 #[test]
 void tb() {
     step(40);  // バー0中央
-    assert(r_o == 255, "bar0 white: r");
-    assert(g_o == 255, "bar0 white: g");
-    assert(b_o == 255, "bar0 white: b");
+    assert(io.r_o == 255, "bar0 white: r");
+    assert(io.g_o == 255, "bar0 white: g");
+    assert(io.b_o == 255, "bar0 white: b");
 
     step(80);  // バー1中央（hc≈120）: 黄
-    assert(r_o == 255, "bar1 yellow: r");
-    assert(b_o == 0, "bar1 yellow: b=0");
+    assert(io.r_o == 255, "bar1 yellow: r");
+    assert(io.b_o == 0, "bar1 yellow: b=0");
 
     step(80);  // バー2中央（hc≈200）: シアン
-    assert(r_o == 0, "bar2 cyan: r=0");
-    assert(g_o == 255, "bar2 cyan: g");
+    assert(io.r_o == 0, "bar2 cyan: r=0");
+    assert(io.g_o == 255, "bar2 cyan: g");
 
     step(400);  // バー7中央（hc≈600）: 黒
-    assert(r_o == 0, "bar7 black: r");
-    assert(g_o == 0, "bar7 black: g");
-    assert(b_o == 0, "bar7 black: b");
+    assert(io.r_o == 0, "bar7 black: r");
+    assert(io.g_o == 0, "bar7 black: g");
+    assert(io.b_o == 0, "bar7 black: b");
 }

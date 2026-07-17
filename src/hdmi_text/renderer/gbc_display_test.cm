@@ -15,14 +15,18 @@ import ../../modules/hdmi/timing/timing;
 import ./gbc_display;
 
 // 検証用出力（1クロック遅れの写し）
-#[output] bool active_o = false;
-#[output] uint x_o = 0;
-#[output] uint y_o = 0;
+struct gbc_display_test_io {
+    #[output] bool active_o = false;
+    #[output] uint x_o = 0;
+    #[output] uint y_o = 0;
+};
+
+gbc_display_test_io io;
 
 async void mirror(posedge pixel_clk) {
-    active_o = gbc_active;
-    x_o = gbc_x as uint;
-    y_o = gbc_y as uint;
+    io.active_o = gbc_active;
+    io.x_o = gbc_x as uint;
+    io.y_o = gbc_y as uint;
 }
 
 import std::debug::assert;
@@ -31,18 +35,18 @@ import std::debug::assert;
 void tb() {
     // 1行目のアクティブ領域: 論理XはhcにパイプラインΔ=3遅れで追従する
     step(200);
-    assert(active_o, "line0 active region: gbc_active on");
-    assert(x_o == 197, "line0: gbc_x tracks hc with pipeline delay");
-    assert(y_o == 0, "line0: gbc_y is 0");
+    assert(io.active_o, "line0 active region: gbc_active on");
+    assert(io.x_o == 197, "line0: gbc_x tracks hc with pipeline delay");
+    assert(io.y_o == 0, "line0: gbc_y is 0");
 
     // 水平ブランキング: 非アクティブでXは行末で飽和する
     step(500);
-    assert(!active_o, "h-blanking: gbc_active off");
-    assert(x_o == 640, "h-blanking: gbc_x saturates at line end");
+    assert(!io.active_o, "h-blanking: gbc_active off");
+    assert(io.x_o == 640, "h-blanking: gbc_x saturates at line end");
 
     // 3行目の同位置: Yが行数に追従する
     step(1900);
-    assert(active_o, "line3 active region: gbc_active on");
-    assert(x_o == 197, "line3: gbc_x same position");
-    assert(y_o == 3, "line3: gbc_y tracks line count");
+    assert(io.active_o, "line3 active region: gbc_active on");
+    assert(io.x_o == 197, "line3: gbc_x same position");
+    assert(io.y_o == 3, "line3: gbc_y tracks line count");
 }

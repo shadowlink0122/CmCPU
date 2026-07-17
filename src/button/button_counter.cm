@@ -26,18 +26,22 @@ const uint CLK_FREQ = 210000000 / 4;  // 内蔵OSC 210MHz / FREQ_DIV(4)
     }
 #end
 
-// ボタン（プルアップ、押下でLow）
-#[input]
-#[sv::pin("AA13", io_type: "LVCMOS33", pull: "UP")]
-bool btn0;
+// ボタン入力とLED出力（IOインスタンス）
+struct button_counter_io {
+    #[input]
+    #[sv::pin("AA13", io_type: "LVCMOS33", pull: "UP")]
+    bool btn0;
 
-#[output]
-#[sv::pin("U12", io_type: "LVCMOS33", drive: 8)]
-bool led_ready = false;
+    #[output]
+    #[sv::pin("U12", io_type: "LVCMOS33", drive: 8)]
+    bool led_ready = false;
 
-#[output]
-#[sv::pin("G11", io_type: "LVCMOS33", drive: 8)]
-bool led_done = false;
+    #[output]
+    #[sv::pin("G11", io_type: "LVCMOS33", drive: 8)]
+    bool led_done = false;
+};
+
+button_counter_io io;
 
 #ifndef TEST
     bool clk = false;
@@ -79,8 +83,8 @@ void count(posedge clk) {
     }
 
     // 2bit表示
-    led_ready = (presses & 1) != 0;
-    led_done = (presses & 2) != 0;
+    io.led_ready = (presses & 1) != 0;
+    io.led_done = (presses & 2) != 0;
 }
 
 import std::debug::assert;
@@ -88,20 +92,20 @@ import std::debug::assert;
 // テストベンチ: 同期→デバウンス→押下エッジ→2bitカウント表示を検証
 #[test]
 void tb() {
-    btn0 = true;  // プルアップ（非押下）
+    io.btn0 = true;  // プルアップ（非押下）
     step(6);
-    assert(!led_ready, "no presses yet: bit0 off");
-    assert(!led_done, "no presses yet: bit1 off");
+    assert(!io.led_ready, "no presses yet: bit0 off");
+    assert(!io.led_done, "no presses yet: bit1 off");
 
-    btn0 = false;  // 押下（Low）
+    io.btn0 = false;  // 押下（Low）
     step(8);       // 同期2 + デバウンス2 + エッジ検出
-    assert(led_ready, "press 1: bit0 on");
-    assert(!led_done, "press 1: bit1 off");
+    assert(io.led_ready, "press 1: bit0 on");
+    assert(!io.led_done, "press 1: bit1 off");
 
-    btn0 = true;  // 離す
+    io.btn0 = true;  // 離す
     step(8);
-    btn0 = false;  // 2回目押下
+    io.btn0 = false;  // 2回目押下
     step(8);
-    assert(!led_ready, "press 2: bit0 off");
-    assert(led_done, "press 2: bit1 on");
+    assert(!io.led_ready, "press 2: bit0 off");
+    assert(io.led_done, "press 2: bit1 on");
 }

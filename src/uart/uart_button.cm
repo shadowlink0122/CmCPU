@@ -10,7 +10,7 @@
 // 動作:
 //   - ボタン (EX_KEY0) 押下ごとに "Pressed: N\r\n" を UART 送信
 //   - N はプレス回数 (0-9 ループ)
-//   - LED: 送信中に led_ready 点灯, 押下検出で led_done 点灯
+//   - LED: 送信中に io.led_ready 点灯, 押下検出で io.led_done 点灯
 //   - 約20msのデバウンス処理
 // ============================================================
 
@@ -40,11 +40,15 @@ const uint MSG_LEN = 12;  // "Pressed: N\r\n"
     }
 #end
 
-// 入出力ポート
-#[input] bool btn0 = true;         // EX_KEY0 (アクティブ LOW)
-#[output] bool uart_tx = true;     // UART TX
-#[output] bool led_ready = false;  // 送信中 LED (Red)
-#[output] bool led_done = false;   // ボタン検出 LED (Blue)
+// 入出力ポート（IOインスタンス）
+struct uart_button_io {
+    #[input] bool btn0 = true;         // EX_KEY0 (アクティブ LOW)
+    #[output] bool uart_tx = true;     // UART TX
+    #[output] bool led_ready = false;  // 送信中 LED (Red)
+    #[output] bool led_done = false;   // ボタン検出 LED (Blue)
+};
+
+uart_button_io io;
 
 // 内部信号
 #ifndef TEST
@@ -74,7 +78,7 @@ uint digit = DIGIT;
 void process(posedge clk) {
     // ==== デバウンス処理 ====
     if (phase == 0) {
-        if (btn0 == false) {
+        if (io.btn0 == false) {
             // ボタン押下中
             if (btn_stable == 1) {
                 db_cnt = db_cnt + 1;
@@ -101,15 +105,15 @@ void process(posedge clk) {
 
     // ==== 押下エッジ検出 → 送信開始 ====
     if (phase == 0) {
-        uart_tx = true;
+        io.uart_tx = true;
         if (btn_prev == 1) {
             if (btn_stable == 0) {
                 // 立ち下がりエッジ → 送信開始
                 digit = DIGIT + press_count;
                 phase = 1;
                 msg_idx = 0;
-                led_ready = true;
-                led_done = true;
+                io.led_ready = true;
+                io.led_done = true;
             }
         }
         btn_prev = btn_stable;
@@ -136,7 +140,7 @@ void process(posedge clk) {
 
     // ==== START ビット ====
     if (phase == 2) {
-        uart_tx = false;
+        io.uart_tx = false;
         if (clk_cnt == CLKS_PER_BIT - 1) {
             clk_cnt = 0;
             phase = 3;
@@ -157,7 +161,7 @@ void process(posedge clk) {
         if (bit_idx == 6) { tx_bit = (tx_data & 64) / 64; }
         if (bit_idx == 7) { tx_bit = (tx_data & 128) / 128; }
 
-        if (tx_bit == 1) { uart_tx = true; } else { uart_tx = false; }
+        if (tx_bit == 1) { io.uart_tx = true; } else { io.uart_tx = false; }
 
         if (clk_cnt == CLKS_PER_BIT - 1) {
             clk_cnt = 0;
@@ -173,15 +177,15 @@ void process(posedge clk) {
 
     // ==== STOP ビット ====
     if (phase == 4) {
-        uart_tx = true;
+        io.uart_tx = true;
         if (clk_cnt == CLKS_PER_BIT - 1) {
             clk_cnt = 0;
             msg_idx = msg_idx + 1;
             if (msg_idx == MSG_LEN) {
                 // 全文字送信完了 → IDLE に戻る
                 phase = 0;
-                led_ready = false;
-                led_done = false;
+                io.led_ready = false;
+                io.led_done = false;
                 if (press_count == 9) {
                     press_count = 0;
                 } else {
@@ -202,19 +206,19 @@ import std::debug::assert;
 // テストベンチ: ボタン押下→デバウンス→"Pressed: N"送信開始を検証
 #[test]
 void tb() {
-    btn0 = true;  // 非押下（プルアップ）
+    io.btn0 = true;  // 非押下（プルアップ）
     step(6);
-    assert(uart_tx, "idle high before press");
-    assert(!led_done, "no press detected yet");
+    assert(io.uart_tx, "idle high before press");
+    assert(!io.led_done, "no press detected yet");
 
-    btn0 = false;  // 押下
+    io.btn0 = false;  // 押下
     step(8);       // デバウンス2 + エッジ検出
-    assert(led_done, "press detected");
+    assert(io.led_done, "press detected");
     // 送信開始（LOAD→START）を待つ
     step(6);
-    assert(led_ready, "transmission in progress");
+    assert(io.led_ready, "transmission in progress");
     // 1バイト = 10bit * 2clk = 20clk、12バイト+LOADで約260clk待って完了
     step(300);
-    assert(uart_tx, "idle high after message");
-    assert(!led_ready, "transmission finished");
+    assert(io.uart_tx, "idle high after message");
+    assert(!io.led_ready, "transmission finished");
 }

@@ -26,13 +26,17 @@
 #end
 
 // CFG LED（デュアルパーパスピン。tclオプションでGPIO化）
-#[output]
-#[sv::pin("U12", io_type: "LVCMOS33", drive: 8)]
-bool led_ready = false;
+struct pwm_breath_io {
+    #[output]
+    #[sv::pin("U12", io_type: "LVCMOS33", drive: 8)]
+    bool led_ready = false;
 
-#[output]
-#[sv::pin("G11", io_type: "LVCMOS33", drive: 8)]
-bool led_done = false;
+    #[output]
+    #[sv::pin("G11", io_type: "LVCMOS33", drive: 8)]
+    bool led_done = false;
+};
+
+pwm_breath_io io;
 
 #ifndef TEST
     bool clk = false;
@@ -56,8 +60,8 @@ const uint CLK_FREQ = 210000000 / 4;  // 内蔵OSC 210MHz / FREQ_DIV(4)
 void breath(posedge clk) {
     // PWM出力（brightness/256 のデューティ）
     pwm_counter = pwm_counter + 1;
-    led_ready = pwm_counter < brightness;
-    led_done = pwm_counter >= brightness;  // 逆位相で交互に呼吸
+    io.led_ready = pwm_counter < brightness;
+    io.led_done = pwm_counter >= brightness;  // 逆位相で交互に呼吸
 
     // 輝度の三角波更新
     if (tick == STEP_COUNT) {
@@ -84,10 +88,10 @@ import std::debug::assert;
 #[test]
 void tb() {
     step(3);
-    assert(led_ready != led_done, "PWM outputs are complementary");
+    assert(io.led_ready != io.led_done, "PWM outputs are complementary");
     step(100);
-    assert(led_ready != led_done, "still complementary while breathing");
+    assert(io.led_ready != io.led_done, "still complementary while breathing");
     // brightness>pwm_counter の期間があること（輝度が上がっている）
     step(1);
-    assert(led_ready || led_done, "outputs are driven");
+    assert(io.led_ready || io.led_done, "outputs are driven");
 }

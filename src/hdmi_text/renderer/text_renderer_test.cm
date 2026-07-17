@@ -16,17 +16,20 @@ import ./gbc_display;
 import ../font/font_rom;
 import ./text_renderer;
 
-#[input] uint waddr;
-#[input] uint wchar;
-#[input] bool wen;
+struct text_renderer_test_io {
+    #[input] uint waddr;
+    #[input] uint wchar;
+    #[input] bool wen;
+    #[output] uint r_o = 0;
+};
 
-#[output] uint r_o = 0;
+text_renderer_test_io io;
 
 async void drive(posedge pixel_clk) {
-    text_addr = waddr as ushort;
-    text_char = wchar as ushort;
-    text_we = wen;
-    r_o = r_out as uint;
+    text_addr = io.waddr as ushort;
+    text_char = io.wchar as ushort;
+    text_we = io.wen;
+    io.r_o = r_out as uint;
 }
 
 import std::debug::assert;
@@ -36,19 +39,19 @@ import std::debug::assert;
 // パイプライン遅延Δ∈[3..7]を吸収する交差点 hc=8 で採取
 #[test]
 void tb() {
-    wen = false;
+    io.wen = false;
     // 'H'(72) をセル(0,0)へ書き込み
-    waddr = 0;
-    wchar = 72;
-    wen = true;
+    io.waddr = 0;
+    io.wchar = 72;
+    io.wen = true;
     step(3);
-    wen = false;
+    io.wen = false;
 
     // vc=3（'H'の横棒行）, hc=8 まで進める（総ステップ 3*800+8）
     step(2405);
-    assert(r_o == 0, "H crossbar row: black pixel");
+    assert(io.r_o == 0, "H crossbar row: black pixel");
 
     // 同じ行のグリフ外（hc≈40）: 白背景
     step(32);
-    assert(r_o == 255, "outside glyph: white background");
+    assert(io.r_o == 255, "outside glyph: white background");
 }

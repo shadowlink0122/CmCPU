@@ -16,23 +16,27 @@ import ../renderer/text_renderer;
 import ./animation_ctrl;
 
 // タイトル行はセル(row=8, col=18)起点。TITLEは43文字（インデックス0..42）
-#[output] uint title_first_o = 0;
-#[output] uint title_last_o = 0;
-#[output] uint title_after_o = 0;
+struct animation_ctrl_test_io {
+    #[output] uint title_first_o = 0;
+    #[output] uint title_last_o = 0;
+    #[output] uint title_after_o = 0;
+    #[output] uint title_max_waddr_o = 0;
+};
+
+animation_ctrl_test_io io;
 
 // 描画フェーズ (anim_ready) 中にタイトル行領域 (グリッド開始行より前) へ書かれた最大アドレス。
 // 範囲外描画のデータは 'x' になり値比較のassertでは検出できない (x楽観性) ため、アドレスで検査する
-#[output] uint title_max_waddr_o = 0;
 
 async void probe(posedge pixel_clk) {
-    title_first_o = text_buf[8 * 80 + 18] as uint;
-    title_last_o = text_buf[8 * 80 + 18 + 42] as uint;
-    title_after_o = text_buf[8 * 80 + 18 + 43] as uint;
+    io.title_first_o = text_buf[8 * 80 + 18] as uint;
+    io.title_last_o = text_buf[8 * 80 + 18 + 42] as uint;
+    io.title_after_o = text_buf[8 * 80 + 18 + 43] as uint;
 
     if (anim_ready && text_we) {
         uint a = text_addr as uint;
-        if (a < 16 * 80 && a > title_max_waddr_o) {
-            title_max_waddr_o = a;
+        if (a < 16 * 80 && a > io.title_max_waddr_o) {
+            io.title_max_waddr_o = a;
         }
     }
 }
@@ -43,8 +47,8 @@ import std::debug::assert;
 #[test]
 void tb() {
     step(5200);
-    assert(title_first_o == ('=' as uint), "title first char is '='");
-    assert(title_last_o == ('=' as uint), "title last char is '='");
-    assert(title_after_o == (' ' as uint), "cell after title stays blank");
-    assert(title_max_waddr_o == 8 * 80 + 18 + 42, "title writes stop at last char (43 chars)");
+    assert(io.title_first_o == ('=' as uint), "title first char is '='");
+    assert(io.title_last_o == ('=' as uint), "title last char is '='");
+    assert(io.title_after_o == (' ' as uint), "cell after title stays blank");
+    assert(io.title_max_waddr_o == 8 * 80 + 18 + 42, "title writes stop at last char (43 chars)");
 }
