@@ -65,7 +65,7 @@ uint tx_bit = 0;
 // メッセージ送信
 uint msg_idx = 0;
 uint press_count = 0;  // 0-9 ループ
-uint digit = 48;       // ASCII '0'
+uint digit = '0' as uint;
 
 // メインプロセス: デバウンス + エッジ検出 + UART TX
 void process(posedge clk) {
@@ -102,7 +102,7 @@ void process(posedge clk) {
         if (btn_prev == 1) {
             if (btn_stable == 0) {
                 // 立ち下がりエッジ → 送信開始
-                digit = 48 + press_count;
+                digit = ('0' as uint) + press_count;
                 phase = 1;
                 msg_idx = 0;
                 led_ready = true;

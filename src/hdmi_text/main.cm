@@ -46,8 +46,8 @@ import std::debug::assert;
 async void sim_mirror(posedge pixel_clk) {
     tmds_r_o = tmds_r as uint;
     tmds_b_o = tmds_b as uint;
-    title_first_o = text_buf[658] as uint;
-    title_after_o = text_buf[701] as uint;
+    title_first_o = text_buf[8 * 80 + 18] as uint;
+    title_after_o = text_buf[8 * 80 + 18 + 43] as uint;
 }
 
 // 統合テスト: timing→テキスト描画→encoder パイプライン全体を検証
@@ -69,6 +69,6 @@ void tb() {
     // アニメーション完了後: タイトル行がテキストバッファへ描画されている
     // （TEST用短縮定数: 起動200 + クリア4800 + タイトル43文字 ≈ 5045クロック）
     step(4600);
-    assert(title_first_o == 61, "title first char is '=' after animation");
-    assert(title_after_o == 32, "cell after title stays blank");
+    assert(title_first_o == ('=' as uint), "title first char is '=' after animation");
+    assert(title_after_o == (' ' as uint), "cell after title stays blank");
 }

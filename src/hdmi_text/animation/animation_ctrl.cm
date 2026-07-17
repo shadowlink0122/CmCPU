@@ -11,7 +11,7 @@ import ./display_strings;
     const uint FRAME_CLOCKS   = 100;
     const uint STARTUP_FRAMES = 2;
 #else
-    const uint FRAME_CLOCKS   = 420000;  // 1フレーム = 800 × 525 クロック
+    const uint FRAME_CLOCKS   = 800 * 525;  // 1フレーム分のピクセルクロック数
     const uint STARTUP_FRAMES = 60;      // 起動待機 (フレーム数)
 #end
 
@@ -100,9 +100,9 @@ ushort get_table_char(utiny r, utiny idx) {
     ushort res_char = ' ' as ushort;
 
     switch (offset) {
-        case (0) { res_char = (digit100 + 48) as ushort; }
-        case (1) { res_char = (digit10 + 48) as ushort; }
-        case (2) { res_char = (digit1 + 48) as ushort; }
+        case (0) { res_char = (digit100 + ('0' as uint)) as ushort; }
+        case (1) { res_char = (digit10 + ('0' as uint)) as ushort; }
+        case (2) { res_char = (digit1 + ('0' as uint)) as ushort; }
         case (3) { res_char = ':' as ushort; }
         case (4) { res_char = '[' as ushort; }
         case (5 ... 7) {

@@ -46,19 +46,18 @@ void tb() {
     assert(hsync_o, "back porch: hsync high again");
     assert(vsync_o, "still first line: vsync high");
 
-    // 垂直: VSYNCパルス区間（vc=490..491、V_ACTIVE+V_FP後）まで進める
-    // 現在位置 771 → 490行目のhc≈100（490*800+100 = 392100）
-    step(391329);
+    // 垂直: VSYNCパルス区間（vc=490..491、V_ACTIVE+V_FP後）まで進める（現在位置771 → 490行目のhc≈100）
+    step(490 * 800 + 100 - 771);
     assert(!vsync_o, "vsync pulse region: vsync low");
     assert(!de_o, "vertical blanking: de off");
 
     // VSYNCパルスを抜ける（vc=492、バックポーチ）
-    step(1600);
+    step(2 * 800);
     assert(vsync_o, "vertical back porch: vsync high again");
     assert(!de_o, "vertical back porch: de still off");
 
     // フレーム境界を跨いで次フレームのアクティブ領域へ（vc=0, hc≈100）
-    step(26400);
+    step(33 * 800);
     assert(de_o, "next frame active region: de on");
     assert(vsync_o, "next frame first line: vsync high");
 }
