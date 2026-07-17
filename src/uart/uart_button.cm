@@ -14,12 +14,15 @@
 //   - 約20msのデバウンス処理
 // ============================================================
 
+import ../modules/common/ascii;
+
 // 定数定義
 const uint CLK_FREQ = 52500000;  // クロック周波数 (Hz)
+const uint BAUD_RATE = 115200;
 #ifdef TEST
     const uint CLKS_PER_BIT = 2;
 #else
-    const uint CLKS_PER_BIT = 456;  // 52500000 / 115200 ≈ 455.7
+    const uint CLKS_PER_BIT = (CLK_FREQ + BAUD_RATE / 2) / BAUD_RATE;  // 四捨五入
 #end
 const uint MSG_LEN = 12;  // "Pressed: N\r\n"
 
@@ -65,7 +68,7 @@ uint tx_bit = 0;
 // メッセージ送信
 uint msg_idx = 0;
 uint press_count = 0;  // 0-9 ループ
-uint digit = '0' as uint;
+uint digit = DIGIT;
 
 // メインプロセス: デバウンス + エッジ検出 + UART TX
 void process(posedge clk) {
@@ -102,7 +105,7 @@ void process(posedge clk) {
         if (btn_prev == 1) {
             if (btn_stable == 0) {
                 // 立ち下がりエッジ → 送信開始
-                digit = ('0' as uint) + press_count;
+                digit = DIGIT + press_count;
                 phase = 1;
                 msg_idx = 0;
                 led_ready = true;

@@ -1,5 +1,6 @@
 module animation_ctrl;
 
+import ../../modules/common/ascii;
 import ../../modules/hdmi/timing/timing;
 import ../renderer/text_renderer;
 import ../font/font_rom;
@@ -100,9 +101,9 @@ ushort get_table_char(utiny r, utiny idx) {
     ushort res_char = ' ' as ushort;
 
     switch (offset) {
-        case (0) { res_char = (digit100 + ('0' as uint)) as ushort; }
-        case (1) { res_char = (digit10 + ('0' as uint)) as ushort; }
-        case (2) { res_char = (digit1 + ('0' as uint)) as ushort; }
+        case (0) { res_char = (digit100 + DIGIT) as ushort; }
+        case (1) { res_char = (digit10 + DIGIT) as ushort; }
+        case (2) { res_char = (digit1 + DIGIT) as ushort; }
         case (3) { res_char = ':' as ushort; }
         case (4) { res_char = '[' as ushort; }
         case (5 ... 7) {
