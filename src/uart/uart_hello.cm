@@ -30,13 +30,13 @@ const uint MSG_LEN = 14;         // "Hello, FPGA!\r\n"
 #end
 
 // 出力ポート（IOインスタンス）
-struct uart_hello_io {
+struct UartHelloIo {
     #[output] bool uart_tx = true;     // UART TX (アイドル = HIGH)
     #[output] bool led_ready = false;  // 送信中 LED
     #[output] bool led_done = false;   // 送信完了 LED
 };
 
-uart_hello_io io;
+UartHelloIo io;
 
 // 内部信号
 #ifndef TEST

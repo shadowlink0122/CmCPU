@@ -15,13 +15,13 @@ import ../../modules/hdmi/timing/timing;
 import ./gbc_display;
 
 // 検証用出力（1クロック遅れの写し）
-struct gbc_display_test_io {
+struct GbcDisplayTestIo {
     #[output] bool active_o = false;
     #[output] uint x_o = 0;
     #[output] uint y_o = 0;
 };
 
-gbc_display_test_io io;
+GbcDisplayTestIo io;
 
 async void mirror(posedge pixel_clk) {
     io.active_o = gbc_active;

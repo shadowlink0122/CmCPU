@@ -26,7 +26,7 @@
 #end
 
 // CFG LED（デュアルパーパスピン。tclオプションでGPIO化）
-struct pwm_breath_io {
+struct PwmBreathIo {
     #[output]
     #[sv::pin("U12", io_type: "LVCMOS33", drive: 8)]
     bool led_ready = false;
@@ -36,7 +36,7 @@ struct pwm_breath_io {
     bool led_done = false;
 };
 
-pwm_breath_io io;
+PwmBreathIo io;
 
 #ifndef TEST
     bool clk = false;

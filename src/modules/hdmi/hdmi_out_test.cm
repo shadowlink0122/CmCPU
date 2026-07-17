@@ -22,13 +22,13 @@ async void drive(posedge pixel_clk) {
 }
 
 // 検証用出力: TMDS符号の写し
-struct hdmi_out_test_io {
+struct HdmiOutTestIo {
     #[output] uint tmds_r_o = 0;
     #[output] uint tmds_g_o = 0;
     #[output] uint tmds_b_o = 0;
 };
 
-hdmi_out_test_io io;
+HdmiOutTestIo io;
 
 async void mirror(posedge pixel_clk) {
     io.tmds_r_o = tmds_r as uint;

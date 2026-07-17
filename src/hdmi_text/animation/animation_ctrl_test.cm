@@ -16,14 +16,14 @@ import ../renderer/text_renderer;
 import ./animation_ctrl;
 
 // タイトル行はセル(row=8, col=18)起点。TITLEは43文字（インデックス0..42）
-struct animation_ctrl_test_io {
+struct AnimationCtrlTestIo {
     #[output] uint title_first_o = 0;
     #[output] uint title_last_o = 0;
     #[output] uint title_after_o = 0;
     #[output] uint title_max_waddr_o = 0;
 };
 
-animation_ctrl_test_io io;
+AnimationCtrlTestIo io;
 
 // 描画フェーズ (anim_ready) 中にタイトル行領域 (グリッド開始行より前) へ書かれた最大アドレス。
 // 範囲外描画のデータは 'x' になり値比較のassertでは検出できない (x楽観性) ため、アドレスで検査する

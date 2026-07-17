@@ -16,14 +16,14 @@ import ./gbc_display;
 import ../font/font_rom;
 import ./text_renderer;
 
-struct text_renderer_test_io {
+struct TextRendererTestIo {
     #[input] uint waddr;
     #[input] uint wchar;
     #[input] bool wen;
     #[output] uint r_o = 0;
 };
 
-text_renderer_test_io io;
+TextRendererTestIo io;
 
 async void drive(posedge pixel_clk) {
     text_addr = io.waddr as ushort;

@@ -15,7 +15,7 @@ import ../constants/hdmi_constants;
 import ../timing/timing;
 import ./encoder;
 
-struct encoder_test_io {
+struct EncoderTestIo {
     #[input] uint r_in;
     #[input] uint g_in;
     #[input] uint b_in;
@@ -24,7 +24,7 @@ struct encoder_test_io {
     #[output] uint tmds_b_o = 0;
 };
 
-encoder_test_io io;
+EncoderTestIo io;
 
 async void feed(posedge pixel_clk) {
     r_out = io.r_in as int;

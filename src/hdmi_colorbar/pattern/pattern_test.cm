@@ -11,13 +11,13 @@ assign bool pixel_clk = clk;
 import ../../modules/hdmi/timing/timing;
 import ./pattern;
 
-struct pattern_test_io {
+struct PatternTestIo {
     #[output] uint r_o = 0;
     #[output] uint g_o = 0;
     #[output] uint b_o = 0;
 };
 
-pattern_test_io io;
+PatternTestIo io;
 
 async void mirror(posedge pixel_clk) {
     io.r_o = r_out as uint;

@@ -16,13 +16,13 @@ assign bool pixel_clk = clk;
 import ./timing;
 
 // 検証用出力（1クロック遅れの写し）
-struct timing_test_io {
+struct TimingTestIo {
     #[output] bool hsync_o = true;
     #[output] bool vsync_o = true;
     #[output] bool de_o = false;
 };
 
-timing_test_io io;
+TimingTestIo io;
 
 async void mirror(posedge pixel_clk) {
     io.hsync_o = hsync_reg;

@@ -25,12 +25,12 @@ const uint CLK_FREQ = 210000000 / 4;  // 内蔵OSC 210MHz / FREQ_DIV(4)
 #end
 
 // 出力ポート: CFG LED（IOインスタンス）
-struct blink_io {
+struct BlinkIo {
     #[output] bool led_ready = false;
     #[output] bool led_done = false;
 };
 
-blink_io io;
+BlinkIo io;
 
 // 内部信号
 uint counter = 0;

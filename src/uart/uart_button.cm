@@ -41,14 +41,14 @@ const uint MSG_LEN = 12;  // "Pressed: N\r\n"
 #end
 
 // 入出力ポート（IOインスタンス）
-struct uart_button_io {
+struct UartButtonIo {
     #[input] bool btn0 = true;         // EX_KEY0 (アクティブ LOW)
     #[output] bool uart_tx = true;     // UART TX
     #[output] bool led_ready = false;  // 送信中 LED (Red)
     #[output] bool led_done = false;   // ボタン検出 LED (Blue)
 };
 
-uart_button_io io;
+UartButtonIo io;
 
 // 内部信号
 #ifndef TEST

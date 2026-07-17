@@ -27,7 +27,7 @@
 #end
 
 // 入出力ポート（IOインスタンス）
-struct simple_gpu_io {
+struct SimpleGpuIo {
     // コマンド入力ポート
     #[input] bool start = false;      // 描画開始（DONE解除にも使用）
     #[input] utiny rect_x = 0;        // 矩形左上X (0..15)
@@ -45,7 +45,7 @@ struct simple_gpu_io {
     #[output] bool done = false;
 };
 
-simple_gpu_io io;
+SimpleGpuIo io;
 
 // FSM状態
 const uint ST_IDLE = 0;
