@@ -34,7 +34,7 @@ async void probe(posedge pixel_clk) {
     io.title_after_o = text_buf[8 * 80 + 18 + 43] as uint;
 
     if (anim_ready && text_we) {
-        uint a = text_addr as uint;
+        const uint a = text_addr as uint;
         if (a < 16 * 80 && a > io.title_max_waddr_o) {
             io.title_max_waddr_o = a;
         }

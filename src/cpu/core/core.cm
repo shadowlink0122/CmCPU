@@ -23,20 +23,20 @@ export uint result_reg = 0;      // MMIO結果出力レジスタ
 void cpu_exec(posedge clk) {
     if (!halted) {
         // フェッチ・デコード
-        uint instr = prog_rom[pc & 15];
-        uint op = dec_op(instr);
-        uint rd = dec_rd(instr);
-        uint rs1 = dec_rs1(instr);
-        uint rs2 = dec_rs2(instr);
-        uint imm6 = dec_imm6s(instr);
-        uint imm8 = dec_imm8(instr);
+        const uint instr = prog_rom[pc & 15];
+        const uint op = dec_op(instr);
+        const uint rd = dec_rd(instr);
+        const uint rs1 = dec_rs1(instr);
+        const uint rs2 = dec_rs2(instr);
+        const uint imm6 = dec_imm6s(instr);
+        const uint imm8 = dec_imm8(instr);
 
         // レジスタ読み出し (r0は常に0)
-        uint a = rf_read(rs1);
-        uint b = rf_read(rs2);
+        const uint a = rf_read(rs1);
+        const uint b = rf_read(rs2);
 
         // 既定の次アドレス (分岐・ジャンプ命令はこの後で上書きする)
-        uint next_pc = add32(pc, 1, 0);
+        const uint next_pc = add32(pc, 1, 0);
         pc = next_pc;
 
         // 実行
@@ -50,12 +50,12 @@ void cpu_exec(posedge clk) {
             0x7 => { if (rd != 0) { regs[rd] = imm8; } }                     // LDI
             0x8 => { if (rd != 0) { regs[rd] = add32(a, imm6, 0); } }        // ADDI
             0x9 => {                                                         // LD
-                uint laddr = add32(a, imm6, 0) & 255;
+                const uint laddr = add32(a, imm6, 0) & 255;
                 if (rd != 0) { regs[rd] = dram[laddr]; }
             }
             0xA => {                                                         // ST
-                uint saddr = add32(a, imm6, 0) & 255;
-                uint sval = rf_read(rd);
+                const uint saddr = add32(a, imm6, 0) & 255;
+                const uint sval = rf_read(rd);
                 dram[saddr] = sval;
                 if (saddr == MMIO_RESULT_ADDR) {
                     result_reg = sval & 255;                                 // MMIO: 結果出力

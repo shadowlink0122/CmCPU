@@ -66,7 +66,7 @@ export uint dec_rs2(uint instr) {
 
 // 符号付き6bit即値 [5:0] (32bitへ符号拡張)
 export uint dec_imm6s(uint instr) {
-    uint v = instr & 63;
+    const uint v = instr & 63;
     if ((v & 32) != 0) {
         return v | 0xFFFFFFC0;
     }

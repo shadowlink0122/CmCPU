@@ -56,7 +56,7 @@ ushort get_table_char(utiny r, utiny idx) {
         else             { c = 7; offset = idx - 70; }
     }
 
-    ushort val = (c as ushort) * 37 + (r as ushort);  // 文字コード (0〜295)
+    const ushort val = (c as ushort) * 37 + (r as ushort);  // 文字コード (0〜295)
 
     utiny digit100 = 0;
     utiny digit10 = 0;
@@ -184,7 +184,7 @@ export async void process_anim(posedge pixel_clk) {
             else if (row_idx >= 2) {
                 if (row_idx <= 38) {
                     // グリッドデータ行の描画 (37行表示)
-                    utiny r = row_idx - 2;
+                    const utiny r = row_idx - 2;
                     text_addr = (((16 + r as ushort) * (TEXT_COLS as ushort))
                         + (write_cnt as ushort)) as ushort;
                     text_char = get_table_char(r, write_cnt);

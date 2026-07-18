@@ -8,8 +8,8 @@ module adder;
 
 // 全加算器: 1bitの加算 (返り値 bit1=キャリー, bit0=和)
 export uint full_adder(uint a, uint b, uint cin) {
-    uint s = (a ^ b ^ cin) & 1;
-    uint c = ((a & b) | (cin & (a ^ b))) & 1;
+    const uint s = (a ^ b ^ cin) & 1;
+    const uint c = ((a & b) | (cin & (a ^ b))) & 1;
     return (c << 1) | s;
 }
 
@@ -19,7 +19,7 @@ export uint add32(uint a, uint b, uint cin) {
     uint result = 0;
     uint carry = cin & 1;
     for (uint i = 0; i < 32; i = i + 1) {
-        uint fa = full_adder((a >> i) & 1, (b >> i) & 1, carry);
+        const uint fa = full_adder((a >> i) & 1, (b >> i) & 1, carry);
         result = result | ((fa & 1) << i);
         carry = (fa >> 1) & 1;
     }
