@@ -37,8 +37,7 @@ async void feed(posedge pixel_clk) {
 
 import std::debug::assert;
 
-// テストベンチ: コントロールトークン（両sync非アクティブ/hsyncパルス中）と
-// アクティブ期間のデータ符号がトークンと異なることを検証
+// テストベンチ: コントロールトークン（両sync非アクティブ/hsyncパルス中）とアクティブ期間のデータ符号がトークンと異なることを検証
 #[test]
 void tb() {
     io.r_in = 128;

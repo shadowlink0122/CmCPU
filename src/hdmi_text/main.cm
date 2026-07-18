@@ -66,8 +66,7 @@ void tb() {
     step(52);
     assert(tmds_b_o == CTRL_10, "hsync: B ctrl {vs=1,hs=0}");
 
-    // アニメーション完了後: タイトル行がテキストバッファへ描画されている
-    // （TEST用短縮定数: 起動200 + クリア4800 + タイトル43文字 ≈ 5045クロック）
+    // アニメーション完了後: タイトル行がテキストバッファへ描画されている（TEST用短縮定数: 起動200 + クリア4800 + タイトル43文字 ≈ 5045クロック）
     step(4600);
     assert(title_first_o == ('=' as uint), "title first char is '=' after animation");
     assert(title_after_o == (' ' as uint), "cell after title stays blank");

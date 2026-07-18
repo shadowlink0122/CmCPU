@@ -173,8 +173,7 @@ export async void process_anim(posedge pixel_clk) {
                 text_addr = (8 * (TEXT_COLS as ushort) + 18 + (write_cnt as ushort)) as ushort;
                 text_char = get_string_char(true, write_cnt, 0) as ushort;
                 text_we = true;
-                // TITLEは43文字 (インデックス0..42)。加算後の値は同サイクル内で読めない (ノンブロッキング代入) ため、
-                // 加算前の値で最終文字を判定する。加算後判定だと1サイクル余分に走り TITLE[43] (範囲外) が描画される
+                // TITLEは43文字 (インデックス0..42)。加算後の値は同サイクル内で読めない (ノンブロッキング代入) ため、加算前の値で最終文字を判定する。加算後判定だと1サイクル余分に走り TITLE[43] (範囲外) が描画される
                 if (write_cnt == 42) {
                     write_cnt = 0;
                     row_idx = 2;     // コラム見出しをスキップして直接グリッドへ
