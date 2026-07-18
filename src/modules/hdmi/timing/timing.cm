@@ -1,3 +1,5 @@
+//! platform: sv
+
 module timing;
 
 import ../constants/hdmi_constants;

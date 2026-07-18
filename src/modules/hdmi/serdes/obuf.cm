@@ -1,3 +1,5 @@
+//! platform: sv
+
 module obuf;
 
 import ./oser;

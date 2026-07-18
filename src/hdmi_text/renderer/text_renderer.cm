@@ -1,3 +1,5 @@
+//! platform: sv
+
 module text_renderer;
 
 import ../../modules/hdmi/timing/timing;

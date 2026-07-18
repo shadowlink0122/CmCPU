@@ -1,3 +1,5 @@
+//! platform: sv
+
 module demo_program;
 
 import ../core/decoder;

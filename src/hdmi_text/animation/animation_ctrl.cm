@@ -1,3 +1,5 @@
+//! platform: sv
+
 module animation_ctrl;
 
 import ../../modules/common/ascii;

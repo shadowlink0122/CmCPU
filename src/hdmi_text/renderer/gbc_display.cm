@@ -1,3 +1,5 @@
+//! platform: sv
+
 module gbc_display;
 
 import ../../modules/hdmi/constants/hdmi_constants;

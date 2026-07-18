@@ -1,3 +1,5 @@
+//! platform: sv
+
 module encoder;
 
 import ../constants/hdmi_constants;

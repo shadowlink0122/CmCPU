@@ -1,3 +1,5 @@
+//! platform: sv
+
 // このファイルは generate_font.py により自動生成されました。手動で編集しないでください。
 // フォントデータ本体は font_rom.hex（$readmemhで読み込み）。
 module font_rom;

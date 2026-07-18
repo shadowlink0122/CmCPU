@@ -1,3 +1,5 @@
+//! platform: sv
+
 module alu;
 
 import ./adder;

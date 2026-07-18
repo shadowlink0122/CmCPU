@@ -1,3 +1,5 @@
+//! platform: sv
+
 module pattern;
 
 import ../../modules/hdmi/constants/hdmi_constants;
