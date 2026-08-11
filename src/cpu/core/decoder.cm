@@ -70,7 +70,7 @@ export uint dec_rs2(uint instr) {
 export uint dec_imm6s(uint instr) {
     const uint v = instr & 63;
     if ((v & 32) != 0) {
-        return v | 0xFFFFFFC0;
+        return (v | 0xFFFFFFC0) as uint;
     }
     return v;
 }

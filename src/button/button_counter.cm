@@ -78,7 +78,7 @@ void count(posedge clk) {
     // 押下（High→Low）エッジでカウント
     btn_prev = btn_state;
     if (btn_prev && !btn_state) {
-        presses = presses + 1;
+        presses = (presses + 1) as utiny;
     }
 
     // 2bit表示

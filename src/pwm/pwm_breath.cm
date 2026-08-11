@@ -59,7 +59,7 @@ const uint CLK_FREQ = 210000000 / 4;  // 内蔵OSC 210MHz / FREQ_DIV(4)
 
 void breath(posedge clk) {
     // PWM出力（brightness/256 のデューティ）
-    pwm_counter = pwm_counter + 1;
+    pwm_counter = (pwm_counter + 1) as utiny;
     io.led_ready = pwm_counter < brightness;
     io.led_done = pwm_counter >= brightness;  // 逆位相で交互に呼吸
 
@@ -67,12 +67,12 @@ void breath(posedge clk) {
     if (tick == STEP_COUNT) {
         tick = 0;
         if (dir_up) {
-            brightness = brightness + 1;
+            brightness = (brightness + 1) as utiny;
             if (brightness == 255) {
                 dir_up = false;
             }
         } else {
-            brightness = brightness - 1;
+            brightness = (brightness - 1) as utiny;
             if (brightness == 0) {
                 dir_up = true;
             }
