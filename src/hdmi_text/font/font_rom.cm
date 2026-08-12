@@ -1,5 +1,3 @@
-//! platform: sv
-
 // このファイルは generate_font.py により自動生成されました。手動で編集しないでください。
 // フォントデータ本体は font_rom.hex（$readmemhで読み込み）。
 module font_rom;
@@ -23,6 +21,6 @@ export uint lookup_font(ushort char_code, utiny row) {
     if (char_code < 32 as ushort || char_code > 295 as ushort) {
         return 0;
     }
-    const uint idx = ((char_code as uint) - FONT_BASE) * 8 + (row as uint);
+    uint idx = ((char_code as uint) - FONT_BASE) * 8 + (row as uint);
     return font_data[idx] as uint;
 }

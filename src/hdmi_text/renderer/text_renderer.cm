@@ -89,7 +89,7 @@ export async void render_process(posedge pixel_clk) {
     // -------------------------------------------------------
     // Stage 1: フォントROMデータのルックアップ (Stage 2 更新用)
     // -------------------------------------------------------
-    font_byte = lookup_font(char_code, font_row_reg);
+    font_byte = lookup_font(char_code, font_row_reg) as utiny;
 
     // 制御信号のステージング (Stage 2 更新用)
     font_col_reg_d1 = font_col_reg;

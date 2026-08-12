@@ -49,16 +49,16 @@ ushort get_table_char(utiny r, utiny idx) {
     utiny offset = 0;
     switch (idx) {
         case (0 ... 9)   { c = 0; offset = idx; }
-        case (10 ... 19) { c = 1; offset = idx - 10; }
-        case (20 ... 29) { c = 2; offset = idx - 20; }
-        case (30 ... 39) { c = 3; offset = idx - 30; }
-        case (40 ... 49) { c = 4; offset = idx - 40; }
-        case (50 ... 59) { c = 5; offset = idx - 50; }
-        case (60 ... 69) { c = 6; offset = idx - 60; }
-        else             { c = 7; offset = idx - 70; }
+        case (10 ... 19) { c = 1; offset = (idx - 10) as utiny; }
+        case (20 ... 29) { c = 2; offset = (idx - 20) as utiny; }
+        case (30 ... 39) { c = 3; offset = (idx - 30) as utiny; }
+        case (40 ... 49) { c = 4; offset = (idx - 40) as utiny; }
+        case (50 ... 59) { c = 5; offset = (idx - 50) as utiny; }
+        case (60 ... 69) { c = 6; offset = (idx - 60) as utiny; }
+        else             { c = 7; offset = (idx - 70) as utiny; }
     }
 
-    const ushort val = (c as ushort) * 37 + (r as ushort);  // 文字コード (0〜295)
+    const ushort val = ((c as ushort) * 37 + (r as ushort)) as ushort;  // 文字コード (0〜295)
 
     utiny digit100 = 0;
     utiny digit10 = 0;
@@ -68,11 +68,11 @@ ushort get_table_char(utiny r, utiny idx) {
     switch (temp) {
         case (200 ... 295) {
             digit100 = 2;
-            temp = temp - 200;
+            temp = (temp - 200) as ushort;
         }
         case (100 ... 199) {
             digit100 = 1;
-            temp = temp - 100;
+            temp = (temp - 100) as ushort;
         }
         else {
             digit100 = 0;
@@ -80,15 +80,15 @@ ushort get_table_char(utiny r, utiny idx) {
     }
 
     switch (temp) {
-        case (90 ... 99) { digit10 = 9; temp = temp - 90; }
-        case (80 ... 89) { digit10 = 8; temp = temp - 80; }
-        case (70 ... 79) { digit10 = 7; temp = temp - 70; }
-        case (60 ... 69) { digit10 = 6; temp = temp - 60; }
-        case (50 ... 59) { digit10 = 5; temp = temp - 50; }
-        case (40 ... 49) { digit10 = 4; temp = temp - 40; }
-        case (30 ... 39) { digit10 = 3; temp = temp - 30; }
-        case (20 ... 29) { digit10 = 2; temp = temp - 20; }
-        case (10 ... 19) { digit10 = 1; temp = temp - 10; }
+        case (90 ... 99) { digit10 = 9; temp = (temp - 90) as ushort; }
+        case (80 ... 89) { digit10 = 8; temp = (temp - 80) as ushort; }
+        case (70 ... 79) { digit10 = 7; temp = (temp - 70) as ushort; }
+        case (60 ... 69) { digit10 = 6; temp = (temp - 60) as ushort; }
+        case (50 ... 59) { digit10 = 5; temp = (temp - 50) as ushort; }
+        case (40 ... 49) { digit10 = 4; temp = (temp - 40) as ushort; }
+        case (30 ... 39) { digit10 = 3; temp = (temp - 30) as ushort; }
+        case (20 ... 29) { digit10 = 2; temp = (temp - 20) as ushort; }
+        case (10 ... 19) { digit10 = 1; temp = (temp - 10) as ushort; }
         else             { digit10 = 0; }
     }
 
@@ -162,7 +162,7 @@ export async void process_anim(posedge pixel_clk) {
         // 1フレームごとにディレイ更新
         if (frame_cnt == 0) {
             if (row_delay > 0) {
-                row_delay = row_delay - 1;
+                row_delay = (row_delay - 1) as utiny;
             }
         }
 
@@ -179,13 +179,13 @@ export async void process_anim(posedge pixel_clk) {
                     row_idx = 2;     // コラム見出しをスキップして直接グリッドへ
                     row_delay = 10;  // 10フレーム待機
                 } else {
-                    write_cnt = write_cnt + 1;
+                    write_cnt = (write_cnt + 1) as utiny;
                 }
             }
             else if (row_idx >= 2) {
                 if (row_idx <= 38) {
                     // グリッドデータ行の描画 (37行表示)
-                    const utiny r = row_idx - 2;
+                    const utiny r = (row_idx - 2) as utiny;
                     text_addr = (((16 + r as ushort) * (TEXT_COLS as ushort))
                         + (write_cnt as ushort)) as ushort;
                     text_char = get_table_char(r, write_cnt);
@@ -193,10 +193,10 @@ export async void process_anim(posedge pixel_clk) {
                     // 1行は80文字 (インデックス0..79)。タイトル行と同様に加算前の値で行末を判定する
                     if (write_cnt == 79) {
                         write_cnt = 0;
-                        row_idx = row_idx + 1;
+                        row_idx = (row_idx + 1) as utiny;
                         row_delay = 10;
                     } else {
-                        write_cnt = write_cnt + 1;
+                        write_cnt = (write_cnt + 1) as utiny;
                     }
                 } else {
                     text_we = false;

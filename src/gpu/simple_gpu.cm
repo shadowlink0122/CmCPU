@@ -81,8 +81,8 @@ void gpu(posedge clk) {
                 io.done = false;
                 x0_reg = io.rect_x;
                 y0_reg = io.rect_y;
-                x1_reg = io.rect_x + io.rect_w - 1;
-                y1_reg = io.rect_y + io.rect_h - 1;
+                x1_reg = (io.rect_x + io.rect_w - 1) as uint;
+                y1_reg = (io.rect_y + io.rect_h - 1) as uint;
                 color_reg = io.rect_color;
                 clr_addr = 0;
                 io.busy = true;
