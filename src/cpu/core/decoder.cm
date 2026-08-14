@@ -1,0 +1,81 @@
+//! platform: sv
+
+module decoder;
+
+// ============================================================
+// 命令デコーダ: 16bit命令のフィールド抽出
+// ============================================================
+// 命令フォーマット:
+//   R形式:  [15:12] op / [11:9] rd / [8:6] rs1 / [5:3] rs2(またはfunct)
+//   I形式:  [15:12] op / [11:9] rd / [8:6] rs1 / [5:0] imm6 (符号付き)
+//   LI形式: [15:12] op / [11:9] rd / [7:0] imm8 (符号なし)
+//
+// オペコード一覧:
+//   0x0 NOP                     何もしない
+//   0x1 ADD  rd, rs1, rs2       rd = rs1 + rs2
+//   0x2 SUB  rd, rs1, rs2       rd = rs1 - rs2
+//   0x3 AND  rd, rs1, rs2       rd = rs1 & rs2
+//   0x4 OR   rd, rs1, rs2       rd = rs1 | rs2
+//   0x5 XOR  rd, rs1, rs2       rd = rs1 ^ rs2
+//   0x6 SHIFT rd, rs1, funct    rd = rs1 << 1 (funct=0) / rs1 >> 1 (funct=1)
+//   0x7 LDI  rd, imm8           rd = imm8
+//   0x8 ADDI rd, rs1, imm6      rd = rs1 + imm6 (符号付き即値)
+//   0x9 LD   rd, [rs1 + imm6]   rd = dram[rs1 + imm6]
+//   0xA ST   rd, [rs1 + imm6]   dram[rs1 + imm6] = rd
+//   0xB BEQ  ra, rb, imm6       ra == rb なら pc = pc + 1 + imm6 (相対分岐)
+//   0xC BNE  ra, rb, imm6       ra != rb なら pc = pc + 1 + imm6 (相対分岐)
+//   0xD JAL  rd, imm8           rd = pc + 1; pc = imm8 (関数呼び出し)
+//   0xE JR   rs1                pc = rs1 (関数からの復帰)
+//   0xF HALT                    停止
+// ============================================================
+
+export const uint OP_NOP   = 0x0;
+export const uint OP_ADD   = 0x1;
+export const uint OP_SUB   = 0x2;
+export const uint OP_AND   = 0x3;
+export const uint OP_OR    = 0x4;
+export const uint OP_XOR   = 0x5;
+export const uint OP_SHIFT = 0x6;
+export const uint OP_LDI   = 0x7;
+export const uint OP_ADDI  = 0x8;
+export const uint OP_LD    = 0x9;
+export const uint OP_ST    = 0xA;
+export const uint OP_BEQ   = 0xB;
+export const uint OP_BNE   = 0xC;
+export const uint OP_JAL   = 0xD;
+export const uint OP_JR    = 0xE;
+export const uint OP_HALT  = 0xF;
+
+// オペコード [15:12]
+export uint dec_op(uint instr) {
+    return (instr >> 12) & 15;
+}
+
+// デスティネーションレジスタ [11:9]
+export uint dec_rd(uint instr) {
+    return (instr >> 9) & 7;
+}
+
+// ソースレジスタ1 [8:6]
+export uint dec_rs1(uint instr) {
+    return (instr >> 6) & 7;
+}
+
+// ソースレジスタ2 / functフィールド [5:3]
+export uint dec_rs2(uint instr) {
+    return (instr >> 3) & 7;
+}
+
+// 符号付き6bit即値 [5:0] (32bitへ符号拡張)
+export uint dec_imm6s(uint instr) {
+    const uint v = instr & 63;
+    if ((v & 32) != 0) {
+        return (v | 0xFFFFFFC0) as uint;
+    }
+    return v;
+}
+
+// 符号なし8bit即値 [7:0]
+export uint dec_imm8(uint instr) {
+    return instr & 255;
+}

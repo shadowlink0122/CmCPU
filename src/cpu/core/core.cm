@@ -1,0 +1,75 @@
+//! platform: sv
+
+module core;
+
+import ./adder;
+import ./alu;
+import ./decoder;
+import ./register_file;
+import ../memory/ram;
+import ../program/demo_program;
+
+// ============================================================
+// CPUコア: フェッチ・デコード・実行 (1命令/サイクル)
+// ============================================================
+// 注意: posedge関数内の状態変数は前サイクル値が読まれ、代入は次サイクル反映（ノンブロッキング代入）。pcへの二重代入は後の代入（分岐・ジャンプ）が勝つ
+// ============================================================
+
+// CPU状態レジスタ
+uint pc = 0;                     // プログラムカウンタ
+export bool halted = false;      // 停止フラグ
+export uint result_reg = 0;      // MMIO結果出力レジスタ
+
+void cpu_exec(posedge clk) {
+    if (!halted) {
+        // フェッチ・デコード
+        const uint instr = prog_rom[pc & 15];
+        const uint op = dec_op(instr);
+        const uint rd = dec_rd(instr);
+        const uint rs1 = dec_rs1(instr);
+        const uint rs2 = dec_rs2(instr);
+        const uint imm6 = dec_imm6s(instr);
+        const uint imm8 = dec_imm8(instr);
+
+        // レジスタ読み出し (r0は常に0)
+        const uint a = rf_read(rs1);
+        const uint b = rf_read(rs2);
+
+        // 既定の次アドレス (分岐・ジャンプ命令はこの後で上書きする)
+        const uint next_pc = add32(pc, 1, 0);
+        pc = next_pc;
+
+        // 実行
+        match (op) {
+            0x1 => { if (rd != 0) { regs[rd] = alu_exec(op, rs2, a, b); } }  // ADD
+            0x2 => { if (rd != 0) { regs[rd] = alu_exec(op, rs2, a, b); } }  // SUB
+            0x3 => { if (rd != 0) { regs[rd] = alu_exec(op, rs2, a, b); } }  // AND
+            0x4 => { if (rd != 0) { regs[rd] = alu_exec(op, rs2, a, b); } }  // OR
+            0x5 => { if (rd != 0) { regs[rd] = alu_exec(op, rs2, a, b); } }  // XOR
+            0x6 => { if (rd != 0) { regs[rd] = alu_exec(op, rs2, a, b); } }  // SHIFT (rs2フィールド=funct)
+            0x7 => { if (rd != 0) { regs[rd] = imm8; } }                     // LDI
+            0x8 => { if (rd != 0) { regs[rd] = add32(a, imm6, 0); } }        // ADDI
+            0x9 => {                                                         // LD
+                const uint laddr = add32(a, imm6, 0) & 255;
+                if (rd != 0) { regs[rd] = dram[laddr]; }
+            }
+            0xA => {                                                         // ST
+                const uint saddr = add32(a, imm6, 0) & 255;
+                const uint sval = rf_read(rd);
+                dram[saddr] = sval;
+                if (saddr == MMIO_RESULT_ADDR) {
+                    result_reg = sval & 255;                                 // MMIO: 結果出力
+                }
+            }
+            0xB => { if (rf_read(rd) == a) { pc = add32(next_pc, imm6, 0); } }  // BEQ ra(rdフィールド), rb(rs1フィールド)
+            0xC => { if (rf_read(rd) != a) { pc = add32(next_pc, imm6, 0); } }  // BNE ra(rdフィールド), rb(rs1フィールド)
+            0xD => {                                                         // JAL (呼び出し)
+                if (rd != 0) { regs[rd] = next_pc; }
+                pc = imm8;
+            }
+            0xE => { pc = a; }                                               // JR (復帰)
+            0xF => { halted = true; }                                        // HALT
+            _ => {}                                                          // NOP
+        }
+    }
+}

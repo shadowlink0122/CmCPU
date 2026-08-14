@@ -8,9 +8,9 @@
 //
 // 機能:
 //   - 16x8ピクセル・8色（3bit）のフレームバッファ
-//   - コマンド: start で「全クリア → 指定矩形を指定色でフィル」を実行
-//   - 1ピクセル/サイクルで描画し、完了で done を立てる
-//   - 読み出しポート（rd_addr → rd_data、同期読み出し）で内容を確認できる
+//   - コマンド: io.start で「全クリア → 指定矩形を指定色でフィル」を実行
+//   - 1ピクセル/サイクルで描画し、完了で io.done を立てる
+//   - 読み出しポート（io.rd_addr → io.rd_data、同期読み出し）で内容を確認できる
 //
 // FSM: IDLE → CLEAR(128px) → FILL(w×h px) → DONE → (startを離すと) IDLE
 // ============================================================
@@ -26,21 +26,26 @@
     }
 #end
 
-// コマンド入力ポート
-#[input] bool start = false;      // 描画開始（DONE解除にも使用）
-#[input] utiny rect_x = 0;        // 矩形左上X (0..15)
-#[input] utiny rect_y = 0;        // 矩形左上Y (0..7)
-#[input] utiny rect_w = 0;        // 矩形幅 (1..16)
-#[input] utiny rect_h = 0;        // 矩形高さ (1..8)
-#[input] utiny rect_color = 0;    // 塗り色 (0..7)
+// 入出力ポート（IOインスタンス）
+struct SimpleGpuIo {
+    // コマンド入力ポート
+    #[input] bool start = false;      // 描画開始（DONE解除にも使用）
+    #[input] utiny rect_x = 0;        // 矩形左上X (0..15)
+    #[input] utiny rect_y = 0;        // 矩形左上Y (0..7)
+    #[input] utiny rect_w = 0;        // 矩形幅 (1..16)
+    #[input] utiny rect_h = 0;        // 矩形高さ (1..8)
+    #[input] utiny rect_color = 0;    // 塗り色 (0..7)
 
-// フレームバッファ読み出しポート（同期読み出し・1サイクル遅延）
-#[input] utiny rd_addr = 0;       // 読み出しアドレス (y*16 + x)
-#[output] utiny rd_data = 0;      // 読み出しデータ
+    // フレームバッファ読み出しポート（同期読み出し・1サイクル遅延）
+    #[input] utiny rd_addr = 0;       // 読み出しアドレス (y*16 + x)
+    #[output] utiny rd_data = 0;      // 読み出しデータ
 
-// ステータス出力
-#[output] bool busy = false;
-#[output] bool done = false;
+    // ステータス出力
+    #[output] bool busy = false;
+    #[output] bool done = false;
+};
+
+SimpleGpuIo io;
 
 // FSM状態
 const uint ST_IDLE = 0;
@@ -71,16 +76,16 @@ uint color_reg = 0;
 void gpu(posedge clk) {
     match (state) {
         0 => {  // IDLE: startでパラメータをラッチして開始
-            // done は次のコマンド開始までスティッキーに保持する
-            if (start) {
-                done = false;
-                x0_reg = rect_x;
-                y0_reg = rect_y;
-                x1_reg = rect_x + rect_w - 1;
-                y1_reg = rect_y + rect_h - 1;
-                color_reg = rect_color;
+            // io.done は次のコマンド開始までスティッキーに保持する
+            if (io.start) {
+                io.done = false;
+                x0_reg = io.rect_x;
+                y0_reg = io.rect_y;
+                x1_reg = (io.rect_x + io.rect_w - 1) as uint;
+                y1_reg = (io.rect_y + io.rect_h - 1) as uint;
+                color_reg = io.rect_color;
                 clr_addr = 0;
-                busy = true;
+                io.busy = true;
                 state = ST_CLEAR;
             }
         }
@@ -108,9 +113,9 @@ void gpu(posedge clk) {
             }
         }
         3 => {  // DONE: 完了通知。startが下がったらIDLEへ
-            busy = false;
-            done = true;
-            if (!start) {
+            io.busy = false;
+            io.done = true;
+            if (!io.start) {
                 state = ST_IDLE;
             }
         }
@@ -120,7 +125,7 @@ void gpu(posedge clk) {
 
 // フレームバッファ読み出し（同期読み出し・1サイクル遅延）
 void read_port(posedge clk) {
-    rd_data = fb[rd_addr & 127];
+    io.rd_data = fb[io.rd_addr & 127];
 }
 
 import std::debug::assert;
@@ -129,37 +134,37 @@ import std::debug::assert;
 // (x,y,w,h) = (2,1,4,3) を色5でフィルする
 #[test]
 void tb() {
-    rect_x = 2;
-    rect_y = 1;
-    rect_w = 4;
-    rect_h = 3;
-    rect_color = 5;
-    start = true;
+    io.rect_x = 2;
+    io.rect_y = 1;
+    io.rect_w = 4;
+    io.rect_h = 3;
+    io.rect_color = 5;
+    io.start = true;
     step(2);
-    assert(busy, "GPU busy after start");
-    start = false;
+    assert(io.busy, "GPU io.busy after io.start");
+    io.start = false;
     // CLEAR(128) + FILL(4*3=12) + 遷移分の余裕
     step(150);
-    assert(done, "fill complete");
-    assert(!busy, "not busy after done");
+    assert(io.done, "fill complete");
+    assert(!io.busy, "not io.busy after io.done");
 
     // 矩形内: (2,1) = addr 18
-    rd_addr = 18;
+    io.rd_addr = 18;
     step(2);
-    assert(rd_data == 5, "inside rect painted with color 5");
+    assert(io.rd_data == 5, "inside rect painted with color 5");
 
     // 矩形内の右下: (5,3) = addr 53
-    rd_addr = 53;
+    io.rd_addr = 53;
     step(2);
-    assert(rd_data == 5, "bottom-right corner painted");
+    assert(io.rd_data == 5, "bottom-right corner painted");
 
     // 矩形外: (0,0) = addr 0
-    rd_addr = 0;
+    io.rd_addr = 0;
     step(2);
-    assert(rd_data == 0, "outside rect cleared");
+    assert(io.rd_data == 0, "outside rect cleared");
 
     // 矩形外の右隣: (6,1) = addr 22
-    rd_addr = 22;
+    io.rd_addr = 22;
     step(2);
-    assert(rd_data == 0, "right neighbor not painted");
+    assert(io.rd_data == 0, "right neighbor not painted");
 }

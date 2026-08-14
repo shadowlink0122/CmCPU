@@ -1,0 +1,51 @@
+//! platform: sv
+
+module hdmi_out;
+
+// ============================================================
+// 汎用HDMI出力モジュール (640x480@60Hz DVIモード)
+// ============================================================
+// タイミング生成・TMDSエンコード・10:1シリアライザ・差動出力・PLLを集約した「HDMI出力だけ」の回路。機能側（カラーバー・テキスト等）は
+// このモジュールをimportし、タイミング信号（h_cnt/v_cnt/video_active等）を参照して r_out / g_out / b_out (各8bit) を駆動する。
+//
+// 機能側トップに必要な宣言:
+//   #[input] posedge clk_50m;                     50MHz外部クロック
+//   #[output] bool tmds_d2_p 〜 tmds_clk_n;       TMDS差動出力ピン8本
+//   #ifdef TEST → #[input] posedge pixel_clk;     シミュレーション用クロック注入
+// ============================================================
+
+import ./constants/hdmi_constants;
+import ./pll/pll;
+import ./timing/timing;
+import ./encoder/encoder;
+import ./serdes/oser;
+import ./serdes/obuf;
+
+// 内部グローバル信号（PLL出力・ロック状態）
+#ifdef TEST
+    // シミュレーション: pixel_clkは機能側トップが外部注入し、PLLロックは常時真
+    bool serial_clk = false;
+    bool pll_lock = true;
+#else
+    bool pixel_clk = false;
+    bool serial_clk = false;
+    bool pll_lock = false;
+#end
+
+// Gowinプリミティブのインスタンス化（実機ビルドのみ）
+#ifndef TEST
+    // PLL: 50MHz -> 25.2MHz (pixel) + 126MHz (serial)
+    PLL pll_inst;
+
+    // OSER10 10:1 シリアライザ
+    OSER10_R oser_r;
+    OSER10_G oser_g;
+    OSER10_B oser_b;
+    OSER10_CK oser_ck;
+
+    // TLVDS_OBUF 差動バッファ
+    TLVDS_D2 tlvds_d2;
+    TLVDS_D1 tlvds_d1;
+    TLVDS_D0 tlvds_d0;
+    TLVDS_CK tlvds_ck;
+#end

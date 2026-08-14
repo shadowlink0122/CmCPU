@@ -1,0 +1,55 @@
+//! platform: sv
+module text_renderer_test;
+
+// ============================================================
+// テキストレンダラの検証ラッパー
+// ============================================================
+// 'H' をセル(0,0)へ書き込み、フォントROM（font_rom.hex）経由の描画結果（白背景・黒文字）をピクセル位置で検証する
+// ============================================================
+
+#[input] posedge clk;
+assign bool pixel_clk = clk;
+
+import ../../modules/hdmi/timing/timing;
+import ./gbc_display;
+import ../font/font_rom;
+import ./text_renderer;
+
+struct TextRendererTestIo {
+    #[input] uint waddr;
+    #[input] uint wchar;
+    #[input] bool wen;
+    #[output] uint r_o = 0;
+};
+
+TextRendererTestIo io;
+
+async void drive(posedge pixel_clk) {
+    text_addr = io.waddr as ushort;
+    text_char = io.wchar as ushort;
+    text_we = io.wen;
+    io.r_o = r_out as uint;
+}
+
+import std::debug::assert;
+
+// テストベンチ: 空バッファ=白背景、'H'書き込み後にグリフ横棒（row3, cols1-5）の黒ピクセルを検証。
+// パイプライン遅延Δ∈[3..7]を吸収する交差点 hc=8 で採取
+#[test]
+void tb() {
+    io.wen = false;
+    // 'H'(72) をセル(0,0)へ書き込み
+    io.waddr = 0;
+    io.wchar = 72;
+    io.wen = true;
+    step(3);
+    io.wen = false;
+
+    // vc=3（'H'の横棒行）, hc=8 まで進める（総ステップ 3*800+8）
+    step(2405);
+    assert(io.r_o == 0, "H crossbar row: black pixel");
+
+    // 同じ行のグリフ外（hc≈40）: 白背景
+    step(32);
+    assert(io.r_o == 255, "outside glyph: white background");
+}

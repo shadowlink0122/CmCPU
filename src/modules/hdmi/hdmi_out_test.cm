@@ -1,0 +1,57 @@
+//! platform: sv
+module hdmi_out_test;
+
+// ============================================================
+// 汎用HDMI出力モジュール（hdmi_out）の検証ラッパー
+// ============================================================
+// 固定色（グレー: R=G=B=128）を供給し、タイミング→TMDSエンコードのパイプライン全体を検証する。3チャネルへ同一値・同一履歴を与えるため、アクティブ領域では3チャネルのTMDS符号が常に一致する
+// ============================================================
+
+#[input] posedge clk;
+assign bool pixel_clk = clk;
+
+import ./hdmi_out;
+
+// 固定色の供給（機能側プログラムの最小形）
+async void drive(posedge pixel_clk) {
+    r_out = 128;
+    g_out = 128;
+    b_out = 128;
+}
+
+// 検証用出力: TMDS符号の写し
+struct HdmiOutTestIo {
+    #[output] uint tmds_r_o = 0;
+    #[output] uint tmds_g_o = 0;
+    #[output] uint tmds_b_o = 0;
+};
+
+HdmiOutTestIo io;
+
+async void mirror(posedge pixel_clk) {
+    io.tmds_r_o = tmds_r as uint;
+    io.tmds_g_o = tmds_g as uint;
+    io.tmds_b_o = tmds_b as uint;
+}
+
+import std::debug::assert;
+
+#[test]
+void tb() {
+    // アクティブ領域: 3チャネルとも同一のデータ符号（コントロールトークンではない）
+    step(10);
+    assert(io.tmds_r_o != CTRL_00, "active: R is data code");
+    assert(io.tmds_r_o == io.tmds_g_o, "active: R and G codes match (same input history)");
+    assert(io.tmds_r_o == io.tmds_b_o, "active: R and B codes match (same input history)");
+
+    // 水平ブランキング: コントロールトークン
+    step(638);
+    assert(io.tmds_r_o == CTRL_00, "blank: R ctrl token CTRL_00");
+    assert(io.tmds_g_o == CTRL_00, "blank: G ctrl token CTRL_00");
+    assert(io.tmds_b_o == CTRL_11, "blank: B ctrl {vs=1,hs=1}");
+
+    // HSYNCパルス中: Bチャネルのみhsが反映される
+    step(52);
+    assert(io.tmds_b_o == CTRL_10, "hsync: B ctrl {vs=1,hs=0}");
+    assert(io.tmds_r_o == CTRL_00, "hsync: R stays CTRL_00");
+}

@@ -1,0 +1,51 @@
+//! platform: sv
+module gbc_display_test;
+
+// ============================================================
+// 表示領域座標変換（gbc_display）の検証ラッパー
+// ============================================================
+// タイミングカウンタから論理座標（gbc_x/gbc_y）と表示領域判定（gbc_active）への変換を検証する（等倍 640x480 設定）
+// ============================================================
+
+#[input] posedge clk;
+assign bool pixel_clk = clk;
+
+import ../../modules/hdmi/timing/timing;
+import ./gbc_display;
+
+// 検証用出力（1クロック遅れの写し）
+struct GbcDisplayTestIo {
+    #[output] bool active_o = false;
+    #[output] uint x_o = 0;
+    #[output] uint y_o = 0;
+};
+
+GbcDisplayTestIo io;
+
+async void mirror(posedge pixel_clk) {
+    io.active_o = gbc_active;
+    io.x_o = gbc_x as uint;
+    io.y_o = gbc_y as uint;
+}
+
+import std::debug::assert;
+
+#[test]
+void tb() {
+    // 1行目のアクティブ領域: 論理XはhcにパイプラインΔ=3遅れで追従する
+    step(200);
+    assert(io.active_o, "line0 active region: gbc_active on");
+    assert(io.x_o == 197, "line0: gbc_x tracks hc with pipeline delay");
+    assert(io.y_o == 0, "line0: gbc_y is 0");
+
+    // 水平ブランキング: 非アクティブでXは行末で飽和する
+    step(500);
+    assert(!io.active_o, "h-blanking: gbc_active off");
+    assert(io.x_o == 640, "h-blanking: gbc_x saturates at line end");
+
+    // 3行目の同位置: Yが行数に追従する
+    step(1900);
+    assert(io.active_o, "line3 active region: gbc_active on");
+    assert(io.x_o == 197, "line3: gbc_x same position");
+    assert(io.y_o == 3, "line3: gbc_y tracks line count");
+}

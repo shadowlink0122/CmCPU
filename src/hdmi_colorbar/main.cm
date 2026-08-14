@@ -1,0 +1,78 @@
+//! platform: sv
+module hdmi_colorbar;
+
+// ============================================================
+// HDMI カラーバー出力回路（機能トップ）
+// ============================================================
+// 汎用HDMI出力モジュール（src/modules/hdmi）を使用し、カラーバー
+// パターンを r_out/g_out/b_out へ供給する。
+// ターゲット: Tang Console 138K / 640×480@60Hz DVIモード
+// ============================================================
+
+// 50MHz 外部システムクロック
+#[input] posedge clk_50m;
+
+// HDMI TMDS 差動出力ピン (汎用モジュール内のTLVDS_OBUFが駆動)
+#[output] bool tmds_d2_p = false;
+#[output] bool tmds_d2_n = false;
+#[output] bool tmds_d1_p = false;
+#[output] bool tmds_d1_n = false;
+#[output] bool tmds_d0_p = false;
+#[output] bool tmds_d0_n = false;
+#[output] bool tmds_clk_p = false;
+#[output] bool tmds_clk_n = false;
+
+// ボード上のステータスLED
+#[output] bool led = false;
+
+#ifdef TEST
+    // シミュレーション: PLLの代わりにピクセルクロックを外部注入
+    #[input] posedge pixel_clk;
+#end
+
+// 汎用HDMI出力モジュールと機能（カラーバーパターン）
+import ../modules/hdmi/hdmi_out;
+import ./pattern/pattern;
+
+// LEDステータス同期制御
+async void led_control(posedge pixel_clk) {
+    led = pll_lock;
+}
+
+import std::debug::assert;
+
+// シミュレーション検証用: TMDS符号を観測ポートへ写す
+#[output] uint tmds_r_o = 0;
+#[output] uint tmds_g_o = 0;
+#[output] uint tmds_b_o = 0;
+
+async void sim_mirror(posedge pixel_clk) {
+    tmds_r_o = tmds_r as uint;
+    tmds_g_o = tmds_g as uint;
+    tmds_b_o = tmds_b as uint;
+}
+
+// 統合テスト: timing→pattern→encoder パイプライン全体を検証
+#[test]
+void tb() {
+    // アクティブ領域（バー0: 白 R=G=B=255）: 3チャネル同一のデータ符号
+    step(10);
+    assert(tmds_r_o != CTRL_00, "active: R is data code");
+    assert(tmds_r_o == tmds_g_o, "bar0 white: R and G codes match");
+    assert(tmds_r_o == tmds_b_o, "bar0 white: R and B codes match");
+    assert(led, "pll_lock passthrough LED on");
+
+    // バー1（黄 R=G=255, B=0）: R/Gは一致したまま、Bは分岐する
+    step(75);
+    assert(tmds_r_o == tmds_g_o, "bar1 yellow: R and G codes match");
+    assert(tmds_r_o != tmds_b_o, "bar1 yellow: B code differs");
+
+    // ブランキング: コントロールトークン
+    step(563);
+    assert(tmds_r_o == CTRL_00, "blank: R ctrl token");
+    assert(tmds_b_o == CTRL_11, "blank: B ctrl {vs=1,hs=1}");
+
+    // HSYNCパルス中
+    step(52);
+    assert(tmds_b_o == CTRL_10, "hsync: B ctrl {vs=1,hs=0}");
+}

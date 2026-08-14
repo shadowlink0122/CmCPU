@@ -1,0 +1,73 @@
+//! platform: sv
+module hdmi_text_top;
+
+// ============================================================
+// HDMI 文字コード表テキスト出力回路（機能トップ）
+// ============================================================
+// 汎用HDMI出力モジュール（src/modules/hdmi）を使用し、テキスト
+// レンダラ＋アニメーション制御の出力を r_out/g_out/b_out へ供給する。
+// ターゲット: Tang Console 138K / 640×480@60Hz DVIモード
+// ============================================================
+
+// 50MHz 外部システムクロック
+#[input] posedge clk_50m;
+
+// HDMI TMDS 差動出力ピン (汎用モジュール内のTLVDS_OBUFが駆動)
+#[output] bool tmds_d2_p = false;
+#[output] bool tmds_d2_n = false;
+#[output] bool tmds_d1_p = false;
+#[output] bool tmds_d1_n = false;
+#[output] bool tmds_d0_p = false;
+#[output] bool tmds_d0_n = false;
+#[output] bool tmds_clk_p = false;
+#[output] bool tmds_clk_n = false;
+
+#ifdef TEST
+    // シミュレーション: PLLの代わりにピクセルクロックを外部注入
+    #[input] posedge pixel_clk;
+#end
+
+// 汎用HDMI出力モジュールと機能（テキスト描画・アニメーション）
+import ../modules/hdmi/hdmi_out;
+import ./animation/animation_ctrl;
+
+// ボード上のステータスLED (Red/Blue)
+#[output] assign bool led_ready = anim_ready;
+#[output] assign bool led_done = anim_done;
+
+import std::debug::assert;
+
+// シミュレーション検証用: TMDS符号とタイトル行バッファを観測ポートへ写す
+#[output] uint tmds_r_o = 0;
+#[output] uint tmds_b_o = 0;
+#[output] uint title_first_o = 0;
+#[output] uint title_after_o = 0;
+
+async void sim_mirror(posedge pixel_clk) {
+    tmds_r_o = tmds_r as uint;
+    tmds_b_o = tmds_b as uint;
+    title_first_o = text_buf[8 * 80 + 18] as uint;
+    title_after_o = text_buf[8 * 80 + 18 + 43] as uint;
+}
+
+// 統合テスト: timing→テキスト描画→encoder パイプライン全体を検証
+#[test]
+void tb() {
+    // アクティブ領域（白背景描画中）: データ符号
+    step(10);
+    assert(tmds_r_o != CTRL_00, "active: R is data code");
+
+    // ブランキング: コントロールトークン
+    step(638);
+    assert(tmds_r_o == CTRL_00, "blank: R ctrl token");
+    assert(tmds_b_o == CTRL_11, "blank: B ctrl {vs=1,hs=1}");
+
+    // HSYNCパルス中
+    step(52);
+    assert(tmds_b_o == CTRL_10, "hsync: B ctrl {vs=1,hs=0}");
+
+    // アニメーション完了後: タイトル行がテキストバッファへ描画されている（TEST用短縮定数: 起動200 + クリア4800 + タイトル43文字 ≈ 5045クロック）
+    step(4600);
+    assert(title_first_o == ('=' as uint), "title first char is '=' after animation");
+    assert(title_after_o == (' ' as uint), "cell after title stays blank");
+}

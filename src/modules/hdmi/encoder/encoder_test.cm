@@ -1,0 +1,61 @@
+//! platform: sv
+module encoder_test;
+
+// ============================================================
+// TMDSエンコーダの検証ラッパー
+// ============================================================
+// timing + encoder を取り込み、画素値を入力ポートから供給して
+// ブランキング期間のコントロールトークンとデータ符号を検証する
+// ============================================================
+
+#[input] posedge clk;
+assign bool pixel_clk = clk;
+
+import ../constants/hdmi_constants;
+import ../timing/timing;
+import ./encoder;
+
+struct EncoderTestIo {
+    #[input] uint r_in;
+    #[input] uint g_in;
+    #[input] uint b_in;
+    #[output] uint tmds_r_o = 0;
+    #[output] uint tmds_g_o = 0;
+    #[output] uint tmds_b_o = 0;
+};
+
+EncoderTestIo io;
+
+async void feed(posedge pixel_clk) {
+    r_out = io.r_in as int;
+    g_out = io.g_in as int;
+    b_out = io.b_in as int;
+    io.tmds_r_o = tmds_r as uint;
+    io.tmds_g_o = tmds_g as uint;
+    io.tmds_b_o = tmds_b as uint;
+}
+
+import std::debug::assert;
+
+// テストベンチ: コントロールトークン（両sync非アクティブ/hsyncパルス中）とアクティブ期間のデータ符号がトークンと異なることを検証
+#[test]
+void tb() {
+    io.r_in = 128;
+    io.g_in = 128;
+    io.b_in = 128;
+
+    // アクティブ領域: データ符号はコントロールトークンにならない（TMDSの性質）
+    step(10);
+    assert(io.tmds_r_o != CTRL_00, "active: R is data code (not CTRL_00)");
+    assert(io.tmds_b_o != CTRL_11, "active: B is data code (not CTRL_11)");
+
+    // ブランキング（sync非アクティブ、hc≈648）: R/G=CTRL_00, B=CTRL_11
+    step(638);
+    assert(io.tmds_r_o == CTRL_00, "blank: R ctrl token CTRL_00");
+    assert(io.tmds_g_o == CTRL_00, "blank: G ctrl token CTRL_00");
+    assert(io.tmds_b_o == CTRL_11, "blank: B ctrl {vs=1,hs=1} CTRL_11");
+
+    // HSYNCパルス中（hc≈700）: B=CTRL_01
+    step(52);
+    assert(io.tmds_b_o == CTRL_10, "hsync pulse: B ctrl {vs=1,hs=0} CTRL_10");
+}

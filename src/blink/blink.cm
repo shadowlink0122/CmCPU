@@ -8,7 +8,7 @@
 // LED: CFG LED READY (U12), DONE (G11)
 
 // 定数定義
-const uint CLK_FREQ = 52500000;  // 内蔵OSCクロック周波数 (Hz)
+const uint CLK_FREQ = 210000000 / 4;  // 内蔵OSC 210MHz / FREQ_DIV(4)
 
 #ifdef TEST
     // シミュレーション: クロックを外部注入し、トグル周期を短縮
@@ -24,9 +24,13 @@ const uint CLK_FREQ = 52500000;  // 内蔵OSCクロック周波数 (Hz)
     }
 #end
 
-// 出力ポート: CFG LED
-#[output] bool led_ready = false;
-#[output] bool led_done  = false;
+// 出力ポート: CFG LED（IOインスタンス）
+struct BlinkIo {
+    #[output] bool led_ready = false;
+    #[output] bool led_done = false;
+};
+
+BlinkIo io;
 
 // 内部信号
 uint counter = 0;
@@ -42,8 +46,8 @@ uint counter = 0;
 void blink(posedge clk) {
     if (counter == HALF_SEC_COUNT) {
         counter = 0;
-        led_ready = !led_ready;
-        led_done = !led_done;
+        io.led_ready = !io.led_ready;
+        io.led_done = !io.led_done;
     } else {
         counter = counter + 1;
     }
@@ -55,10 +59,10 @@ import std::debug::assert;
 #[test]
 void tb() {
     step(2);
-    assert(led_ready, "led toggles on after 2 clocks");
-    assert(led_done, "led_done follows led_ready");
+    assert(io.led_ready, "led toggles on after 2 clocks");
+    assert(io.led_done, "io.led_done follows io.led_ready");
     step(2);
-    assert(!led_ready, "led toggles off after 2 more clocks");
+    assert(!io.led_ready, "led toggles off after 2 more clocks");
     step(4);
-    assert(!led_ready, "full period returns to off");
+    assert(!io.led_ready, "full period returns to off");
 }
